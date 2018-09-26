@@ -5,6 +5,10 @@
 [Bb]uilds/
 Assets/AssetStoreTools*
 
+# ignore build folders
+Glove_Server_App/App/
+Glove_Hololens_App/App/
+
 # Visual Studio cache directory
 .vs/
 
