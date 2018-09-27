@@ -180,20 +180,6 @@ public class UDPSend : MonoBehaviour
         }
     }
 
-
-    // endless test
-    private void sendEndless(string testStr)
-    {
-        do
-        {
-            sendString(testStr);
-
-
-        }
-        while (true);
-
-    }
-
     //______________________________________ Code von Alex
 
     private void sendSinglePoseUpdate(TrackingData trD)
