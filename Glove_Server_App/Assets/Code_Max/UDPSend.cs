@@ -49,10 +49,7 @@ public class UDPSend : MonoBehaviour
         sendObj.init();
 
         // testing via console
-        // sendObj.inputFromConsole();
-
-        // as server sending endless
-        sendObj.sendEndless(" endless infos \n");
+        // sendObj.inputFromConsole();        
 
     }
     // start from unity3d
