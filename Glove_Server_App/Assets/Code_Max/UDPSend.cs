@@ -24,34 +24,26 @@ using System.Threading;
 public class UDPSend : MonoBehaviour
 {
     private static int localPort;
-
-    // prefs
-    private string IP;  // define in init
-    public int port;  // define in init
+    
+    public int port = 11110;  // define in init
 
     // "connection" things
     IPEndPoint remoteEndPoint;
     UdpClient client;
+    Boolean connected = false;
 
     // gui
     string strMessage = "";
 
+    // Sequenznumber of the packet send
     static uint seq = 0;
+
+    // For synchronizing clocks
     static long currentTicks = 0;
 
     // for testing
     private TrackingData glove;
-
-    // call it from shell (as program)
-    private static void Main()
-    {
-        UDPSend sendObj = new UDPSend();
-        sendObj.init();
-
-        // testing via console
-        // sendObj.inputFromConsole();        
-
-    }
+        
     // start from unity3d
     public void Start()
     {
@@ -66,45 +58,34 @@ public class UDPSend : MonoBehaviour
     // OnGUI
     void OnGUI()
     {
+        GUIStyle labelStyle = new GUIStyle(GUI.skin.GetStyle("label"));
+        labelStyle.fontSize = 50;
+
+        GUIStyle buttonStyle = new GUIStyle(GUI.skin.GetStyle("button"));
+        buttonStyle.fontSize = 50;
+
         Rect rectObj = new Rect(40, 380, 200, 400);
         GUIStyle style = new GUIStyle();
         style.alignment = TextAnchor.UpperLeft;
-        GUI.Box(rectObj, "# UDPSend-Data\n127.0.0.1 " + port + " #\n"
-                    + "shell> nc -lu 127.0.0.1  " + port + " \n"
-                , style);
+        if (!connected)
+            GUI.Box(new Rect(100, 100, 800, 500), "No client connected", labelStyle);
+        else
+            GUI.Box(new Rect(100, 100, 800, 500), "Getting Data from " + remoteEndPoint.Address + "\non Port " + remoteEndPoint.Port, labelStyle);
 
         // ------------------------
         // send it
         // ------------------------
-        strMessage = GUI.TextField(new Rect(40, 420, 140, 20), strMessage);
-        if (GUI.Button(new Rect(190, 420, 40, 20), "send"))
-        {
-            sendString(strMessage + "\n");
-            Debug.Log("Gesendet von Max");
-        }
+        if (connected)
+            if (GUI.Button(new Rect(100, 300, 300, 100), "send pose", buttonStyle))
+                sendSinglePoseUpdate(glove);
     }
 
     // init
     public void init()
     {
         init_glove();
-
-        // Endpunkt definieren, von dem die Nachrichten gesendet werden.
-        print("UDPSend.init()");
-
-        // define
-        IP = "127.0.0.1";
-        port = 11110;
-
-        // ----------------------------
-        // Senden
-        // ----------------------------
-        //remoteEndPoint = new IPEndPoint(IPAddress.Parse(IP), port);
-        client = new UdpClient(port);        
-
-        // status
-        print("Sending to " + IP + " : " + port);
-        print("Testing: nc -lu " + IP + " : " + port);
+        
+        client = new UdpClient(port);  
 
         client.BeginReceive(new AsyncCallback(recv), null);
     }
@@ -118,43 +99,14 @@ public class UDPSend : MonoBehaviour
         glove.JointValues = new float[40];
         for (int i = 0; i < 40; i++)
         {
-            glove.JointValues[i] = i;
+            glove.JointValues[i] = (float)i;
         }
 
         glove.pose = new Matrix4x4(new Vector4(1, 2, 3, 4), new Vector4(1, 2, 3, 4), new Vector4(1, 2, 3, 4), new Vector4(1, 2, 3, 4));
 
         glove.velocity = new Vector3(2, 4, 6);
         glove.acceleration = new Vector3(2, 4, 6);
-    }
-
-    // inputFromConsole
-    private void inputFromConsole()
-    {
-        try
-        {
-            string text;
-            do
-            {
-                text = Console.ReadLine();
-
-                // Den Text zum Remote-Client senden.
-                if (text != "")
-                {
-
-                    // Daten mit der UTF8-Kodierung in das Binärformat kodieren.
-                    byte[] data = Encoding.UTF8.GetBytes(text);
-
-                    // Den Text zum Remote-Client senden.
-                    client.Send(data, data.Length, remoteEndPoint);
-                }
-            } while (text != "");
-        }
-        catch (Exception err)
-        {
-            print(err.ToString());
-        }
-
-    }
+    }       
 
     // sendData
     private void sendString(string message)
@@ -180,15 +132,11 @@ public class UDPSend : MonoBehaviour
     //______________________________________ Code von Alex
 
     private void sendSinglePoseUpdate(TrackingData trD)
-    {
-        //StringBuilder s = new StringBuilder();
-        //s.AppendFormat("{0,9:N2} {1,9:N2} {2,9:N2} {3,9:N2}\n{4,9:N2} {5,9:N2} {6,9:N2} {7,9:N2}\n{8,9:N2} {9,9:N2} {10,9:N2} {11,9:N2}\n{12,9:N2} {13,9:N2} {14,9:N2} {15,9:N2}", matrix[0][0], matrix[0][1], matrix[0][2], matrix[0][3], matrix[1][0], matrix[1][1], matrix[1][2], matrix[1][3], matrix[2][0], matrix[2][1], matrix[2][2], matrix[2][3], matrix[3][0], matrix[3][1], matrix[3][2], matrix[3][3]);
-        //Console.WriteLine(s.ToString());
+    {       
         // data format = length (int) | Type (byte) | SEQ (uint) |  jointValues (float[40]) | pose (4*4 floats) | velocity (3 floats) | acceleration (3 floats) | time (long)
        
         byte[] data = new byte[sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * 4 * sizeof(float) + 3 * sizeof(float) + 3 * sizeof(float) + sizeof(long)];
         
-
         Buffer.BlockCopy(BitConverter.GetBytes(data.Length), 0, data, 0, BitConverter.GetBytes(data.Length).Length);
         data[sizeof(int)] = (byte)1;//Type: 1 = default format
         Buffer.BlockCopy(BitConverter.GetBytes(seq), 0, data, sizeof(int) + sizeof(byte), BitConverter.GetBytes(seq).Length);
@@ -215,22 +163,23 @@ public class UDPSend : MonoBehaviour
         }
                 
         Buffer.BlockCopy(BitConverter.GetBytes(currentTicks), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 16 * sizeof(float) + 3 * sizeof(float) + 3 * sizeof(float), sizeof(long));
-        //System.Threading.Thread.Sleep(rnd.Next(2, 15));
-        
+                
         client.Send(data, data.Length, remoteEndPoint);
 
+        Debug.Log("pose " + seq + " send!");
         seq++;
+        
     }
 
     
     //CallBack
     private void recv(IAsyncResult res)
     {
-        Debug.Log("Callback started");
         remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
         byte[] received = client.EndReceive(res, ref remoteEndPoint);
         client.BeginReceive(new AsyncCallback(recv), null);
-        Debug.Log("Message Received");
+        Debug.Log("Client connected");
+        connected = true;
 
         //Ping
         if (Encoding.UTF8.GetString(received, 0, received.Length).Equals("UDPPing"))
