@@ -35,7 +35,8 @@ public class Glove
         public float[] values;
         public UInt16 version;
 
-        private Int64[] raw_values;
+        public Int64[] raw_values;
+        //private Int64[] raw_values;
         private Int64[] offsets;
 
         public Glove()
@@ -90,8 +91,8 @@ public class UDPReceive : MonoBehaviour {
     
     public Dictionary<string, TrackingData> trackedPoints = new Dictionary<string, TrackingData>();
 
-    public string IPAddress = "192.168.1.210";
-    public int port = 11110;
+    public static string IPAddress = "192.168.1.210";
+    public static int port = 11110;
 
     public bool readIPAddressAndPortFromFile = false;
     private string IPAddressFromFile;
@@ -244,116 +245,14 @@ public class UDPReceive : MonoBehaviour {
         }
         
         else
-            updateTrackingData(messageBytes);    
-    }
-
-
-#else
-
-    Thread receiveThread;
-    UdpClient client;
-    private volatile bool shutdown = false;
-
-    public void ReadIPAddress() {
-        try {
-            string readFromFile = System.IO.File.ReadAllText(Application.persistentDataPath + "\\ipaddress.txt");
-            string[] splitString = readFromFile.Split(':');
-            IPAddressFromFile = splitString[0].Trim();
-            if(splitString.Length == 2) {
-                port = int.Parse(splitString[1].Trim());
-            }
-        }
-        catch(Exception e) {
-            Debug.Log("Error thrown when reading IP address.\n" + e);
-        }
-    }
-
-    private void sendUDPMessage(byte[] message) {
-        client.Send(message, message.Length);
-    }
-
-    private void initUDPReceiver() {
-        if(!readIPAddressAndPortFromFile || (readIPAddressAndPortFromFile && !string.IsNullOrEmpty(IPAddressFromFile) )) {
-            receiveThread = new Thread(new ThreadStart(ReceiveData));
-            receiveThread.IsBackground = true;
-            receiveThread.Start();
-            initialized = true;
-        }
-
-    }
-
-    // receive thread
-    private void ReceiveData() {
-
-        client = new UdpClient();
-        System.Net.IPAddress ip = readIPAddressAndPortFromFile ? System.Net.IPAddress.Parse(IPAddressFromFile) : System.Net.IPAddress.Parse(IPAddress);
-        IPEndPoint EPIP = new IPEndPoint(ip, port);
-        client.Connect(EPIP);
-        if(autoConnect) {
-#if !UNITY_ANDROID
-            System.Net.NetworkInformation.Ping ping = new System.Net.NetworkInformation.Ping();
-            try {
-                System.Net.NetworkInformation.PingReply pingreply = ping.Send(ip);
-                Debug.Log("Sending ping");
-                Debug.Log(pingreply.Status);
-                if(pingreply.Status == System.Net.NetworkInformation.IPStatus.Success) {
-                    Debug.Log(string.Format("Address: {0}", pingreply.Address));
-                    Debug.Log(string.Format("status: {0}", pingreply.Status));
-                    Debug.Log(string.Format("Round trip time: {0}", pingreply.RoundtripTime));
-                    rtt = pingreply.RoundtripTime;
-                }
-            }
-            catch(System.Net.NetworkInformation.PingException ex) {
-                Debug.Log(ex);
-            }
-#endif
-
-
-            byte[] helloMessage = Encoding.UTF8.GetBytes("Hello");
-            sendUDPMessage(helloMessage);
-        }
-        //first packet handed differently
-        if(!shutdown) {
-            try {
-                
-                byte [] lastReceivedUDPBytes = client.Receive(ref EPIP);
-                updateTrackingData(lastReceivedUDPBytes);
-
-            }
-            catch(Exception err) {
-                Debug.Log(err.ToString());
-            }
-        }
-
-        while(!shutdown) {
-            try {
-                byte [] lastReceivedUDPBytes = client.Receive(ref EPIP);
-                //string trackerName = Encoding.UTF8.GetString(lastReceivedUDPBytes, sizeof(int) + sizeof(byte) + sizeof(uint), lastReceivedUDPBytes.Length-145);
-                //Debug.Log(trackerName);
-                updateTrackingData(lastReceivedUDPBytes);
-
-            }
-            catch(Exception err) {
-                Debug.Log(err.ToString());
-            }
-        }
-        client.Close();
-    }
-
-
-#endif
-
-    void OnDisable() {
-#if WINDOWS_UWP
-
-#else
-        shutdown = true;
-#endif
-    }
-
-
+            updateTrackingData(messageBytes);
+    }    
+    
     //reads the tracking data, either in old human readable UTF8 position/quaternion format, or new binary matrix format
     void updateTrackingData(byte[] trackingMessage) {
+
+        Debug.Log("New TrackingData arrived");
+
         if(showDebug) {
             lastReceivedUDPString = BitConverter.ToString(trackingMessage);
         }
@@ -429,7 +328,6 @@ public class UDPReceive : MonoBehaviour {
 
                 glove.apply_packet(jointValues);
 
-
                 /*
                 Ich habe keine trackerName, also direkt den glove updaten
                 if(trackedPoints.ContainsKey(trackerName)) {
@@ -451,132 +349,12 @@ public class UDPReceive : MonoBehaviour {
 
                 */
 
+                Debug.Log("velocity = (" + velocity.x + "," + velocity.y + "," + velocity.z + ")");
+
                 prevSEQ = seq;
             }
         }
-
-        /*
-        else if(type == 2) {
-            //This is tracking data in binary format, multiple poses in one message
-            // data format = length (int) | Type (byte) | SEQ (uint) | number of poses (byte) | 
-            // plus multiple of:
-            // pose length(int) | trackerName(variable) | matrix(4 * 4 * double) | buttonPress (int) | quality(double) | time(long)
-            int length = BitConverter.ToInt32(trackingMessage, 0);
-            if(trackingMessage.Length != length) {
-                Debug.Log("Malformed Packet");
-                return;
-            }
-            if(trackingMessage.Length <= 162) {
-                Debug.Log("Strange message length");
-                return;
-            }
-
-            uint seq = BitConverter.ToUInt32(trackingMessage, sizeof(int) + sizeof(byte));
-            if(seq > prevSEQ || ( seq < 10000 && prevSEQ > UInt32.MaxValue * 0.75 )) { //tracking data is newer than what we already have
-                byte numberOfPoses = trackingMessage[sizeof(int) + sizeof(byte) + sizeof(uint)];
-                int offset = 0;
-                double [] matrix;
-                int trackerNameByteLength;
-                string trackerName;
-                int buttonPress = 0;
-                double quality = 0.0f;
-                long currentTick = 0;
-                for(int i = 0; i < numberOfPoses; i++) {
-                    matrix = new double[16];
-                    trackerNameByteLength = BitConverter.ToInt32(trackingMessage, offset + sizeof(int) + sizeof(byte) + sizeof(uint) + sizeof(byte)) - 16 * sizeof(double) - sizeof(double) - sizeof(int) - sizeof(long);
-                    trackerName = Encoding.UTF8.GetString(trackingMessage, offset + sizeof(int) + sizeof(byte) + sizeof(uint) + sizeof(byte) + sizeof(int), trackerNameByteLength);
-                    System.Buffer.BlockCopy(trackingMessage, offset + sizeof(int) + sizeof(byte) + sizeof(uint) + sizeof(byte) + sizeof(int) + trackerNameByteLength, matrix, 0, 16 * sizeof(double));
-                    buttonPress = BitConverter.ToInt32(trackingMessage, offset + sizeof(int) + sizeof(byte) + sizeof(uint) + sizeof(byte) + sizeof(int) + trackerNameByteLength + 16 * sizeof(double));
-                    quality = BitConverter.ToDouble(trackingMessage, offset + sizeof(int) + sizeof(byte) + sizeof(uint) + sizeof(byte) + sizeof(int) + trackerNameByteLength + 16 * sizeof(double) + sizeof(int));
-                    currentTick = BitConverter.ToInt64(trackingMessage, offset + sizeof(int) + sizeof(byte) + sizeof(uint) + sizeof(byte) + sizeof(int) + trackerNameByteLength + 16 * sizeof(double) + sizeof(int) + sizeof(long));
-                    if(remoteTime == 0) {
-                        ownFirstTick = System.DateTime.Now.Ticks;
-                        remoteTime = currentTick + ( (long)( ( rtt / 2.0 ) * TimeSpan.TicksPerMillisecond ) );
-                        remoteTimeOffset = remoteTime - ownFirstTick;
-                    }
-
-
-                    Matrix4x4 transformationMatrix = new Matrix4x4();
-                    //column Major - row major switcheroo and right left handed conversion
-                    transformationMatrix[0, 0] = (float)matrix[0 * 4 + 0];
-                    transformationMatrix[0, 1] = (float)matrix[2 * 4 + 0];
-                    transformationMatrix[0, 2] = (float)matrix[1 * 4 + 0];
-                    transformationMatrix[0, 3] = (float)matrix[3 * 4 + 0];
-
-                    transformationMatrix[1, 0] = (float)matrix[0 * 4 + 2];
-                    transformationMatrix[1, 1] = (float)matrix[2 * 4 + 2];
-                    transformationMatrix[1, 2] = (float)matrix[1 * 4 + 2];
-                    transformationMatrix[1, 3] = (float)matrix[3 * 4 + 2];
-
-                    transformationMatrix[2, 0] = (float)matrix[0 * 4 + 1];
-                    transformationMatrix[2, 1] = (float)matrix[2 * 4 + 1];
-                    transformationMatrix[2, 2] = (float)matrix[1 * 4 + 1];
-                    transformationMatrix[2, 3] = (float)matrix[3 * 4 + 1];
-
-                    transformationMatrix[3, 0] = (float)matrix[0 * 4 + 3];
-                    transformationMatrix[3, 1] = (float)matrix[2 * 4 + 3];
-                    transformationMatrix[3, 2] = (float)matrix[1 * 4 + 3];
-                    transformationMatrix[3, 3] = (float)matrix[3 * 4 + 3];
-
-                    transformationMatrix = Matrix4x4.Rotate(Quaternion.Euler(0, 180, 180)) * transformationMatrix;
-
-                    Vector3 pos = new Vector3(transformationMatrix[0, 3] / 1000.0f, transformationMatrix[1, 3] / 1000.0f, transformationMatrix[2, 3] / 1000.0f);
-                    Quaternion rotation = transformationMatrix.rotation;
-
-                    if(trackedPoints.ContainsKey(trackerName)) {
-                        trackedPoints[trackerName].position = pos;
-                        trackedPoints[trackerName].rotation = rotation;
-                        trackedPoints[trackerName].buttonPress = (TrackedObject.ButtonState)buttonPress;
-                        trackedPoints[trackerName].quality = quality;
-                        trackedPoints[trackerName].timestamp = ( (double)( currentTick - ownFirstTick ) / 1000.0f ) / System.TimeSpan.TicksPerMillisecond;
-                    }
-                    else {
-                        TrackingData temp = new TrackingData();
-                        temp.position = pos;
-                        temp.rotation = rotation;
-                        temp.buttonPress = (TrackedObject.ButtonState)buttonPress;
-                        temp.quality = quality;
-                        temp.timestamp = ( (double)( currentTick - ownFirstTick ) / 1000.0f ) / System.TimeSpan.TicksPerMillisecond;
-                        trackedPoints.Add(trackerName, temp);
-                    }
-                    offset += trackerNameByteLength + 16 * sizeof(double) + sizeof(double) + sizeof(int) + sizeof(long);
-                }
-                prevSEQ = seq;
-            }
-           
-        } */
-    }
-
-
-    public void sayHello() {
-#if WINDOWS_UWP
-        //UDPPing
-        before = System.DateTime.Now.Ticks;
-        sendUDPMessage(Encoding.UTF8.GetBytes("UDPPing"));
-#else
-#if !UNITY_ANDROID
-        System.Net.IPAddress ip = readIPAddressAndPortFromFile ? System.Net.IPAddress.Parse(IPAddressFromFile) : System.Net.IPAddress.Parse(IPAddress);
-        System.Net.NetworkInformation.Ping ping = new System.Net.NetworkInformation.Ping();
-        try {
-            System.Net.NetworkInformation.PingReply pingreply = ping.Send(ip);
-            Debug.Log("Sending ping");
-            Debug.Log(pingreply.Status);
-            if(pingreply.Status == System.Net.NetworkInformation.IPStatus.Success) {
-                Debug.Log(string.Format("Address: {0}", pingreply.Address));
-                Debug.Log(string.Format("status: {0}", pingreply.Status));
-                Debug.Log(string.Format("Round trip time: {0}", pingreply.RoundtripTime));
-                rtt = pingreply.RoundtripTime;
-            }
-        }
-        catch(System.Net.NetworkInformation.PingException ex) {
-            Debug.Log(ex);
-        }
-#endif
-#endif
-
-        byte[] data = Encoding.UTF8.GetBytes("Hello");
-        sendUDPMessage(data); 
-    }
+    }   
 
     public void Start() {
         if(readIPAddressAndPortFromFile) {
@@ -587,50 +365,19 @@ public class UDPReceive : MonoBehaviour {
 
         initUDPReceiver();
     }
-
+    
     void Update() {
         if(!initialized) {
             ReadIPAddress();
             initUDPReceiver();
         }
-    }
-    
-    void OnGUI() {
-        if(showDebug) {
-            /*
-            Rect rectObj = new Rect(40, 10, 200, 400);
-            GUIStyle style = new GUIStyle();
-            style.alignment = TextAnchor.UpperLeft;
-            GUI.Box(rectObj, "# UDPReceive\n " + IPAddress + "  port" + port + " #\n"
-                        + "\nLast Packet: \n" + lastReceivedUDPString
-                    , style);
-                    */
 
-
-            GUIStyle labelStyle = new GUIStyle(GUI.skin.GetStyle("label"));
-            labelStyle.fontSize = 30;
-
-            GUIStyle buttonStyle = new GUIStyle(GUI.skin.GetStyle("button"));
-            buttonStyle.fontSize = 30;
-
-            Rect rectObj = new Rect(40, 380, 200, 400);
-            GUIStyle style = new GUIStyle();
-            style.alignment = TextAnchor.UpperLeft;
-            if (!connected)
-                GUI.Box(new Rect(100, 100, 800, 500), "Not connected to Server", labelStyle);
-            else
-                GUI.Box(new Rect(100, 100, 800, 500), "Getting Data from " + IPAddress + "\non Port " + port, labelStyle);
-
-            // ------------------------
-            // connect to host
-            // ------------------------
-            if (!autoConnect)
-                if (GUI.Button(new Rect(100, 300, 300, 100), "send Ping", buttonStyle)) { 
-                    //UDPPing
-                    before = System.DateTime.Now.Ticks;
-                    sendUDPMessage(Encoding.UTF8.GetBytes("UDPPing"));
+        if (autoConnect && !connected)
+        {
+            //UDPPing
+            before = System.DateTime.Now.Ticks;
+            sendUDPMessage(Encoding.UTF8.GetBytes("UDPPing"));
         }
-        initialized = true;
     }
-    }
+#endif
 }

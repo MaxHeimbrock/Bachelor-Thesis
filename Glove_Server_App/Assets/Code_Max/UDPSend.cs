@@ -175,23 +175,26 @@ public class UDPSend : MonoBehaviour
     //CallBack
     private void recv(IAsyncResult res)
     {
-        remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
-        byte[] received = client.EndReceive(res, ref remoteEndPoint);
-        client.BeginReceive(new AsyncCallback(recv), null);
-        Debug.Log("Client connected");
-        connected = true;
-
-        //Ping
-        if (Encoding.UTF8.GetString(received, 0, received.Length).Equals("UDPPing"))
+        if (!connected)
         {
-            Console.WriteLine("UDPPing received from {0}:", remoteEndPoint.ToString());
-            byte[] udpPing = Encoding.UTF8.GetBytes("UDPPingReply");
-            byte[] data = new byte[sizeof(int) + udpPing.Length];
-            Buffer.BlockCopy(BitConverter.GetBytes(data.Length), 0, data, 0, BitConverter.GetBytes(data.Length).Length);
-            Buffer.BlockCopy(udpPing, 0, data, sizeof(int), udpPing.Length);
-            client.Send(data, data.Length, remoteEndPoint);
-            Debug.Log("Ping received");
-        }        
+            remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
+            byte[] received = client.EndReceive(res, ref remoteEndPoint);
+            client.BeginReceive(new AsyncCallback(recv), null);
+            Debug.Log("Client connected");
+            connected = true;
+
+            //Ping
+            if (Encoding.UTF8.GetString(received, 0, received.Length).Equals("UDPPing"))
+            {
+                Console.WriteLine("UDPPing received from {0}:", remoteEndPoint.ToString());
+                byte[] udpPing = Encoding.UTF8.GetBytes("UDPPingReply");
+                byte[] data = new byte[sizeof(int) + udpPing.Length];
+                Buffer.BlockCopy(BitConverter.GetBytes(data.Length), 0, data, 0, BitConverter.GetBytes(data.Length).Length);
+                Buffer.BlockCopy(udpPing, 0, data, sizeof(int), udpPing.Length);
+                client.Send(data, data.Length, remoteEndPoint);
+                Debug.Log("Ping received");
+            }
+        }
     }
 }
 

@@ -787,11 +787,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d652cc88b5818b0459104509ab0c7918, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  IPAddress: 192.168.1.210
-  port: 11110
   readIPAddressAndPortFromFile: 0
   autoConnect: 1
-  showDebug: 1
+  showDebug: 0
   rtt: 0
   remoteTime: 0
   remoteTimeOffset: 0
