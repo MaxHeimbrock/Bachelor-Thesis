@@ -102,7 +102,7 @@ public class UDPSend : MonoBehaviour
             glove.JointValues[i] = (float)i;
         }
 
-        glove.pose = new Matrix4x4(new Vector4(1, 2, 3, 4), new Vector4(1, 2, 3, 4), new Vector4(1, 2, 3, 4), new Vector4(1, 2, 3, 4));
+        glove.pose = new Matrix4x4(new Vector4(0, 0, 0, 0), new Vector4(0, 0, 0, 0), new Vector4(0, 0, 0, 0), new Vector4(0, 0, 0, 0));
 
         glove.velocity = new Vector3(2, 4, 6);
         glove.acceleration = new Vector3(2, 4, 6);
