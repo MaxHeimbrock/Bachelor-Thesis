@@ -68,7 +68,7 @@ public class UDPSend : MonoBehaviour
         GUIStyle style = new GUIStyle();
         style.alignment = TextAnchor.UpperLeft;
         if (!connected)
-            GUI.Box(new Rect(100, 100, 800, 500), "No client connected", labelStyle);
+            GUI.Box(new Rect(100, 100, 800, 500), "No Client connected", labelStyle);
         else
             GUI.Box(new Rect(100, 100, 800, 500), "Getting Data from " + remoteEndPoint.Address + "\non Port " + remoteEndPoint.Port, labelStyle);
 

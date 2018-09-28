@@ -96,11 +96,11 @@ public class UDPReceive : MonoBehaviour {
     public bool readIPAddressAndPortFromFile = false;
     private string IPAddressFromFile;
     private bool initialized = false;
+    private bool connected = false;
 
-    public bool autoConnect = true;
+    public bool autoConnect = false;
 
     public bool showDebug = false;
-
 
     private uint prevSEQ = 0;
     private string lastReceivedUDPString = "";
@@ -111,8 +111,14 @@ public class UDPReceive : MonoBehaviour {
     public long ownFirstTick = 0;
 
     public Glove glove;
+    private long before = 0;
 
 #if WINDOWS_UWP
+
+    ////////////////////
+    // READ FROM FILE //
+    ////////////////////
+
     public void ReadIPAddress() {
         try {
             using( Stream stream = OpenFileForRead( ApplicationData.Current.RoamingFolder.Path, "ipaddress.txt" ) ) {
@@ -161,7 +167,7 @@ public class UDPReceive : MonoBehaviour {
         return stream;
     }
 
-    private long before = 0;
+    /////////////////////////////////////////////////////////////////////////    
 
     private DatagramSocket socket;
     public Queue<Action> ExecuteOnMainThread;
@@ -187,15 +193,11 @@ public class UDPReceive : MonoBehaviour {
                         == icp.NetworkAdapter.NetworkAdapterId);
 
                 _ = socket.BindEndpointAsync(IP, port.ToString());
-                //UDPPing
-                before = System.DateTime.Now.Ticks;
-                sendUDPMessage(Encoding.UTF8.GetBytes("UDPPing"));
-
 
                 if(autoConnect) {
-                    Debug.Log("Saying Hello...");
-                    byte[] helloMessage = Encoding.UTF8.GetBytes("Hello");
-                    sendUDPMessage(helloMessage);
+                    //UDPPing
+                    before = System.DateTime.Now.Ticks;
+                    sendUDPMessage(Encoding.UTF8.GetBytes("UDPPing"));
                 }
                 initialized = true;
 
@@ -237,12 +239,12 @@ public class UDPReceive : MonoBehaviour {
                 Debug.Log("UDPPingReply received.");
                 rtt = ( System.DateTime.Now.Ticks - before ) / System.TimeSpan.TicksPerMillisecond;
                 Debug.Log("rtt: " + rtt);
+                connected = true;
             }
         }
         
-        updateTrackingData(messageBytes);
-        
-
+        else
+            updateTrackingData(messageBytes);    
     }
 
 
@@ -592,16 +594,43 @@ public class UDPReceive : MonoBehaviour {
             initUDPReceiver();
         }
     }
-
-
+    
     void OnGUI() {
         if(showDebug) {
+            /*
             Rect rectObj = new Rect(40, 10, 200, 400);
             GUIStyle style = new GUIStyle();
             style.alignment = TextAnchor.UpperLeft;
             GUI.Box(rectObj, "# UDPReceive\n " + IPAddress + "  port" + port + " #\n"
                         + "\nLast Packet: \n" + lastReceivedUDPString
                     , style);
+                    */
+
+
+            GUIStyle labelStyle = new GUIStyle(GUI.skin.GetStyle("label"));
+            labelStyle.fontSize = 30;
+
+            GUIStyle buttonStyle = new GUIStyle(GUI.skin.GetStyle("button"));
+            buttonStyle.fontSize = 30;
+
+            Rect rectObj = new Rect(40, 380, 200, 400);
+            GUIStyle style = new GUIStyle();
+            style.alignment = TextAnchor.UpperLeft;
+            if (!connected)
+                GUI.Box(new Rect(100, 100, 800, 500), "Not connected to Server", labelStyle);
+            else
+                GUI.Box(new Rect(100, 100, 800, 500), "Getting Data from " + IPAddress + "\non Port " + port, labelStyle);
+
+            // ------------------------
+            // connect to host
+            // ------------------------
+            if (!autoConnect)
+                if (GUI.Button(new Rect(100, 300, 300, 100), "send Ping", buttonStyle)) { 
+                    //UDPPing
+                    before = System.DateTime.Now.Ticks;
+                    sendUDPMessage(Encoding.UTF8.GetBytes("UDPPing"));
         }
+        initialized = true;
+    }
     }
 }
