@@ -790,7 +790,7 @@ MonoBehaviour:
   IPAddress: 192.168.1.210
   port: 11110
   readIPAddressAndPortFromFile: 0
-  autoConnect: 0
+  autoConnect: 1
   showDebug: 1
   rtt: 0
   remoteTime: 0
