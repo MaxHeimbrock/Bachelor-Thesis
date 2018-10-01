@@ -18,13 +18,14 @@ public class umeyama : MonoBehaviour {
 		
 	}
 
-    public Matrix4x4 umeyamaFunc(double[,] src, double[,] dst)
-    {
-        /*
+    public Matrix4x4 umeyamaFunc(double[,] src, double[,] dst)    {      
 
         int m = src.GetLength(1); // dimension
         int n = src.GetLength(0); // number of measurements
 
+        double[] src_mean = Accord.Math.Matrix.Sum(Accord.Math.Matrix.GetRow(src, 0)));
+
+        /*
         double[] src_mean = new double[m];
 
         for (int i = 0; i < m; i++)
