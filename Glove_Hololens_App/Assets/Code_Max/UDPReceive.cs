@@ -75,11 +75,11 @@ public class Glove
         //Debug.Log ("cnt " + cnt);
     }
     */
-    public void apply_packet(float[] jointValues)
+    public void apply_packet(long[] jointValues)
     {
         for (int i = 0; i < 40; i++)
         {
-            raw_values[i] = (Int64)jointValues[i];
+            raw_values[i] = jointValues[i];
         }
     }
 
@@ -90,7 +90,7 @@ public class Glove
 public class UDPReceive : MonoBehaviour {
     
     public Dictionary<string, TrackingData> trackedPoints = new Dictionary<string, TrackingData>();
-
+    
     public static string IPAddress = "192.168.1.210";
     public static int port = 11110;
 
@@ -264,7 +264,7 @@ public class UDPReceive : MonoBehaviour {
         byte type = trackingMessage[sizeof(int)];
         if(type == 1) {
             //This is tracking data in binary format
-            // data format = length (int) | Type (byte) | SEQ (uint) |  jointValues (float[40]) | pose (4*4 floats) | velocity (3 floats) | acceleration (3 floats) | time (long)
+            // data format = length (int) | Type (byte) | SEQ (uint) |  jointValues (long[40]) | pose (4*4 floats) | velocity (3 floats) | acceleration (3 floats) | time (long)
             int length = BitConverter.ToInt32(trackingMessage, 0);
             if(trackingMessage.Length != length) {
                 Debug.Log("Malformed Packet");
@@ -277,17 +277,17 @@ public class UDPReceive : MonoBehaviour {
 
             uint seq = BitConverter.ToUInt32(trackingMessage, sizeof(int) + sizeof(byte));
             if(seq > prevSEQ || ( seq < 10000 && prevSEQ > UInt32.MaxValue * 0.75 )) { //tracking data is newer than what we already have
-                float[] jointValues = new float[40];
+                long[] jointValues = new long[40];
                 float[] poseMatrixIntermediate = new float[16];
                 float[] velocityIntermediate = new float[3];
                 float[] accelerationIntermediate = new float[3];
 
-                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint), jointValues, 0, 40 * sizeof(float));
-                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float), poseMatrixIntermediate, 0, 16 * sizeof(float));
-                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 16 * sizeof(float), velocityIntermediate, 0, 3 * sizeof(float));
-                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 16 * sizeof(float) + 3 * sizeof(float), accelerationIntermediate, 0, 3 * sizeof(float));
+                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint), jointValues, 0, 40 * sizeof(long));
+                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(long), poseMatrixIntermediate, 0, 16 * sizeof(float));
+                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(long) + 16 * sizeof(float), velocityIntermediate, 0, 3 * sizeof(float));
+                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(long) + 16 * sizeof(float) + 3 * sizeof(float), accelerationIntermediate, 0, 3 * sizeof(float));
               
-                long currentTick = BitConverter.ToInt64(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 16 * sizeof(float) + 3 * sizeof(float) + 3 * sizeof(float));
+                long currentTick = BitConverter.ToInt64(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(long) + 16 * sizeof(float) + 3 * sizeof(float) + 3 * sizeof(float));
 
                 if(remoteTime == 0) {
                     ownFirstTick = System.DateTime.Now.Ticks;

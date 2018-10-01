@@ -12,11 +12,20 @@ public class TrackingData {
     public double timestamp;
     */
 
-    public float[] JointValues;
+    public long[] JointValues;
     public Matrix4x4 pose;
     public Vector3 velocity;
     public Vector3 acceleration;
     public double timestamp;
+
+    public TrackingData(long[] JointValues, Matrix4x4 pose, Vector3 velocity, Vector3 acceleration, double timestamp)
+    {
+        this.JointValues = JointValues;
+        this.pose = pose;
+        this.velocity = velocity;
+        this.acceleration = acceleration;
+        this.timestamp = timestamp;
+    }
 
     public TrackingData Copy() {
         return (TrackingData)this.MemberwiseClone();

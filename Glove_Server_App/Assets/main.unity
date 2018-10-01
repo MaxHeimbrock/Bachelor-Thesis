@@ -295,6 +295,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: faf898e0acc5a2d4cadec4f25340366d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  glove_controller: {fileID: 1300774465}
   port: 11110
 --- !u!4 &639621806
 Transform:

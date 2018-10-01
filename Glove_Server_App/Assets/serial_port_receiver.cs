@@ -23,7 +23,7 @@ public class Glove {
 	public UInt16 NB_SENSORS = 40;
 	public UInt32 cnt;
 	public float[] values;
-	public UInt16 version;
+	public UInt16 version;    
 
 	private Int64[] raw_values;
 	private Int64[] offsets;
@@ -56,6 +56,15 @@ public class Glove {
 		}
 		//Debug.Log ("cnt " + cnt);
 	}
+
+    public TrackingData GetTrackingData()
+    {
+        Vector3 vel = new Vector3(1, 2, 3);
+        Vector3 acc = new Vector3(2, 4, 6);
+        Matrix4x4 pose = new Matrix4x4(new Vector4(1, 0, 0, 0), new Vector4(0, 1, 0, 0), new Vector4(0, 0, 1, 0), new Vector4(0, 0, 0, 1));
+
+        return new TrackingData(raw_values, pose, vel, acc, 2.0);
+    }
 
 }
 //=======================================================

@@ -24,6 +24,8 @@ using System.Threading;
 public class UDPSend : MonoBehaviour
 {
     private static int localPort;
+
+    public GameObject glove_controller;
     
     public int port = 11110;  // define in init
 
@@ -53,6 +55,8 @@ public class UDPSend : MonoBehaviour
     public void Update()
     {
         currentTicks = DateTime.Now.Ticks;
+        
+        glove = glove_controller.GetComponent<serial_port_receiver>().glove.GetTrackingData();
     }
 
     // OnGUI
@@ -92,8 +96,10 @@ public class UDPSend : MonoBehaviour
 
     public void init_glove()
     {
-        // random values for testing
+        serial_port_receiver rec = glove_controller.GetComponent<serial_port_receiver>();
 
+        // random values for testing
+        /*
         glove = new TrackingData();
 
         glove.JointValues = new float[40];
@@ -106,6 +112,7 @@ public class UDPSend : MonoBehaviour
 
         glove.velocity = new Vector3(2, 4, 6);
         glove.acceleration = new Vector3(2, 4, 6);
+        */
     }       
 
     // sendData
@@ -133,9 +140,9 @@ public class UDPSend : MonoBehaviour
 
     private void sendSinglePoseUpdate(TrackingData trD)
     {       
-        // data format = length (int) | Type (byte) | SEQ (uint) |  jointValues (float[40]) | pose (4*4 floats) | velocity (3 floats) | acceleration (3 floats) | time (long)
+        // data format = length (int) | Type (byte) | SEQ (uint) |  jointValues (long[40]) | pose (4*4 floats) | velocity (3 floats) | acceleration (3 floats) | time (long)
        
-        byte[] data = new byte[sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * 4 * sizeof(float) + 3 * sizeof(float) + 3 * sizeof(float) + sizeof(long)];
+        byte[] data = new byte[sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(long) + 4 * 4 * sizeof(float) + 3 * sizeof(float) + 3 * sizeof(float) + sizeof(long)];
         
         Buffer.BlockCopy(BitConverter.GetBytes(data.Length), 0, data, 0, BitConverter.GetBytes(data.Length).Length);
         data[sizeof(int)] = (byte)1;//Type: 1 = default format
@@ -144,25 +151,25 @@ public class UDPSend : MonoBehaviour
         // Maybe inefficient
         for (int i = 0; i < 40; i++)
         {
-            Buffer.BlockCopy(BitConverter.GetBytes(trD.JointValues[i]), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + i * sizeof(float), sizeof(float));
+            Buffer.BlockCopy(BitConverter.GetBytes(trD.JointValues[i]), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + i * sizeof(long), sizeof(long));
         }
 
         for (int i = 0; i < 16; i++)
         {
-            Buffer.BlockCopy(BitConverter.GetBytes(trD.pose[i]), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + i * sizeof(float), sizeof(float));
+            Buffer.BlockCopy(BitConverter.GetBytes(trD.pose[i]), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(long) + i * sizeof(float), sizeof(float));
         }
 
         for (int i = 0; i < 3; i++)
         {
-            Buffer.BlockCopy(BitConverter.GetBytes(trD.velocity[i]), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 16 * sizeof(float) + i * sizeof(float), sizeof(float));
+            Buffer.BlockCopy(BitConverter.GetBytes(trD.velocity[i]), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(long) + 16 * sizeof(float) + i * sizeof(float), sizeof(float));
         }
 
         for (int i = 0; i < 3; i++)
         {
-            Buffer.BlockCopy(BitConverter.GetBytes(trD.acceleration[i]), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 16 * sizeof(float) + 3 * sizeof(float) + i * sizeof(float), sizeof(float));
+            Buffer.BlockCopy(BitConverter.GetBytes(trD.acceleration[i]), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(long) + 16 * sizeof(float) + 3 * sizeof(float) + i * sizeof(float), sizeof(float));
         }
                 
-        Buffer.BlockCopy(BitConverter.GetBytes(currentTicks), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 16 * sizeof(float) + 3 * sizeof(float) + 3 * sizeof(float), sizeof(long));
+        Buffer.BlockCopy(BitConverter.GetBytes(currentTicks), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(long) + 16 * sizeof(float) + 3 * sizeof(float) + 3 * sizeof(float), sizeof(long));
                 
         client.Send(data, data.Length, remoteEndPoint);
 
