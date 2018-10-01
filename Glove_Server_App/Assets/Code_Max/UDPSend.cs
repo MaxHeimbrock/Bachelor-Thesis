@@ -36,7 +36,7 @@ public class UDPSend : MonoBehaviour
     string strMessage = "";
 
     // Sequenznumber of the packet send
-    static uint seq = 0;
+    static uint seq = 1;
 
     // For synchronizing clocks
     static long currentTicks = 0;
@@ -102,7 +102,7 @@ public class UDPSend : MonoBehaviour
             glove.JointValues[i] = (float)i;
         }
 
-        glove.pose = new Matrix4x4(new Vector4(0, 0, 0, 0), new Vector4(0, 0, 0, 0), new Vector4(0, 0, 0, 0), new Vector4(0, 0, 0, 0));
+        glove.pose = new Matrix4x4(new Vector4(1, 0, 0, 0), new Vector4(0, 1, 0, 0), new Vector4(0, 0, 1, 0), new Vector4(0, 0, 0, 1));
 
         glove.velocity = new Vector3(2, 4, 6);
         glove.acceleration = new Vector3(2, 4, 6);
