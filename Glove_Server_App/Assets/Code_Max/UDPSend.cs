@@ -1,18 +1,4 @@
-﻿/*
- 
-    -----------------------
-    UDP-Send
-    -----------------------
-    // [url]http://msdn.microsoft.com/de-de/library/bb979228.aspx#ID0E3BAC[/url]
-   
-    // > gesendetes unter
-    // 127.0.0.1 : 8050 empfangen
-   
-    // nc -lu 127.0.0.1 8050
- 
-        // todo: shutdown thread at the end
-*/
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 
 using System;
@@ -33,6 +19,8 @@ public class UDPSend : MonoBehaviour
     IPEndPoint remoteEndPoint;
     UdpClient client;
     Boolean connected = false;
+
+    public Boolean autosend = false;
 
     // gui
     string strMessage = "";
@@ -57,6 +45,10 @@ public class UDPSend : MonoBehaviour
         currentTicks = DateTime.Now.Ticks;
         
         glove = glove_controller.GetComponent<serial_port_receiver>().glove.GetTrackingData();
+
+        if (connected && autosend)
+            sendSinglePoseUpdate(glove);
+
     }
 
     // OnGUI
@@ -79,9 +71,12 @@ public class UDPSend : MonoBehaviour
         // ------------------------
         // send it
         // ------------------------
-        if (connected)
+        if (connected && !autosend)
             if (GUI.Button(new Rect(100, 300, 300, 100), "send pose", buttonStyle))
                 sendSinglePoseUpdate(glove);
+
+        if (connected && autosend)
+            GUI.Box(new Rect(100, 300, 300, 100), "sending data", labelStyle);
     }
 
     // init

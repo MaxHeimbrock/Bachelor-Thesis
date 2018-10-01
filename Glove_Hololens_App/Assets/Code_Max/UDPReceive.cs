@@ -77,10 +77,22 @@ public class Glove
     */
     public void apply_packet(long[] jointValues)
     {
+        for (int i = 0; i < Constants.NB_SENSORS; i++)
+        {
+            raw_values[i] = (Int64)(raw_values[i] + jointValues[i]);
+        }
+
+        for (int i = 0; i < Constants.NB_SENSORS; i++)
+        {
+            values[i] = 0.001f * (raw_values[i] - offsets[i]);
+        }
+
+
+        /*
         for (int i = 0; i < 40; i++)
         {
-            raw_values[i] = jointValues[i];
-        }
+            raw_values[i] += jointValues[i];
+        }*/
     }
 
     }
@@ -327,28 +339,7 @@ public class UDPReceive : MonoBehaviour {
                 Vector3 acceleration = new Vector3(accelerationIntermediate[0], accelerationIntermediate[1], accelerationIntermediate[2]);
 
                 glove.apply_packet(jointValues);
-
-                /*
-                Ich habe keine trackerName, also direkt den glove updaten
-                if(trackedPoints.ContainsKey(trackerName)) {
-                    trackedPoints[trackerName].position = pos;
-                    trackedPoints[trackerName].rotation = rotation;
-                    trackedPoints[trackerName].buttonPress = (TrackedObject.ButtonState)buttonPress;
-                    trackedPoints[trackerName].quality = quality;
-                    trackedPoints[trackerName].timestamp = ( (double)( currentTick - ownFirstTick ) / 1000.0f ) / System.TimeSpan.TicksPerMillisecond;
-                }
-                else {
-                    TrackingData temp = new TrackingData();
-                    temp.position = pos;
-                    temp.rotation = rotation;
-                    temp.buttonPress = (TrackedObject.ButtonState)buttonPress;
-                    temp.quality = quality;
-                    temp.timestamp = ( (double)( currentTick - ownFirstTick ) / 1000.0f ) / System.TimeSpan.TicksPerMillisecond;
-                    trackedPoints.Add(trackerName, temp);
-                }
-
-                */
-
+                
                 Debug.Log("velocity = (" + velocity.x + "," + velocity.y + "," + velocity.z + ")");
 
                 prevSEQ = seq;

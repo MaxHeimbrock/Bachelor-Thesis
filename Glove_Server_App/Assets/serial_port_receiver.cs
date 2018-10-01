@@ -105,8 +105,6 @@ public class serial_port_receiver : MonoBehaviour {
 		MESSAGE_SIZE = Constants.NB_SENSORS * 2 + 12;
 		glove = new Glove ();
 		readThread = new Thread(Read);
-
-
 		 
 		// Allow the user to set the appropriate properties.
 
