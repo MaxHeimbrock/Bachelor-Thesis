@@ -63,7 +63,7 @@ public class Glove {
         Vector3 acc = new Vector3(2, 4, 6);
         Matrix4x4 pose = new Matrix4x4(new Vector4(1, 0, 0, 0), new Vector4(0, 1, 0, 0), new Vector4(0, 0, 1, 0), new Vector4(0, 0, 0, 1));
 
-        return new TrackingData(raw_values, pose, vel, acc, 2.0);
+        return new TrackingData(values, pose, vel, acc, 2.0);
     }
 
 }
@@ -158,8 +158,15 @@ public class serial_port_receiver : MonoBehaviour {
 		if(glove.cnt%1000==0){
 			Debug.Log ("got 1000 packet");
 		}
-		//Debug.Log(glove.cnt + " " + glove.version + " " + glove.values[1] + "\t" + glove.values[2] + "\t" + glove.values[2] + "\t" + glove.values[3] );
-	}
+        //Debug.Log(glove.cnt + " " + glove.version + " " + glove.values[1] + "\t" + glove.values[2] + "\t" + glove.values[2] + "\t" + glove.values[3] );
+
+        // von mir hier hin verschoben
+        if (Input.GetKey("space"))
+        {
+            glove.set_zero();
+            Debug.Log("set_zero");
+        }
+    }
 
 	//=======================================================
 	void OnDisable() 

@@ -12,13 +12,13 @@ public class TrackingData {
     public double timestamp;
     */
 
-    public long[] JointValues;
+    public float[] JointValues;
     public Matrix4x4 pose;
     public Vector3 velocity;
     public Vector3 acceleration;
     public double timestamp;
 
-    public TrackingData(long[] JointValues, Matrix4x4 pose, Vector3 velocity, Vector3 acceleration, double timestamp)
+    public TrackingData(float[] JointValues, Matrix4x4 pose, Vector3 velocity, Vector3 acceleration, double timestamp)
     {
         this.JointValues = JointValues;
         this.pose = pose;

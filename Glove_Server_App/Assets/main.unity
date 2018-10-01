@@ -297,6 +297,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   glove_controller: {fileID: 1300774465}
   port: 11110
+  autosend: 1
 --- !u!4 &639621806
 Transform:
   m_ObjectHideFlags: 0

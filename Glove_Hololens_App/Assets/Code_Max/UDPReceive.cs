@@ -276,7 +276,7 @@ public class UDPReceive : MonoBehaviour {
         byte type = trackingMessage[sizeof(int)];
         if(type == 1) {
             //This is tracking data in binary format
-            // data format = length (int) | Type (byte) | SEQ (uint) |  jointValues (long[40]) | pose (4*4 floats) | velocity (3 floats) | acceleration (3 floats) | time (long)
+            // data format = length (int) | Type (byte) | SEQ (uint) |  jointValues (float[40]) | pose (4*4 floats) | velocity (3 floats) | acceleration (3 floats) | time (long)
             int length = BitConverter.ToInt32(trackingMessage, 0);
             if(trackingMessage.Length != length) {
                 Debug.Log("Malformed Packet");
@@ -289,17 +289,17 @@ public class UDPReceive : MonoBehaviour {
 
             uint seq = BitConverter.ToUInt32(trackingMessage, sizeof(int) + sizeof(byte));
             if(seq > prevSEQ || ( seq < 10000 && prevSEQ > UInt32.MaxValue * 0.75 )) { //tracking data is newer than what we already have
-                long[] jointValues = new long[40];
+                float[] jointValues = new float[40];
                 float[] poseMatrixIntermediate = new float[16];
                 float[] velocityIntermediate = new float[3];
                 float[] accelerationIntermediate = new float[3];
 
-                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint), jointValues, 0, 40 * sizeof(long));
-                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(long), poseMatrixIntermediate, 0, 16 * sizeof(float));
-                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(long) + 16 * sizeof(float), velocityIntermediate, 0, 3 * sizeof(float));
-                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(long) + 16 * sizeof(float) + 3 * sizeof(float), accelerationIntermediate, 0, 3 * sizeof(float));
+                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint), jointValues, 0, 40 * sizeof(float));
+                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float), poseMatrixIntermediate, 0, 16 * sizeof(float));
+                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 16 * sizeof(float), velocityIntermediate, 0, 3 * sizeof(float));
+                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 16 * sizeof(float) + 3 * sizeof(float), accelerationIntermediate, 0, 3 * sizeof(float));
               
-                long currentTick = BitConverter.ToInt64(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(long) + 16 * sizeof(float) + 3 * sizeof(float) + 3 * sizeof(float));
+                long currentTick = BitConverter.ToInt64(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 16 * sizeof(float) + 3 * sizeof(float) + 3 * sizeof(float));
 
                 if(remoteTime == 0) {
                     ownFirstTick = System.DateTime.Now.Ticks;
@@ -337,10 +337,10 @@ public class UDPReceive : MonoBehaviour {
 
                 Vector3 velocity = new Vector3(velocityIntermediate[0], velocityIntermediate[1], velocityIntermediate[2]);
                 Vector3 acceleration = new Vector3(accelerationIntermediate[0], accelerationIntermediate[1], accelerationIntermediate[2]);
-
-                glove.apply_packet(jointValues);
                 
-                Debug.Log("velocity = (" + velocity.x + "," + velocity.y + "," + velocity.z + ")");
+                glove.values = jointValues;
+                
+                Debug.Log(jointValues[17]);
 
                 prevSEQ = seq;
             }
