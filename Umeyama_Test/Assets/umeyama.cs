@@ -15,23 +15,20 @@ public class umeyama : MonoBehaviour {
     private static double[,] test2 = new double[2, 3] { { 0, -1, 0 }, 
                                                         { 0, 0, 2 } };
 
-    private static double[,] test3 = new double[3, 3] { { 0, 0, 0 },
-                                                        { 1, 0, 0 },
-                                                        { 0, 2, 0} };
+    private static double[,] test3 = new double[3, 3] { { 0.57215, 0.37512, 0.37551 }, { 0.23318, 0.86846, 0.98642 }, { 0.79969, 0.96778, 0.27493 } };
 
-    private static double[,] test4 = new double[3, 3] { { 1, 1, 0 },
-                                                        { 2, 1, 0 } ,
-                                                        { 1, 3, 0} };
-
-    
+    private static double[,] test4 = new double[3, 3] { { 0.57215, 0.37512, 0.37551 }, { 0.23318, 0.86846, 0.98642 }, { 10.79969, 10.96778, 10.27493 } };
 
     // Use this for initialization
     void Start() {
         //double[,] src = Accord.Math.Matrix.Transpose(test1);
         //double[,] dst = Accord.Math.Matrix.Transpose(test2);
 
+        printMatrix2x3(test1);
+        printMatrix2x3(test2);
+
         //umeyamaFunc(src, dst);
-        umeyamaFunc(test1, test2);
+        umeyamaFunc(test4, test4);
     }
 
     // Update is called once per frame
@@ -55,31 +52,7 @@ public class umeyama : MonoBehaviour {
         double[] my_y = new double[m];
         for (int i = 0; i < m; i++)
             my_y[i] = Accord.Math.Matrix.Sum(Accord.Math.Matrix.GetRow(Y, i)) / (double)n;
-
-        /*
-        double[] src_mean = new double[m];
-
-        for (int i = 0; i < m; i++)
-        {
-            double x = 0;
-            for (int j = 0; j < n; j++)
-                x += src[j, i];
-
-            src_mean[i] = x / n;
-        }
-
-        double[] dst_mean = new double[m];
-
-        for (int i = 0; i < m; i++)
-        {
-            double x = 0;
-            for (int j = 0; j < n; j++)
-                x += dst[j, i];
-
-            dst_mean[i] = x / n;
-        }
-        */
-
+        
         // for easier computation
         double[,] X_demean = new double[m, n];
 
@@ -112,9 +85,9 @@ public class umeyama : MonoBehaviour {
         double[,] SIGMA = Accord.Math.Matrix.DotWithTransposed(Y_demean, X_demean);
         
         SIGMA = scaleMatrix(SIGMA, (1 / (double)n));
-        
+                
         Debug.Log("SIGMA:");
-        printMatrix2x2(SIGMA);
+        printMatrix3x3(SIGMA);
 
         int r = Accord.Math.Matrix.Rank(SIGMA);
 
@@ -125,13 +98,13 @@ public class umeyama : MonoBehaviour {
         double[,] V = svd.RightSingularVectors;
 
         Debug.Log("U:");
-        printMatrix2x2(U);
+        printMatrix3x3(U);
 
         Debug.Log("D:");
-        printMatrix2x2(D);
+        printMatrix3x3(D);
 
         Debug.Log("V:");
-        printMatrix2x2(V);
+        printMatrix3x3(V);
 
         // construct Matrix S (Eq. 39/40)
         double[,] S = Accord.Math.Matrix.Identity(m);
@@ -150,7 +123,7 @@ public class umeyama : MonoBehaviour {
         }
 
         Debug.Log("S:");
-        printMatrix2x2(S);
+        printMatrix3x3(S);
 
         Debug.Log("Trace(DS) = " + Accord.Math.Matrix.Trace(Accord.Math.Matrix.Dot(D, S)));
         // Trace is correct with wolfram alpha
@@ -167,7 +140,7 @@ public class umeyama : MonoBehaviour {
         if (debug)
         {
             Debug.Log("R:");
-            printMatrix2x2(R);
+            printMatrix3x3(R);
             Debug.Log("c = " + c);
             Debug.Log("t = \t" + t[0] +"\n\t" + t[1]);
         }
