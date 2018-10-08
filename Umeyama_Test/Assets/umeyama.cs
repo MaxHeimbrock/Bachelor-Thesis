@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,11 +10,9 @@ public class umeyama : MonoBehaviour {
     private static double[,] sourceArray = new double[6, 3] { { 1, 2, 3 }, { 3, 4, 5 }, { 5, 6, 7 }, { 7, 8, 9 }, { 7, 8, 1 }, { 7, 8, 9 } };
     private static double[,] destinationArray = new double[6, 3] { { 2, 3, 4 }, { 3, 4, 5 }, { 5, 6, 7 }, { 7, 8, 9 }, { 7, 8, 1 }, { 7, 8, 9 } };
 
-    private static double[,] test1 = new double[2, 3] { { 0, 1, 0 }, 
-                                                        { 0, 0, 2 } };
+    private static double[,] test1 = new double[3, 2] { { 0, 0 },{1, 0},{0, 2 } };
 
-    private static double[,] test2 = new double[2, 3] { { 0, -1, 0 }, 
-                                                        { 0, 0, 2 } };
+    private static double[,] test2 = new double[3, 2] { { 0, 0 }, { -1, 0 }, { 0, 2 } };
 
     private static double[,] test3 = new double[3, 3] { { 0.57215, 0.37512, 0.37551 }, { 0.23318, 0.86846, 0.98642 }, { 0.79969, 0.96778, 0.27493 } };
 
@@ -21,14 +20,10 @@ public class umeyama : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
-        //double[,] src = Accord.Math.Matrix.Transpose(test1);
-        //double[,] dst = Accord.Math.Matrix.Transpose(test2);
+        double[,] src = Accord.Math.Matrix.Transpose(test3);
+        double[,] dst = Accord.Math.Matrix.Transpose(test4);        
 
-        printMatrix2x3(test1);
-        printMatrix2x3(test2);
-
-        //umeyamaFunc(src, dst);
-        umeyamaFunc(test4, test4);
+        umeyamaFunc(test1, test2);
     }
 
     // Update is called once per frame
@@ -36,7 +31,11 @@ public class umeyama : MonoBehaviour {
 
     }
 
-    public Matrix4x4 umeyamaFunc(double[,] X, double[,] Y) {
+    public Matrix4x4 umeyamaFunc(double[,] src, double[,] dst) {
+
+        // Das Format muss geändert werden
+        double[,] X = Accord.Math.Matrix.Transpose(src);
+        double[,] Y = Accord.Math.Matrix.Transpose(dst);
 
         int m = X.GetLength(0); // dimension
         int n = X.GetLength(1); // number of measurements
@@ -69,11 +68,12 @@ public class umeyama : MonoBehaviour {
         // getting simgas (Eq. 36/37)
         double sigma_x = 0;
 
-        for (int i = 0; i < n; i++)
-            sigma_x += Accord.Math.Norm.Euclidean(Accord.Math.Matrix.GetColumn(X_demean,i));
+        for (int i = 0; i < m; i++)
+            for (int j = 0; j < n; j++)
+                sigma_x += Math.Pow(X_demean[i,j], 2);
 
         sigma_x /= n;
-
+        
         double sigma_y = 0;
 
         for (int i = 0; i < n; i++)
@@ -82,12 +82,11 @@ public class umeyama : MonoBehaviour {
         sigma_y /= n;
 
         // get Matrix E (Eq. 38)
-        double[,] SIGMA = Accord.Math.Matrix.DotWithTransposed(Y_demean, X_demean);
-        
+        double[,] SIGMA = Accord.Math.Matrix.DotWithTransposed(Y_demean, X_demean);        
         SIGMA = scaleMatrix(SIGMA, (1 / (double)n));
-                
-        Debug.Log("SIGMA:");
-        printMatrix3x3(SIGMA);
+
+        // Weil ich die Matrix anscheinend im falschen Format verwalte
+        SIGMA = Accord.Math.Matrix.Transpose(SIGMA);        
 
         int r = Accord.Math.Matrix.Rank(SIGMA);
 
@@ -96,16 +95,7 @@ public class umeyama : MonoBehaviour {
         double[,] U = svd.LeftSingularVectors;
         double[,] D = svd.DiagonalMatrix;
         double[,] V = svd.RightSingularVectors;
-
-        Debug.Log("U:");
-        printMatrix3x3(U);
-
-        Debug.Log("D:");
-        printMatrix3x3(D);
-
-        Debug.Log("V:");
-        printMatrix3x3(V);
-
+        
         // construct Matrix S (Eq. 39/40)
         double[,] S = Accord.Math.Matrix.Identity(m);
 
@@ -120,33 +110,35 @@ public class umeyama : MonoBehaviour {
             {
                 // Hier kommt müll rein
             }
-        }
-
-        Debug.Log("S:");
-        printMatrix3x3(S);
-
-        Debug.Log("Trace(DS) = " + Accord.Math.Matrix.Trace(Accord.Math.Matrix.Dot(D, S)));
-        // Trace is correct with wolfram alpha
-
-        Debug.Log("sigma_x = " + sigma_x);
-        // Sigma is correct with wolfram alpha
-
-        // TODO: es scheint alles richtig berechnet zu werden, muss es mit anderen Algorithmen vergleichen und nochmal alles schritt für schritt durchrechnen
-
+        }        
+        
         double[,] R = Accord.Math.Matrix.TransposeAndDot(Accord.Math.Matrix.Dot(U, S), V);
         double c = Accord.Math.Matrix.Trace(Accord.Math.Matrix.Dot(D, S)) * (1/sigma_x);
         double[] t = subtractVectors(my_y, scaleVector(Accord.Math.Matrix.Dot(R, my_x), c));
 
-        if (debug)
+        // für 2D und 3D Lösungen
+        if (debug && r == 3)
         {
             Debug.Log("R:");
             printMatrix3x3(R);
             Debug.Log("c = " + c);
-            Debug.Log("t = \t" + t[0] +"\n\t" + t[1]);
+            Debug.Log("t = \t" + t[0] +"\n\t" + t[1] + "\n\t" + t[2]);
+        }
+        
+        else if (debug && r == 2)
+        {
+            Debug.Log("R:");
+            printMatrix2x2(R);
+            Debug.Log("c = " + c);
+            Debug.Log("t = \t" + t[0] + "\n\t" + t[1]);
         }
 
         return new Matrix4x4();
     }
+
+    /////////////////////////////////////////////////////////////
+    /////////// HILFSFUNKTIONEN /////////////////////////////////
+    /////////////////////////////////////////////////////////////
 
     private double[,] scaleMatrix(double[,] matrix, double scale)
     {
