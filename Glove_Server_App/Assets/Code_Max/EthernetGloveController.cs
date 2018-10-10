@@ -8,6 +8,7 @@ using UnityEngine;
 
 public class EthernetGloveController : MonoBehaviour {
 
+    Glove glove;
     public TrackingData TrD;
 
     // "connection" things for Ping
@@ -26,6 +27,7 @@ public class EthernetGloveController : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
+        glove = new Glove();
         TrD = new TrackingData();
 
         if (autoconnect)
@@ -36,8 +38,14 @@ public class EthernetGloveController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		
-	}
+
+        // von mir hier hin verschoben
+        if (Input.GetKey("space"))
+        {
+            glove.set_zero();
+            Debug.Log("set_zero");
+        }
+    }
 
     public void ping()
     {
@@ -53,26 +61,38 @@ public class EthernetGloveController : MonoBehaviour {
         client = new UdpClient(remoteEndPoint);
         
         client.BeginReceive(new AsyncCallback(recv), null);
-        Debug.Log("Listening with " + myIP + " on Port: " + port);
     }
 
     //CallBack
     private void recv(IAsyncResult res)
     {
-        Debug.Log("Got something");
-        byte[] received = client.EndReceive(res, ref remoteEndPoint);
+        byte[] data = client.EndReceive(res, ref remoteEndPoint);
         client.BeginReceive(new AsyncCallback(recv), null);
-        Debug.Log("package received");
+        Debug.Log("Received package from glove");
         connected = true;
+        TrD = createTrackingData(data);
     }
 
     // sendPing
     private void sendPing()
     { 
         // Daten mit der UTF8-Kodierung in das Binärformat kodieren.
-        byte[] data = Encoding.UTF8.GetBytes("Ping");
+        byte[] message = Encoding.UTF8.GetBytes("Ping");
 
         // Den message zum Remote-Client senden.
-        pingClient.Send(data, data.Length, remoteEndPointPing);
+        pingClient.Send(message, message.Length, remoteEndPointPing);
+    }
+
+    private TrackingData createTrackingData(byte[] data)
+    {
+        float[] jointValues = new float[40];
+
+        // Data Format: uint16_t cnt || uint16_t version/svn_revision || uint32_t values[NB_VALUES_GLOVE]
+        System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16), jointValues, 0, 40 * sizeof(float));
+        glove.applyEthernetPacket(jointValues);
+
+        return glove.GetTrackingData();
     }
 }
+
+

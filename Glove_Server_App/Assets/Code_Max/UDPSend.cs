@@ -14,6 +14,8 @@ public class UDPSend : MonoBehaviour
     
     public int port = 11110;  // define in init
 
+    public string myIP = "192.168.1.210";
+
     // "connection" things
     IPEndPoint remoteEndPoint;
     UdpClient client;
@@ -53,8 +55,9 @@ public class UDPSend : MonoBehaviour
     // init
     public void init()    {
         
-        client = new UdpClient(port);
-        
+        IPEndPoint listeningEndPoint = new IPEndPoint(IPAddress.Parse(myIP), port);
+        client = new UdpClient(listeningEndPoint);
+
         client.BeginReceive(new AsyncCallback(recv), null);
     }    
 
@@ -109,7 +112,7 @@ public class UDPSend : MonoBehaviour
             remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
             byte[] received = client.EndReceive(res, ref remoteEndPoint);
             client.BeginReceive(new AsyncCallback(recv), null);
-            Debug.Log("Client connected");
+            Debug.Log("Hololens connected");
             connected = true;
 
             //Ping
@@ -121,7 +124,7 @@ public class UDPSend : MonoBehaviour
                 Buffer.BlockCopy(BitConverter.GetBytes(data.Length), 0, data, 0, BitConverter.GetBytes(data.Length).Length);
                 Buffer.BlockCopy(udpPing, 0, data, sizeof(int), udpPing.Length);
                 client.Send(data, data.Length, remoteEndPoint);
-                Debug.Log("Ping received");
+                Debug.Log("Ping from Hololens received");
             }
         }
     }
