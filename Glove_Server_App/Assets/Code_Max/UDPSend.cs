@@ -54,7 +54,7 @@ public class UDPSend : MonoBehaviour
     public void init()    {
         
         client = new UdpClient(port);
-
+        
         client.BeginReceive(new AsyncCallback(recv), null);
     }    
 

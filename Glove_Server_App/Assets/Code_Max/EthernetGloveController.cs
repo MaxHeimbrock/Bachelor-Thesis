@@ -22,7 +22,7 @@ public class EthernetGloveController : MonoBehaviour {
     UdpClient client;
     Boolean connected = false;
     public static string myIP = "192.168.131.1";
-    public static int port = 65059; //65259 for IMU
+    public static int port = 64059; //65259 for IMU
 
     // Use this for initialization
     void Start () {
@@ -51,13 +51,15 @@ public class EthernetGloveController : MonoBehaviour {
     {
         remoteEndPoint = new IPEndPoint(IPAddress.Parse(myIP), port);
         client = new UdpClient(remoteEndPoint);
-
+        
         client.BeginReceive(new AsyncCallback(recv), null);
+        Debug.Log("Listening with " + myIP + " on Port: " + port);
     }
 
     //CallBack
     private void recv(IAsyncResult res)
     {
+        Debug.Log("Got something");
         byte[] received = client.EndReceive(res, ref remoteEndPoint);
         client.BeginReceive(new AsyncCallback(recv), null);
         Debug.Log("package received");
