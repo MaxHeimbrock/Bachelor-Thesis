@@ -126,6 +126,11 @@ public class UDPReceive : MonoBehaviour {
     public Glove glove;
     private long before = 0;
 
+    // Erster Test IMU Integration
+    TimeSpan delta_t;
+    private long lastTick;
+    private long currentTick;
+
 #if WINDOWS_UWP
 
     ////////////////////
@@ -339,7 +344,14 @@ public class UDPReceive : MonoBehaviour {
                 Vector3 acceleration = new Vector3(accelerationIntermediate[0], accelerationIntermediate[1], accelerationIntermediate[2]);
                 
                 glove.values = jointValues;
-                
+
+                // test
+                lastTick = currentTick;
+                currentTick = DateTime.Now.Ticks;
+                delta_t = new TimeSpan(currentTick - lastTick);
+
+                Debug.Log(accelerationIntermediate[0]);
+
                 prevSEQ = seq;
             }
         }

@@ -46,7 +46,7 @@ public class UDPSend : MonoBehaviour
         if (SerialPortUsed)
             glove = glove_controller.GetComponent<serial_port_receiver>().glove.GetTrackingData();
         else
-            glove = glove_controller.GetComponent<EthernetGloveController>().TrD;
+            glove = glove_controller.GetComponent<EthernetGloveController>().glove.GetTrackingData();
 
         if (connected && autosend)
             sendSinglePoseUpdate(glove);

@@ -13,6 +13,10 @@ public class Glove
     private Int64[] raw_values;
     private Int64[] offsets;
 
+    public Vector3 acceleration;
+    private Vector3 velocity;
+    private Vector3 position = new Vector3(0,0,0);
+
     public Glove()
     {
         cnt = 0;
@@ -47,7 +51,7 @@ public class Glove
         }
     }
 
-    public void applyEthernetPacket(float[] newValues)
+    public void applyEthernetPacketValues(float[] newValues)
     {
         cnt++;
 
@@ -62,13 +66,25 @@ public class Glove
         }
     }
 
+    public void applyEthernetPacketIMU(Vector3 acc)
+    {
+        acceleration = acc;
+    }
+
     public TrackingData GetTrackingData()
     {
+        // All Dummy Values but acc for testing
+
+        float[] JointValues = new float[40];
+
+        for (int i = 0; i < JointValues.Length; i++)
+            JointValues[i] = i;
+
         Vector3 vel = new Vector3(1, 2, 3);
-        Vector3 acc = new Vector3(2, 4, 6);
+        //Vector3 acc = new Vector3(2, 4, 6);
         Matrix4x4 pose = new Matrix4x4(new Vector4(1, 0, 0, 0), new Vector4(0, 1, 0, 0), new Vector4(0, 0, 1, 0), new Vector4(0, 0, 0, 1));
 
-        return new TrackingData(values, pose, vel, acc, 2.0);
+        return new TrackingData(JointValues, pose, vel, acceleration, 2.0);
     }
 
     }
