@@ -18,6 +18,22 @@ public class TrackingData {
     public Vector3 acceleration;
     public double timestamp;
 
+    // Dummy for testing
+    public TrackingData()
+    {
+        JointValues = new float[40];
+
+        for (int i = 0; i < JointValues.Length; i++)
+            JointValues[i] = i;
+
+        pose = Matrix4x4.identity;
+
+        velocity = new Vector3(1, 1, 1);
+        acceleration = new Vector3(2, 3, 4);
+
+        timestamp = 1;
+    }
+
     public TrackingData(float[] JointValues, Matrix4x4 pose, Vector3 velocity, Vector3 acceleration, double timestamp)
     {
         this.JointValues = JointValues;

@@ -9,8 +9,7 @@ using System.Threading;
 
 public class UDPSend : MonoBehaviour
 {
-    private static int localPort;
-
+    public Boolean SerialPortUsed = false;
     public GameObject glove_controller;
     
     public int port = 11110;  // define in init
@@ -20,10 +19,8 @@ public class UDPSend : MonoBehaviour
     UdpClient client;
     Boolean connected = false;
 
-    public Boolean autosend = false;
-
-    // gui
-    string strMessage = "";
+    // Send constant data stream
+    public Boolean autosend = true;    
 
     // Sequenznumber of the packet send
     static uint seq = 1;
@@ -44,91 +41,22 @@ public class UDPSend : MonoBehaviour
     {
         currentTicks = DateTime.Now.Ticks;
         
-        glove = glove_controller.GetComponent<serial_port_receiver>().glove.GetTrackingData();
+        if (SerialPortUsed)
+            glove = glove_controller.GetComponent<serial_port_receiver>().glove.GetTrackingData();
+        else
+            glove = glove_controller.GetComponent<EthernetGloveController>().TrD;
 
         if (connected && autosend)
             sendSinglePoseUpdate(glove);
-    }
-
-    // OnGUI
-    void OnGUI()
-    {
-        GUIStyle labelStyle = new GUIStyle(GUI.skin.GetStyle("label"));
-        labelStyle.fontSize = 50;
-
-        GUIStyle buttonStyle = new GUIStyle(GUI.skin.GetStyle("button"));
-        buttonStyle.fontSize = 50;
-
-        Rect rectObj = new Rect(40, 380, 200, 400);
-        GUIStyle style = new GUIStyle();
-        style.alignment = TextAnchor.UpperLeft;
-        if (!connected)
-            GUI.Box(new Rect(100, 100, 800, 500), "No Client connected", labelStyle);
-        else
-            GUI.Box(new Rect(100, 100, 800, 500), "Getting Data from " + remoteEndPoint.Address + "\non Port " + remoteEndPoint.Port, labelStyle);
-
-        // ------------------------
-        // send it
-        // ------------------------
-        if (connected && !autosend)
-            if (GUI.Button(new Rect(100, 300, 300, 100), "send pose", buttonStyle))
-                sendSinglePoseUpdate(glove);
-
-        if (connected && autosend)
-            GUI.Box(new Rect(100, 300, 300, 100), "sending data", labelStyle);
-    }
-
-    // init
-    public void init()
-    {
-        init_glove();
-        
-        client = new UdpClient(port);  
-
-        client.BeginReceive(new AsyncCallback(recv), null);
-    }
-
-    public void init_glove()
-    {
-        serial_port_receiver rec = glove_controller.GetComponent<serial_port_receiver>();
-
-        // random values for testing
-        /*
-        glove = new TrackingData();
-
-        glove.JointValues = new float[40];
-        for (int i = 0; i < 40; i++)
-        {
-            glove.JointValues[i] = (float)i;
-        }
-
-        glove.pose = new Matrix4x4(new Vector4(1, 0, 0, 0), new Vector4(0, 1, 0, 0), new Vector4(0, 0, 1, 0), new Vector4(0, 0, 0, 1));
-
-        glove.velocity = new Vector3(2, 4, 6);
-        glove.acceleration = new Vector3(2, 4, 6);
-        */
     }       
 
-    // sendData
-    private void sendString(string message)
-    {
-        try
-        {
-            //if (message != "")
-            //{
+    // init
+    public void init()    {
+        
+        client = new UdpClient(port);
 
-            // Daten mit der UTF8-Kodierung in das Binärformat kodieren.
-            byte[] data = Encoding.UTF8.GetBytes(message);
-
-            // Den message zum Remote-Client senden.
-            client.Send(data, data.Length, remoteEndPoint);
-            //}
-        }
-        catch (Exception err)
-        {
-            print(err.ToString());
-        }
-    }
+        client.BeginReceive(new AsyncCallback(recv), null);
+    }    
 
     //______________________________________ Code von Alex
 
@@ -171,11 +99,11 @@ public class UDPSend : MonoBehaviour
         seq++;
         
     }
-
     
     //CallBack
     private void recv(IAsyncResult res)
     {
+        // Got a Ping from the Hololens --> Create remoteEndPoint to send to
         if (!connected)
         {
             remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
@@ -196,6 +124,34 @@ public class UDPSend : MonoBehaviour
                 Debug.Log("Ping received");
             }
         }
+    }
+
+    // OnGUI
+    void OnGUI()
+    {
+        GUIStyle labelStyle = new GUIStyle(GUI.skin.GetStyle("label"));
+        labelStyle.fontSize = 50;
+
+        GUIStyle buttonStyle = new GUIStyle(GUI.skin.GetStyle("button"));
+        buttonStyle.fontSize = 50;
+
+        Rect rectObj = new Rect(40, 380, 200, 400);
+        GUIStyle style = new GUIStyle();
+        style.alignment = TextAnchor.UpperLeft;
+        if (!connected)
+            GUI.Box(new Rect(100, 100, 800, 500), "No Client connected", labelStyle);
+        else
+            GUI.Box(new Rect(100, 100, 800, 500), "Getting Data from " + remoteEndPoint.Address + "\non Port " + remoteEndPoint.Port, labelStyle);
+
+        // ------------------------
+        // send it
+        // ------------------------
+        if (connected && !autosend)
+            if (GUI.Button(new Rect(100, 300, 300, 100), "send pose", buttonStyle))
+                sendSinglePoseUpdate(glove);
+
+        if (connected && autosend)
+            GUI.Box(new Rect(100, 300, 300, 100), "sending data", labelStyle);
     }
 }
 
