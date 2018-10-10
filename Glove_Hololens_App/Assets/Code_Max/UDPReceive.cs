@@ -340,8 +340,6 @@ public class UDPReceive : MonoBehaviour {
                 
                 glove.values = jointValues;
                 
-                Debug.Log(jointValues[17]);
-
                 prevSEQ = seq;
             }
         }

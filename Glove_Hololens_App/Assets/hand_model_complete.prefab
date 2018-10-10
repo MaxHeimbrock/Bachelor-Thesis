@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 95880502619976392}
   - component: {fileID: 114689666317783034}
   m_Layer: 0
-  m_Name: hand_model_right
+  m_Name: hand_model_complete
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

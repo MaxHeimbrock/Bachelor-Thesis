@@ -124,7 +124,7 @@ public class UDPSend : MonoBehaviour
                 Buffer.BlockCopy(BitConverter.GetBytes(data.Length), 0, data, 0, BitConverter.GetBytes(data.Length).Length);
                 Buffer.BlockCopy(udpPing, 0, data, sizeof(int), udpPing.Length);
                 client.Send(data, data.Length, remoteEndPoint);
-                Debug.Log("Ping from Hololens received");
+                Debug.Log("Ping from Hololens received");                
             }
         }
     }
@@ -133,28 +133,22 @@ public class UDPSend : MonoBehaviour
     void OnGUI()
     {
         GUIStyle labelStyle = new GUIStyle(GUI.skin.GetStyle("label"));
-        labelStyle.fontSize = 50;
+        labelStyle.fontSize = 40;
 
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.GetStyle("button"));
-        buttonStyle.fontSize = 50;
-
-        Rect rectObj = new Rect(40, 380, 200, 400);
-        GUIStyle style = new GUIStyle();
-        style.alignment = TextAnchor.UpperLeft;
+        buttonStyle.fontSize = 40;
+                
         if (!connected)
-            GUI.Box(new Rect(100, 100, 800, 500), "No Client connected", labelStyle);
+            GUI.Box(new Rect(100, 100, 800, 500), "Hololens not connected", labelStyle);
         else
-            GUI.Box(new Rect(100, 100, 800, 500), "Getting Data from " + remoteEndPoint.Address + "\non Port " + remoteEndPoint.Port, labelStyle);
+            GUI.Box(new Rect(100, 100, 800, 800), "Hololens connected - sending data", labelStyle);
 
         // ------------------------
         // send it
         // ------------------------
         if (connected && !autosend)
-            if (GUI.Button(new Rect(100, 300, 300, 100), "send pose", buttonStyle))
-                sendSinglePoseUpdate(glove);
-
-        if (connected && autosend)
-            GUI.Box(new Rect(100, 300, 300, 100), "sending data", labelStyle);
+            if (GUI.Button(new Rect(100, 200, 300, 100), "send pose", buttonStyle))
+                sendSinglePoseUpdate(glove);        
     }
 }
 

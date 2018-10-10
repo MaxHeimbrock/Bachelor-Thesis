@@ -6,7 +6,8 @@ using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
 
-public class EthernetGloveController : MonoBehaviour {
+public class EthernetGloveController : MonoBehaviour
+{
 
     Glove glove;
     public TrackingData TrD;
@@ -26,18 +27,20 @@ public class EthernetGloveController : MonoBehaviour {
     public static int port = 64059; //65259 for IMU
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
         glove = new Glove();
         TrD = new TrackingData();
 
-        if (autoconnect)
-            ping();
-
         initUDPReceiver();
-	}
-	
-	// Update is called once per frame
-	void Update () {
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+
+        if (autoconnect && connected == false)
+            ping();
 
         // von mir hier hin verschoben
         if (Input.GetKey("space"))
@@ -59,27 +62,29 @@ public class EthernetGloveController : MonoBehaviour {
     {
         remoteEndPoint = new IPEndPoint(IPAddress.Parse(myIP), port);
         client = new UdpClient(remoteEndPoint);
-        
+
         client.BeginReceive(new AsyncCallback(recv), null);
     }
 
     //CallBack
     private void recv(IAsyncResult res)
     {
+        if (connected == false)
+            Debug.Log("Glove is active");
         byte[] data = client.EndReceive(res, ref remoteEndPoint);
         client.BeginReceive(new AsyncCallback(recv), null);
-        Debug.Log("Received package from glove");
+        //Debug.Log("Received package from glove");
         connected = true;
         TrD = createTrackingData(data);
     }
 
     // sendPing
     private void sendPing()
-    { 
+    {
         // Daten mit der UTF8-Kodierung in das Binärformat kodieren.
         byte[] message = Encoding.UTF8.GetBytes("Ping");
 
-        // Den message zum Remote-Client senden.
+        // den Ping zum Remote-Client senden.
         pingClient.Send(message, message.Length, remoteEndPointPing);
     }
 
@@ -90,9 +95,21 @@ public class EthernetGloveController : MonoBehaviour {
         // Data Format: uint16_t cnt || uint16_t version/svn_revision || uint32_t values[NB_VALUES_GLOVE]
         System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16), jointValues, 0, 40 * sizeof(float));
         glove.applyEthernetPacket(jointValues);
-
         return glove.GetTrackingData();
+
+        //return new TrackingData(jointValues);
+    }
+
+    // OnGUI
+    void OnGUI()
+    {
+        GUIStyle labelStyle = new GUIStyle(GUI.skin.GetStyle("label"));
+        labelStyle.fontSize = 40;
+
+        if (!connected)
+            GUI.Box(new Rect(100, 200, 800, 500), "Glove offline", labelStyle);
+        else
+            GUI.Box(new Rect(100, 200, 500, 500), "Glove active - getting data", labelStyle);
     }
 }
-
 
