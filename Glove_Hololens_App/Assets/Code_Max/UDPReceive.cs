@@ -350,7 +350,7 @@ public class UDPReceive : MonoBehaviour {
                 currentTick = DateTime.Now.Ticks;
                 delta_t = new TimeSpan(currentTick - lastTick);
 
-                Debug.Log(accelerationIntermediate[0]);
+                Debug.Log(jointValues[33]);
 
                 prevSEQ = seq;
             }

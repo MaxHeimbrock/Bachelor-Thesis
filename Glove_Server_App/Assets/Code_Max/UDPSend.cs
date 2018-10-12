@@ -97,7 +97,7 @@ public class UDPSend : MonoBehaviour
         Buffer.BlockCopy(BitConverter.GetBytes(currentTicks), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 16 * sizeof(float) + 3 * sizeof(float) + 3 * sizeof(float), sizeof(long));
                 
         client.Send(data, data.Length, remoteEndPoint);
-
+        
         //Debug.Log("pose " + seq + " send!");
         seq++;
         

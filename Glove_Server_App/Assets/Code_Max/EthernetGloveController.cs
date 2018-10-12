@@ -34,7 +34,7 @@ public class EthernetGloveController : MonoBehaviour
         glove = new Glove();
 
         // Testing
-        //initUDPReceiverValues();
+        initUDPReceiverValues();
 
         initUDPReceiverIMU();
     }
@@ -50,9 +50,10 @@ public class EthernetGloveController : MonoBehaviour
         {
             glove.set_zero();
             Debug.Log("set_zero");
+            Debug.Log(glove.values[33]);
         }
 
-        Debug.Log(glove.acceleration);
+        //Debug.Log(glove.acceleration);
     }
 
     public void ping()
@@ -114,10 +115,11 @@ public class EthernetGloveController : MonoBehaviour
     // Change Glove Object according to new joint Data
     private void applyValuePacket(byte[] data)
     {
-        float[] jointValues = new float[40];
+        int[] jointValues = new int[40];
 
         // Data Format: uint16_t cnt || uint16_t version/svn_revision || uint32_t values[NB_VALUES_GLOVE]
-        System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16), jointValues, 0, 40 * sizeof(float));
+        System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16), jointValues, 0, 40 * sizeof(int));
+        
         glove.applyEthernetPacketValues(jointValues);
     }
 
