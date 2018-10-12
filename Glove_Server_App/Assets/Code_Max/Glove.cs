@@ -8,14 +8,19 @@ public class Glove
     public UInt16 NB_SENSORS = 40;
     public UInt32 cnt;
     public float[] values;
-    public UInt16 version;    
+    public UInt16 version;
 
     private Int64[] raw_values;
     private Int64[] offsets;
 
-    public Vector3 acceleration;
+    // for imu testing
+    private Vector3 acceleration;
     private Vector3 velocity;
-    private Vector3 position = new Vector3(0,0,0);
+    public Vector3 position;
+
+    private Vector3 acceleration_bias;
+
+    long time0;
 
     public Glove()
     {
@@ -23,8 +28,14 @@ public class Glove
         version = 0;
         raw_values = new Int64[Constants.NB_SENSORS];
         offsets = new Int64[Constants.NB_SENSORS];
-        values = new float[Constants.NB_SENSORS];        
-    }
+        values = new float[Constants.NB_SENSORS];
+
+        acceleration = new Vector3(0, 0, 0);
+        velocity = new Vector3(0, 0, 0);
+        position = new Vector3(0, 0, 5);
+
+        time0 = 0;
+}
 
     public void set_zero()
     {
@@ -40,35 +51,57 @@ public class Glove
         cnt++;
 
         for (int i = 0; i < Constants.NB_SENSORS; i++)
-        {
             raw_values[i] = (Int64)(raw_values[i] + packet.values[i]);
-        }
+
         raw_values[packet.key] = packet.value;
 
         for (int i = 0; i < Constants.NB_SENSORS; i++)
-        {
             values[i] = 0.001f * (raw_values[i] - offsets[i]);
-        }
     }
 
-    public void applyEthernetPacketValues(int[] newValues)
+    public void applyEthernetPacketValues(UInt32[] newValues)
     {
-        cnt++;        
+        cnt++;
         
         for (int i = 0; i < Constants.NB_SENSORS; i++)
-        {
             raw_values[i] = (Int64)(raw_values[i] + newValues[i]);
-        }
 
         for (int i = 0; i < Constants.NB_SENSORS; i++)
-        {
             values[i] = 0.001f * (raw_values[i] - offsets[i]);
-        }                
     }
 
-    public void applyEthernetPacketIMU(Vector3 acc)
+    public void applyEthernetPacketIMU(Vector3 acceleration1)
     {
-        acceleration = acc;
+        // testing double integration, just playing around
+
+        long time1 = DateTime.Now.Ticks;
+        Vector3 velocity1;
+        Vector3 position1;        
+
+        if (time0 != 0 && Math.Abs(acceleration_bias.x) > 1000)
+        {
+            acceleration1 -= acceleration_bias;
+
+            acceleration1 /= 1000000000;
+
+            TimeSpan elapsedSpan = new TimeSpan(time1 - time0);
+            long delta_t = elapsedSpan.Seconds;
+
+            velocity1 = velocity + acceleration + (acceleration1 - acceleration)/2;
+            position1 = position + velocity + (velocity1 - velocity) / 2;
+
+            position = position1;
+            velocity = velocity1;
+            acceleration = acceleration1;
+        }
+        else
+        {
+            // trying to get a bias for flat on table
+            acceleration_bias = acceleration1;
+
+            Debug.Log(acceleration);
+        }
+        time0 = time1;
     }
 
     public TrackingData GetTrackingData()
