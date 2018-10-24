@@ -118,7 +118,7 @@ public class EthernetGloveController : MonoBehaviour
         // Data Format: uint16_t cnt || uint16_t version/svn_revision || uint32_t values[NB_VALUES_GLOVE]
         System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16), jointValues, 0, 40 * sizeof(UInt32));
 
-        Debug.Log(jointValues[1]);
+        //Debug.Log(jointValues[1]);
 
         glove.applyEthernetPacketValues(jointValues);
     }

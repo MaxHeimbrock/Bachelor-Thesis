@@ -65,8 +65,8 @@ public class Glove
 
         for (int i = 0; i < Constants.NB_SENSORS; i++)
         {
-            //raw_values[i] = (Int64)(raw_values[i] + (UInt32)(newValues[i] / 4000000));
-            raw_values[i] = (raw_values[i] + (Int64)newValues[i]);
+              raw_values[i] = (Int64)(raw_values[i] + (UInt32)(newValues[i] / 2000000));
+            //raw_values[i] = (raw_values[i] + (Int64)newValues[i]);
             //raw_values[i] = (Int64)(raw_values[i] + (UInt16)(newValues[i] / 1000000));
             //raw_values[i] = (Int64)(raw_values[i] + (UInt16)(newValues[i] / 10000000));
             //raw_values[i] = (Int64)(raw_values[i] + newValues[i]);
@@ -77,7 +77,9 @@ public class Glove
         for (int i = 0; i < Constants.NB_SENSORS; i++)
         {
             // Wenn values = 0 --> Hand flach
+            // Wenn values = 2 --> Hand verkrampft
             values[i] = 0.001f * (raw_values[i] - offsets[i]);
+            Debug.Log(values[1]);
         }
     }
 
