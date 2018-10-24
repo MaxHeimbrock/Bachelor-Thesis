@@ -11,56 +11,6 @@ using System.Net.Sockets;
 using System.Threading;
 using System.IO;
 
-static class Constants
-{
-	public const int NB_SENSORS = 40;
-	public const bool IS_BLUETOOTH = false;
-}
-//=======================================================
-//
-//=======================================================
-public class Glove {
-	public UInt16 NB_SENSORS = 40;
-	public UInt32 cnt;
-	public float[] values;
-	public UInt16 version;
-
-	private Int64[] raw_values;
-	private Int64[] offsets;
-
-	public Glove(){
-		cnt = 0;
-		version = 0;
-		raw_values = new Int64[Constants.NB_SENSORS];
-		offsets = new Int64[Constants.NB_SENSORS];
-		values = new float[Constants.NB_SENSORS];
-	}
-
-	public void set_zero(	){
-		for(int i =0;i<Constants.NB_SENSORS;i++){
-			offsets[i] = raw_values[i];
-		}
-	}
-
-	public void apply_packet(Packet packet){
-		version = packet.version;
-		cnt++;
-
-		for (int i = 0; i < Constants.NB_SENSORS; i++) {
-			raw_values [i] = (Int64)(raw_values [i] + packet.values [i]);
-		}
-		raw_values [packet.key] = packet.value;
-
-		for (int i = 0; i < Constants.NB_SENSORS; i++) {
-			values [i] = 0.001f * (raw_values [i] - offsets [i]);
-		}
-		//Debug.Log ("cnt " + cnt);
-	}
-
-}
-//=======================================================
-//
-//=======================================================
 public class Packet {
 
 	public  Char marker;
@@ -76,7 +26,6 @@ public class Packet {
 	public Packet(){
 		values = new Int16[Constants.NB_SENSORS];
 	}
-
 }
 
 //=======================================================
@@ -96,8 +45,6 @@ public class serial_port_receiver : MonoBehaviour {
 		MESSAGE_SIZE = Constants.NB_SENSORS * 2 + 12;
 		glove = new Glove ();
 		readThread = new Thread(Read);
-
-
 		 
 		// Allow the user to set the appropriate properties.
 
@@ -151,8 +98,15 @@ public class serial_port_receiver : MonoBehaviour {
 		if(glove.cnt%1000==0){
 			Debug.Log ("got 1000 packet");
 		}
-		//Debug.Log(glove.cnt + " " + glove.version + " " + glove.values[1] + "\t" + glove.values[2] + "\t" + glove.values[2] + "\t" + glove.values[3] );
-	}
+        //Debug.Log(glove.cnt + " " + glove.version + " " + glove.values[1] + "\t" + glove.values[2] + "\t" + glove.values[2] + "\t" + glove.values[3] );
+
+        // von mir hier hin verschoben
+        if (Input.GetKey("space"))
+        {
+            glove.set_zero();
+            Debug.Log("set_zero");
+        }
+    }
 
 	//=======================================================
 	void OnDisable() 

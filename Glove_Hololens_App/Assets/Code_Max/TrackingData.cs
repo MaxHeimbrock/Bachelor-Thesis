@@ -18,6 +18,15 @@ public class TrackingData {
     public Vector3 acceleration;
     public double timestamp;
 
+    public TrackingData(float[] JointValues, Matrix4x4 pose, Vector3 velocity, Vector3 acceleration, double timestamp)
+    {
+        this.JointValues = JointValues;
+        this.pose = pose;
+        this.velocity = velocity;
+        this.acceleration = acceleration;
+        this.timestamp = timestamp;
+    }
+
     public TrackingData Copy() {
         return (TrackingData)this.MemberwiseClone();
     }
