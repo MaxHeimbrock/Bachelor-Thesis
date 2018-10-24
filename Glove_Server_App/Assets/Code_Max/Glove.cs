@@ -62,12 +62,23 @@ public class Glove
     public void applyEthernetPacketValues(UInt32[] newValues)
     {
         cnt++;
-        
-        for (int i = 0; i < Constants.NB_SENSORS; i++)
-            raw_values[i] = (Int64)(raw_values[i] + newValues[i]);
 
         for (int i = 0; i < Constants.NB_SENSORS; i++)
+        {
+            //raw_values[i] = (Int64)(raw_values[i] + (UInt32)(newValues[i] / 4000000));
+            raw_values[i] = (raw_values[i] + (Int64)newValues[i]);
+            //raw_values[i] = (Int64)(raw_values[i] + (UInt16)(newValues[i] / 1000000));
+            //raw_values[i] = (Int64)(raw_values[i] + (UInt16)(newValues[i] / 10000000));
+            //raw_values[i] = (Int64)(raw_values[i] + newValues[i]);
+
+           // Debug.Log((Int64)newValues[1]);
+        }
+
+        for (int i = 0; i < Constants.NB_SENSORS; i++)
+        {
+            // Wenn values = 0 --> Hand flach
             values[i] = 0.001f * (raw_values[i] - offsets[i]);
+        }
     }
 
     public void applyEthernetPacketIMU(Vector3 acceleration1)
