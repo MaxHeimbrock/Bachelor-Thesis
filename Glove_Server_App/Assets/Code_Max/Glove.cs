@@ -10,8 +10,9 @@ public class Glove
     public float[] values;
     public UInt16 version;
 
-    private Int64[] raw_values;
-    private Int64[] offsets;
+    private float[] raw_values;
+    //private Int64[] offsets;
+    private UInt32[] offsets;
 
     // for imu testing
     private Vector3 acceleration;
@@ -26,8 +27,10 @@ public class Glove
     {
         cnt = 0;
         version = 0;
-        raw_values = new Int64[Constants.NB_SENSORS];
-        offsets = new Int64[Constants.NB_SENSORS];
+        raw_values = new float[Constants.NB_SENSORS];
+        //raw_values = new Int64[Constants.NB_SENSORS];
+        offsets = new UInt32[Constants.NB_SENSORS];
+        //offsets = new Int64[Constants.NB_SENSORS];
         values = new float[Constants.NB_SENSORS];
 
         acceleration = new Vector3(0, 0, 0);
@@ -37,11 +40,12 @@ public class Glove
         time0 = 0;
 }
 
-    public void set_zero()
+    public void set_zero(UInt32[] values)
     {
         for (int i = 0; i < Constants.NB_SENSORS; i++)
         {
-            offsets[i] = raw_values[i];
+            offsets[i] = values[i];
+            raw_values[i] = 0.0f;
         }        
     }
 
@@ -66,18 +70,22 @@ public class Glove
         for (int i = 0; i < Constants.NB_SENSORS; i++)
         {
             //raw_values[i] = (Int64)(raw_values[i] + (UInt32)(newValues[i] / 4000000));
-            raw_values[i] = (raw_values[i] + (Int64)newValues[i]);
+            raw_values[i] = (raw_values[i] + ((float)newValues[i] - (float)offsets[i])/10000);
             //raw_values[i] = (Int64)(raw_values[i] + (UInt16)(newValues[i] / 1000000));
             //raw_values[i] = (Int64)(raw_values[i] + (UInt16)(newValues[i] / 10000000));
             //raw_values[i] = (Int64)(raw_values[i] + newValues[i]);
 
-           // Debug.Log((Int64)newValues[1]);
+            //Debug.Log(offsets[1]);
+            //Debug.Log(raw_values[1]);
         }
 
         for (int i = 0; i < Constants.NB_SENSORS; i++)
         {
             // Wenn values = 0 --> Hand flach
-            values[i] = 0.001f * (raw_values[i] - offsets[i]);
+            // Wenn values = 2 --> Hand zur Faust geballt
+            values[i] = 0.001f * raw_values[i];
+
+            //Debug.Log(values[1]);
         }
     }
 

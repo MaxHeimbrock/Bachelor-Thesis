@@ -27,6 +27,8 @@ public class EthernetGloveController : MonoBehaviour
     public static int valuesPort = 64059; //65259 for IMU
     public static int IMUPort = 64159;
 
+    private UInt32[] lastPackage;
+
     // Use this for initialization
     void Start()
     {
@@ -44,12 +46,14 @@ public class EthernetGloveController : MonoBehaviour
         if (autoconnect && connected == false)
             ping();
 
+        
         // von mir hier hin verschoben
         if (Input.GetKey("space"))
         {
-            glove.set_zero();
+            glove.set_zero(lastPackage);
             Debug.Log("set_zero");
         }
+        
 
         //Debug.Log(glove.acceleration);
     }
@@ -118,7 +122,9 @@ public class EthernetGloveController : MonoBehaviour
         // Data Format: uint16_t cnt || uint16_t version/svn_revision || uint32_t values[NB_VALUES_GLOVE]
         System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16), jointValues, 0, 40 * sizeof(UInt32));
 
-        Debug.Log(jointValues[1]);
+        //Debug.Log(jointValues[1]); 
+
+        lastPackage = jointValues;
 
         glove.applyEthernetPacketValues(jointValues);
     }

@@ -103,7 +103,7 @@ public class serial_port_receiver : MonoBehaviour {
         // von mir hier hin verschoben
         if (Input.GetKey("space"))
         {
-            glove.set_zero();
+            //glove.set_zero();
             Debug.Log("set_zero");
         }
     }
