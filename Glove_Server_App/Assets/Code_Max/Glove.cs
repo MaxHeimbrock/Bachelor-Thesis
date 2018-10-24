@@ -19,6 +19,7 @@ public class Glove
     public Vector3 position;
 
     private Vector3 acceleration_bias;
+    private int biasCounter = 0;
 
     long time0;
 
@@ -79,7 +80,7 @@ public class Glove
             // Wenn values = 0 --> Hand flach
             // Wenn values = 2 --> Hand verkrampft
             values[i] = 0.001f * (raw_values[i] - offsets[i]);
-            Debug.Log(values[1]);
+            //Debug.Log(values[1]);
         }
     }
 
@@ -89,30 +90,39 @@ public class Glove
 
         long time1 = DateTime.Now.Ticks;
         Vector3 velocity1;
-        Vector3 position1;        
+        Vector3 position1;
 
-        if (time0 != 0 && Math.Abs(acceleration_bias.x) > 1000)
+        if (biasCounter > 1000)
         {
             acceleration1 -= acceleration_bias;
 
             acceleration1 /= 1000000000;
 
+            //Debug.Log(acceleration1);
+
             TimeSpan elapsedSpan = new TimeSpan(time1 - time0);
             long delta_t = elapsedSpan.Seconds;
 
-            velocity1 = velocity + acceleration + (acceleration1 - acceleration)/2;
+            velocity1 = velocity + acceleration + (acceleration1 - acceleration) / 2;
             position1 = position + velocity + (velocity1 - velocity) / 2;
 
             position = position1;
             velocity = velocity1;
             acceleration = acceleration1;
         }
+
+        // Die ersten 1000 Messungen setzen den Bias, also die Gravitation
+        else if (biasCounter == 1000)
+        {
+            acceleration_bias /= 1000;
+            biasCounter++;
+        }
         else
         {
             // trying to get a bias for flat on table
-            acceleration_bias = acceleration1;
+            acceleration_bias += acceleration1;
 
-            Debug.Log(acceleration);
+            biasCounter++;
         }
         time0 = time1;
     }
