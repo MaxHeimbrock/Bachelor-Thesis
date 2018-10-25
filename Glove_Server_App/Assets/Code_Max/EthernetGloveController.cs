@@ -78,41 +78,18 @@ public class EthernetGloveController : MonoBehaviour
         IMUClient.BeginReceive(new AsyncCallback(recvIMU), null);
     }
 
-    //CallBack fuer Values
+    //CallBack for joint values
     private void recvValues(IAsyncResult res)
     {
+        // If first packet
         if (connected == false)
             Debug.Log("Glove is active");
+
         byte[] data = valuesClient.EndReceive(res, ref valuesRemoteEndPoint);
         valuesClient.BeginReceive(new AsyncCallback(recvValues), null);
         //Debug.Log("Received Value package from glove");
         connected = true;
-        applyValuePacket(data);
-    }
 
-    //CallBack fuer IMU
-    private void recvIMU(IAsyncResult res)
-    {
-        byte[] data = IMUClient.EndReceive(res, ref IMURemoteEndPoint);
-        IMUClient.BeginReceive(new AsyncCallback(recvIMU), null);
-        //Debug.Log("Received IMU package from glove");
-        connected = true;
-        applyIMUPacket(data);
-    }
-
-    // sendPing
-    private void sendPing()
-    {
-        // Daten mit der UTF8-Kodierung in das Binärformat kodieren.
-        byte[] message = Encoding.UTF8.GetBytes("Ping");
-
-        // den Ping zum Remote-Client senden.
-        pingClient.Send(message, message.Length, remoteEndPointPing);
-    }
-
-    // Change Glove Object according to new joint Data
-    private void applyValuePacket(byte[] data)
-    {
         UInt32[] jointValues = new UInt32[40];
 
         // Data Format: uint16_t cnt || uint16_t version/svn_revision || uint32_t values[NB_VALUES_GLOVE]
@@ -120,12 +97,18 @@ public class EthernetGloveController : MonoBehaviour
 
         //Debug.Log(jointValues[1]);
 
-        glove.applyEthernetPacketValues(jointValues);
+        // Apply joint values to glove object
+        glove.apply_ethernetJointPacket(jointValues);
     }
 
-    // Change Glove Object according to new IMU Data
-    private void applyIMUPacket(byte[] data)
+    //CallBack for IMU
+    private void recvIMU(IAsyncResult res)
     {
+        byte[] data = IMUClient.EndReceive(res, ref IMURemoteEndPoint);
+        IMUClient.BeginReceive(new AsyncCallback(recvIMU), null);
+        //Debug.Log("Received IMU package from glove");
+        connected = true;
+
         Int16[] acc = new Int16[3];
         Vector3 accVec;
 
@@ -136,6 +119,16 @@ public class EthernetGloveController : MonoBehaviour
 
         glove.applyEthernetPacketIMU(accVec);
     }
+
+    // sendPing
+    private void sendPing()
+    {
+        // Daten mit der UTF8-Kodierung in das Binärformat kodieren.
+        byte[] message = Encoding.UTF8.GetBytes("Ping");
+
+        // den Ping zum Remote-Client senden.
+        pingClient.Send(message, message.Length, remoteEndPointPing);
+    }        
 
     // OnGUI
     void OnGUI()
