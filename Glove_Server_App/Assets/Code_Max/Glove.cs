@@ -10,9 +10,9 @@ public class Glove
     public float[] values;
     public UInt16 version;
 
-    private Int32[] raw_values;
     private Int32[] offsets;
-
+    private Int32[] raw_values;
+    
     // for imu testing
     private Vector3 acceleration;
     private Vector3 velocity;
@@ -47,7 +47,7 @@ public class Glove
     {
         for (int i = 0; i < Constants.NB_SENSORS; i++)
         {
-            //offsets[i] = values[i];
+            offsets[i] = raw_values[i];
         }        
     }
 
@@ -65,12 +65,13 @@ public class Glove
      //      values[i] = 0.001f * (raw_values[i] - offsets[i]);
     }
 
+
     public void apply_ethernetJointPacket(UInt32[] newValues)
     {
         cnt++;
-
+ 
         float filter = 0.9f;
-
+ 
         for (int i = 0; i < Constants.NB_SENSORS; i++)
         {
             Int64 tmp = ((Int64)newValues[i]) - ((Int64)offsets[i]);
@@ -78,6 +79,19 @@ public class Glove
             values[i] = filtered_value;
         }
     }
+
+    /* taken from apply packet but didnt work
+    public void apply_ethernetJointPacket(UInt32[] newValues)
+    {
+        cnt++;
+                
+        for (int i = 0; i < Constants.NB_SENSORS; i++)
+        {
+            raw_values[i] = (Int64)(raw_values[i] + newValues[i]);
+            values[i] = 0.001f * (raw_values[i] - offsets[i]);
+        }
+    }
+    */
 
     public void applyEthernetPacketIMU(Vector3 acceleration1, Vector3 gyroscope)
     {
@@ -92,7 +106,7 @@ public class Glove
             acceleration1 -= acceleration_bias;
             gyroscope -= gyro_bias;
 
-            // Range of Values is weird
+            // Range of Values is too big
             acceleration1 /= 10000000000;
 
             //Debug.Log(acceleration1);
@@ -116,15 +130,17 @@ public class Glove
 
             // X-axis
             AccXangle = (float)((Math.Atan2(acceleration1.x, acceleration1.z) + Math.PI) * (180/Math.PI)); // andere Rechnung http://ozzmaker.com/berryimu/
-            // diese Rechnung korrigiert orientierung
+            // diese Rechnung korrigiert Orientierung zu 0 - 360 grad
             AccXangle = (AccXangle*2 - 180);            
 
             // Y-axis
             AccYangle = (float)((Math.Atan2(acceleration1.y, acceleration1.z) + Math.PI) * (180 / Math.PI)); // andere Rechnung
-            // diese Rechnung korrigiert orientierung
+            // diese Rechnung korrigiert Orientierung zu 0 - 360 grad
             AccYangle = (AccYangle * -2) + 540;
 
             //q = Quaternion.Euler(AccXangle, 0, 0);
+
+            // noch eine formel https://stackoverflow.com/questions/3755059/3d-accelerometer-calculate-the-orientation
 
             //double Roll = 2 * Math.Atan2(acceleration1.y, acceleration.z) * 180 / Math.PI;
             //double Pitch = 2 * Math.Atan2(-acceleration1.x, Math.Sqrt(acceleration1.y * acceleration1.y + acceleration1.z * acceleration1.z)) * 180 / Math.PI;

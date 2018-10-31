@@ -117,13 +117,16 @@ public class EthernetGloveController : MonoBehaviour
 
         // Data Format: uint16_t cnt || uint16_t version/svn_revision || int16_t acceleration[3] || int16_t gyro[3]
         System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16), acc, 0, 3 * sizeof(Int16));
-
         System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16) + 3 * sizeof(Int16), gyro, 0, 3 * sizeof(Int16));
 
         accVec = new Vector3(acc[0], acc[1], acc[2]);
         gyroVec = new Vector3(gyro[0], gyro[1], gyro[2]);
 
         glove.applyEthernetPacketIMU(accVec, gyroVec);
+
+
+        // 2000 degrees/sec default settings
+        // max acceleration 2g 
     }
 
     // sendPing
