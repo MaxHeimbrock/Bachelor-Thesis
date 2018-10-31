@@ -69,7 +69,7 @@ public class hand_controller : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		if (glove == null) {
-			glove = glove_controller.GetComponent<serial_port_receiver> ().glove;
+			glove = glove_controller.GetComponent<EthernetGloveController> ().glove;
 			return;
 		}
 
@@ -79,12 +79,13 @@ public class hand_controller : MonoBehaviour {
 		if(Time.fixedTime<2.0f){
 				glove.set_zero ();
 		}
+        /*
 		if (Input.GetKey("space")){
 			glove.set_zero ();
 		}
 		if (Input.GetKey("space") && Input.GetKey("Ctrl")){
 			//glove.set_zero ();
-		}
+		}*/
 
 		q[0] = 0.0f;
 		q[1] = 180.0f/Mathf.PI*glove.values [1];
