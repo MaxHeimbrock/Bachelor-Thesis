@@ -7,7 +7,7 @@ public class IMUTest : MonoBehaviour {
     public GameObject glove_controller;
     private Glove glove;
 
-	// Use this for initialization
+    // Use this for initialization
 	void Start () {
         //glove = glove_controller.GetComponent<EthernetGloveController>().glove;
     }
@@ -17,6 +17,11 @@ public class IMUTest : MonoBehaviour {
         if (glove == null)
             glove = glove_controller.GetComponent<EthernetGloveController>().glove;
         else
-            this.transform.position = glove.position;
+        {
+            //this.transform.position = glove.position;
+            //this.transform.rotation = glove.q;
+
+            this.transform.Rotate(glove.rotation);
+        }
     }
 }
