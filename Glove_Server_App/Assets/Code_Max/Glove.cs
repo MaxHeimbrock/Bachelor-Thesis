@@ -126,6 +126,13 @@ public class Glove
 
             //q = Quaternion.Euler(AccXangle, 0, 0);
 
+            //double Roll = 2 * Math.Atan2(acceleration1.y, acceleration.z) * 180 / Math.PI;
+            //double Pitch = 2 * Math.Atan2(-acceleration1.x, Math.Sqrt(acceleration1.y * acceleration1.y + acceleration1.z * acceleration1.z)) * 180 / Math.PI;
+            //
+            //Debug.Log(Pitch);
+            //
+            //q = Quaternion.Euler((float)Pitch, 0, 0);
+
             gyroscope /= 10000;
 
             rotation = gyroscope * delta_t;
