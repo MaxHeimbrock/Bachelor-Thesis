@@ -19,9 +19,9 @@ public class IMUTest : MonoBehaviour {
         else
         {
             //this.transform.position = glove.position;
-            //this.transform.rotation = glove.q;
+            this.transform.rotation = glove.q;
 
-            this.transform.Rotate(glove.rotation);
+            //this.transform.Rotate(glove.rotation);
         }
     }
 }

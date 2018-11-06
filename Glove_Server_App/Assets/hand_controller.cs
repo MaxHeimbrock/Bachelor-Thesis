@@ -76,9 +76,9 @@ public class hand_controller : MonoBehaviour {
 		float t = Time.fixedTime;
 		//Debug.Log (t);
 		// get the last received data
-		if(Time.fixedTime<2.0f){
-				glove.set_zero ();
-		}
+		//if(Time.fixedTime<2.0f){
+		//		glove.set_zero ();
+		//}
         /*
 		if (Input.GetKey("space")){
 			glove.set_zero ();

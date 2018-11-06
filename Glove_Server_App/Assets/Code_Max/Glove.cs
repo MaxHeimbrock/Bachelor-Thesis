@@ -10,8 +10,8 @@ public class Glove
     public float[] values;
     public UInt16 version;
 
-    private Int32[] offsets;
-    private Int32[] raw_values;
+    private UInt32[] offsets;
+    private UInt32[] raw_values;
     
     // for imu testing
     private Vector3 acceleration;
@@ -22,9 +22,12 @@ public class Glove
     public float AccYangle;
     public Vector3 rotation;
 
+    float G_Gain = 0.07f; // to get degrees per second with 2000dps http://ozzmaker.com/berryimu/
+
     private Vector3 acceleration_bias;
     private Vector3 gyro_bias;
-    private int biasCounter = 0;
+    private int bias_counter = 0;
+    private int bias_length = 100;
 
     long time0;
 
@@ -32,8 +35,8 @@ public class Glove
     {
         cnt = 0;
         version = 0;
-        raw_values = new Int32[Constants.NB_SENSORS];
-        offsets = new Int32[Constants.NB_SENSORS];
+        raw_values = new UInt32[Constants.NB_SENSORS];
+        offsets = new UInt32[Constants.NB_SENSORS];
         values = new float[Constants.NB_SENSORS];
 
         acceleration = new Vector3(0, 0, 0);
@@ -45,6 +48,8 @@ public class Glove
 
     public void set_zero()
     {
+        Debug.Log("set_zero");
+
         for (int i = 0; i < Constants.NB_SENSORS; i++)
         {
             offsets[i] = raw_values[i];
@@ -71,12 +76,17 @@ public class Glove
         cnt++;
  
         float filter = 0.9f;
+
+        raw_values = newValues;
  
         for (int i = 0; i < Constants.NB_SENSORS; i++)
         {
             Int64 tmp = ((Int64)newValues[i]) - ((Int64)offsets[i]);
-            float filtered_value = (1.0f - filter) * ((Int64)tmp) + filter * ((Int64)values[i]);
-            values[i] = filtered_value;
+            double tmpd = (double)tmp; // I use double here to avoid loosing to much precision
+            tmpd = 0.001f * tmpd; // That should be the same scale as for the serial glove
+            double filtered_value = (1.0f - filter) * tmpd + filter * values[i];
+            values[i] = (float)filtered_value; // finally cut it to float, the precision should be fine at that point
+            //Debug.Log(values[1]);
         }
     }
 
@@ -101,26 +111,28 @@ public class Glove
         Vector3 velocity1;
         Vector3 position1;
 
-        if (biasCounter > 1000)
+        if (bias_counter > bias_length)
         {
             acceleration1 -= acceleration_bias;
             gyroscope -= gyro_bias;
 
             // Range of Values is too big
             acceleration1 /= 10000000000;
+            //acceleration1 /= 16384;
 
             //Debug.Log(acceleration1);
 
             TimeSpan elapsedSpan = new TimeSpan(time1 - time0);
-            long delta_t = elapsedSpan.Milliseconds;
+            long delta_t_ms = elapsedSpan.Milliseconds;
+            float delta_t_s = delta_t_ms / 1000;
 
             //Debug.Log(delta_t);
 
             //velocity1 = velocity + acceleration + (acceleration1 - acceleration) / 2;
             //position1 = position + velocity + (velocity1 - velocity) / 2;
 
-            velocity1 = velocity + acceleration1 * delta_t;
-            position1 = position + velocity1 * delta_t;
+            velocity1 = velocity + acceleration1 * delta_t_ms;
+            position1 = position + velocity1 * delta_t_ms;
 
             position = position1;
             velocity = velocity1;
@@ -131,14 +143,20 @@ public class Glove
             // X-axis
             AccXangle = (float)((Math.Atan2(acceleration1.x, acceleration1.z) + Math.PI) * (180/Math.PI)); // andere Rechnung http://ozzmaker.com/berryimu/
             // diese Rechnung korrigiert Orientierung zu 0 - 360 grad
-            AccXangle = (AccXangle*2 - 180);            
+            //AccXangle = (AccXangle*2 - 180);     
+
+            if (AccXangle > 180)
+                AccXangle -= (float)360;
 
             // Y-axis
             AccYangle = (float)((Math.Atan2(acceleration1.y, acceleration1.z) + Math.PI) * (180 / Math.PI)); // andere Rechnung
             // diese Rechnung korrigiert Orientierung zu 0 - 360 grad
-            AccYangle = (AccYangle * -2) + 540;
+            //AccYangle = (AccYangle * -2) + 540;
 
-            //q = Quaternion.Euler(AccXangle, 0, 0);
+            if (AccYangle > 180)
+                AccYangle -= (float)360;
+
+            q = Quaternion.Euler(0, 0, AccYangle);
 
             // noch eine formel https://stackoverflow.com/questions/3755059/3d-accelerometer-calculate-the-orientation
 
@@ -148,25 +166,37 @@ public class Glove
             //Debug.Log(Pitch);
             //
             //q = Quaternion.Euler((float)Pitch, 0, 0);
+            
+            // eigentlich so
+            rotation += (gyroscope * delta_t_ms * G_Gain) / (1000);
 
-            gyroscope /= 10000;
+            //Debug.Log("gyroscope degree = " + rotation.x);
+            Debug.Log("accelerometer degree = " + AccXangle);
 
-            rotation = gyroscope * delta_t;
+            // complementary filter
+            float filter = 0.98f;
 
+            //rotation.x = filter * rotation.x + (1 - filter) * AccXangle;
+            //rotation.y = filter * rotation.y + (1 - filter) * AccYangle;
+
+            // TODO: Achsen sind zwischen ACC und GYRO unterschiedlich!!
+
+            // switching axis
             float tmp = rotation.z;
 
             rotation.z = rotation.y;
 
             rotation.y = tmp;
-            
+
+            //q = Quaternion.Euler(rotation);
         }
 
         // Die ersten 1000 Messungen setzen den Bias, also die Gravitation
-        else if (biasCounter == 1000)
+        else if (bias_counter == bias_length)
         {
             acceleration_bias /= 1000;
             gyro_bias /= 1000;
-            biasCounter++;
+            bias_counter++;
             Debug.Log("Acceleration bias is " + acceleration_bias);
             Debug.Log("Gyroscope bias is " + gyro_bias);
         }
@@ -176,7 +206,7 @@ public class Glove
             acceleration_bias += acceleration1;
             gyro_bias += gyroscope;
 
-            biasCounter++;
+            bias_counter++;
         }
 
         time0 = time1;
