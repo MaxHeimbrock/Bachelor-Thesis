@@ -117,22 +117,22 @@ public class Glove
             gyroscope -= gyro_bias;
 
             // Range of Values is too big
-            acceleration1 /= 10000000000;
-            //acceleration1 /= 16384;
+            //acceleration1 /= 10000000000;
+            acceleration1 /= 16384;
 
             //Debug.Log(acceleration1);
 
             TimeSpan elapsedSpan = new TimeSpan(time1 - time0);
             long delta_t_ms = elapsedSpan.Milliseconds;
-            float delta_t_s = delta_t_ms / 1000;
+            float delta_t_s = delta_t_ms / 1000f;
 
-            //Debug.Log(delta_t);
+            //Debug.Log(delta_t_s);
 
             //velocity1 = velocity + acceleration + (acceleration1 - acceleration) / 2;
             //position1 = position + velocity + (velocity1 - velocity) / 2;
 
-            velocity1 = velocity + acceleration1 * delta_t_ms;
-            position1 = position + velocity1 * delta_t_ms;
+            velocity1 = velocity + acceleration1 * delta_t_s;
+            position1 = position + velocity1 * delta_t_s;
 
             position = position1;
             velocity = velocity1;
@@ -155,9 +155,7 @@ public class Glove
 
             if (AccYangle > 180)
                 AccYangle -= (float)360;
-
-            q = Quaternion.Euler(0, 0, AccYangle);
-
+            
             // noch eine formel https://stackoverflow.com/questions/3755059/3d-accelerometer-calculate-the-orientation
 
             //double Roll = 2 * Math.Atan2(acceleration1.y, acceleration.z) * 180 / Math.PI;
@@ -168,10 +166,14 @@ public class Glove
             //q = Quaternion.Euler((float)Pitch, 0, 0);
             
             // eigentlich so
-            rotation += (gyroscope * delta_t_ms * G_Gain) / (1000);
+            rotation += gyroscope * delta_t_s * G_Gain;
+
+            float tmp = rotation.x;
+            rotation.x = -rotation.y;
+            rotation.y = tmp;
 
             //Debug.Log("gyroscope degree = " + rotation.x);
-            Debug.Log("accelerometer degree = " + AccXangle);
+            //Debug.Log("accelerometer degree = " + AccXangle);
 
             // complementary filter
             float filter = 0.98f;
@@ -180,15 +182,18 @@ public class Glove
             //rotation.y = filter * rotation.y + (1 - filter) * AccYangle;
 
             // TODO: Achsen sind zwischen ACC und GYRO unterschiedlich!!
+            // -y = x von gyro
 
             // switching axis
-            float tmp = rotation.z;
 
-            rotation.z = rotation.y;
+            //float tmp = rotation.x;
 
-            rotation.y = tmp;
+            //rotation.x = rotation.y;
 
-            //q = Quaternion.Euler(rotation);
+            //rotation.y = tmp;
+
+            q = Quaternion.Euler(AccXangle, 0, 0);
+            q = Quaternion.Euler(rotation.x, 0, 0);
         }
 
         // Die ersten 1000 Messungen setzen den Bias, also die Gravitation
