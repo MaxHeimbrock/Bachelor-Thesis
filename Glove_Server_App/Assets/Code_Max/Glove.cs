@@ -121,6 +121,7 @@ public class Glove
         if (bias_counter > bias_length)
         {
             acceleration1 -= acceleration_bias;
+            // Bias makes it worse?
             gyroscope -= gyro_bias;
 
             acceleration1 /= 16384;
@@ -157,6 +158,9 @@ public class Glove
             
             rotation += gyroscope * delta_t_s * G_Gain;
 
+            //Debug.Log(-rotation.y);
+            //Debug.Log(gyroscope);
+
             q = Quaternion.Euler(AccXangle, 0, -AccYangle);
             q2 = Quaternion.Euler(-rotation.y, rotation.z, -rotation.x);
 
@@ -175,7 +179,7 @@ public class Glove
             //rotation.y = filter * (rotation.y + gyroscope.y * delta_t_s * G_Gain) + (1 - filter) * AccYangle;
 
             // So sind die einzelnen Achsen richtig
-
+            
             //q = Quaternion.Euler(0, 0, -AccYangle);
             z = Quaternion.Euler(0, 0, -rotation.x);
 
@@ -188,11 +192,14 @@ public class Glove
             q3 = Quaternion.Euler(rotation_filtered);
         }
 
-        // Die ersten 1000 Messungen setzen den Bias, also die Gravitation
+        // get bias
         else if (bias_counter == bias_length)
         {
-            acceleration_bias /= 1000;
-            gyro_bias /= 1000;
+            // TODO Hier ist noch ein Fehler 
+            acceleration_bias /= bias_length;
+            gyro_bias /= bias_length;
+
+
             bias_counter++;
             Debug.Log("Acceleration bias is " + acceleration_bias);
             Debug.Log("Gyroscope bias is " + gyro_bias);

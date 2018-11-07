@@ -46,14 +46,14 @@ public class IMUTest : MonoBehaviour {
                     break;
             }
 
-            //if (translate)
-            //    this.transform.position = glove.position;
-            //if (acc_rotation && !gyro_rotation)
-            //    this.transform.rotation = glove.q;
-            //else if (gyro_rotation && !acc_rotation)
-            //    this.transform.rotation = glove.q2;
-            //else if (acc_rotation && gyro_rotation)
-            //    this.transform.rotation = glove.q3;
+            if (translate)
+                this.transform.position = glove.position;
+            if (acc_rotation && !gyro_rotation)
+                this.transform.rotation = glove.q;
+            else if (gyro_rotation && !acc_rotation)
+                this.transform.rotation = glove.q2;
+            else if (acc_rotation && gyro_rotation)
+                this.transform.rotation = glove.q3;
         }
     }
 }
