@@ -9,7 +9,7 @@ Assets/AssetStoreTools*
 Glove_Server_App/App/
 Glove_Hololens_App/App/
 Umeyama_Test/App/
-HololensDepthCamera/App/
+AkihiroDepthCamera/App/
 
 # Visual Studio cache directory
 .vs/

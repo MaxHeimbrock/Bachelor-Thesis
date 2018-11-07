@@ -92,7 +92,7 @@ public class SensorViewControlOld : MonoBehaviour {
                 softwarebitmap.Dispose();
                 UInt16 depth_at_center = BitConverter.ToUInt16(my_bytes, (w / 2) * (h / 2));
 
-                Debug.Log("Depth at Center: " + depth_at_center);
+                Debug.Log("Depth at Center: " + depth_at_center/1000f);
 
                 /*
                 if (bytes==null)
