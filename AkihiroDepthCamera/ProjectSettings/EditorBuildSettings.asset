@@ -5,7 +5,7 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
-    path: 
-    guid: 00000000000000000000000000000000
+  - enabled: 1
+    path: Assets/Akihiro/Researchmode_Demo.unity
+    guid: d83dc16b1e038e74192294f32a9e978f
   m_configObjects: {}
