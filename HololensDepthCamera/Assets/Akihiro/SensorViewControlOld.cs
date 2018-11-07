@@ -12,7 +12,7 @@ using Windows.Graphics.Imaging;
 using System.Runtime.InteropServices.WindowsRuntime;
 #endif
 
-public class SensorViewControl : MonoBehaviour {
+public class SensorViewControlOld : MonoBehaviour {
 
     private Texture2D tex = null;
     private byte[] bytes = null;
