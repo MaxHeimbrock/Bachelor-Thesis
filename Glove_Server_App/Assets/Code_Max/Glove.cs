@@ -25,6 +25,10 @@ public class Glove
     public Vector3 rotation;
     public Vector3 rotation_filtered;
 
+    public Quaternion x;
+    public Quaternion y;
+    public Quaternion z;
+
     float G_Gain = 0.07f; // to get degrees per second with 2000dps http://ozzmaker.com/berryimu/
 
     private Vector3 acceleration_bias;
@@ -163,8 +167,8 @@ public class Glove
             //rotation_filtered.z = filter * (rotation_filtered.z + -gyroscope.x * delta_t_s * G_Gain) + (1 - filter) * -AccYangle;
             //rotation_filtered.y = gyroscope.z * delta_t_s * G_Gain;
 
-            //rotation.x = filter * rotation.x + (1 - filter) * AccXangle;
-            //rotation.y = filter * rotation.y + (1 - filter) * AccYangle;
+            rotation.x = filter * rotation.x + (1 - filter) * AccYangle;
+            rotation.y = filter * rotation.y + (1 - filter) * -AccXangle;
 
             // in one equation
             //rotation.x = filter * (rotation.x + gyroscope.x * delta_t_s * G_Gain) + (1 - filter) * AccXangle;
@@ -173,13 +177,13 @@ public class Glove
             // So sind die einzelnen Achsen richtig
 
             //q = Quaternion.Euler(0, 0, -AccYangle);
-            //q2 = Quaternion.Euler(0, 0, -rotation.x);
+            z = Quaternion.Euler(0, 0, -rotation.x);
 
             //q = Quaternion.Euler(AccXangle, 0, 0);
-            //q2 = Quaternion.Euler(-rotation.y, 0, 0);
+            x = Quaternion.Euler(-rotation.y, 0, 0);
 
             //q doesn't give z rotation
-            //q2 = Quaternion.Euler(0, rotation.z, 0);
+            y = Quaternion.Euler(0, rotation.z, 0);
 
             q3 = Quaternion.Euler(rotation_filtered);
         }
