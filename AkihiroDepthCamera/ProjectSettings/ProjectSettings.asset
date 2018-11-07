@@ -551,7 +551,7 @@ PlayerSettings:
   metroCertificatePassword: 
   metroCertificateSubject: DefaultCompany
   metroCertificateIssuer: DefaultCompany
-  metroCertificateNotAfter: 8094b42f9f95d501
+  metroCertificateNotAfter: 8083fbb1b495d501
   metroApplicationDescription: HoloLensResearchmodeDemoWithUnity
   wsaImages: {}
   metroTileShortName: 
