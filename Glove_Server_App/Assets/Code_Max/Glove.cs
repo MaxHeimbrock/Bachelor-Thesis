@@ -18,9 +18,12 @@ public class Glove
     private Vector3 velocity;
     public Vector3 position;
     public Quaternion q;
+    public Quaternion q2;
+    public Quaternion q3;
     public float AccXangle;
     public float AccYangle;
     public Vector3 rotation;
+    public Vector3 rotation_filtered;
 
     float G_Gain = 0.07f; // to get degrees per second with 2000dps http://ozzmaker.com/berryimu/
 
@@ -116,18 +119,12 @@ public class Glove
             acceleration1 -= acceleration_bias;
             gyroscope -= gyro_bias;
 
-            // Range of Values is too big
-            //acceleration1 /= 10000000000;
             acceleration1 /= 16384;
-
-            //Debug.Log(acceleration1);
-
+            
             TimeSpan elapsedSpan = new TimeSpan(time1 - time0);
             long delta_t_ms = elapsedSpan.Milliseconds;
             float delta_t_s = delta_t_ms / 1000f;
-
-            //Debug.Log(delta_t_s);
-
+            
             //velocity1 = velocity + acceleration + (acceleration1 - acceleration) / 2;
             //position1 = position + velocity + (velocity1 - velocity) / 2;
 
@@ -142,58 +139,49 @@ public class Glove
 
             // X-axis
             AccXangle = (float)((Math.Atan2(acceleration1.x, acceleration1.z) + Math.PI) * (180/Math.PI)); // andere Rechnung http://ozzmaker.com/berryimu/
-            // diese Rechnung korrigiert Orientierung zu 0 - 360 grad
-            //AccXangle = (AccXangle*2 - 180);     
 
+            // diese Rechnung korrigiert Orientierung zu -180 bis 180 grad
             if (AccXangle > 180)
                 AccXangle -= (float)360;
 
             // Y-axis
             AccYangle = (float)((Math.Atan2(acceleration1.y, acceleration1.z) + Math.PI) * (180 / Math.PI)); // andere Rechnung
-            // diese Rechnung korrigiert Orientierung zu 0 - 360 grad
-            //AccYangle = (AccYangle * -2) + 540;
-
+            
+            // diese Rechnung korrigiert Orientierung zu -180 bis 180 grad
             if (AccYangle > 180)
-                AccYangle -= (float)360;
+                AccYangle -= (float)360;            
             
-            // noch eine formel https://stackoverflow.com/questions/3755059/3d-accelerometer-calculate-the-orientation
-
-            //double Roll = 2 * Math.Atan2(acceleration1.y, acceleration.z) * 180 / Math.PI;
-            //double Pitch = 2 * Math.Atan2(-acceleration1.x, Math.Sqrt(acceleration1.y * acceleration1.y + acceleration1.z * acceleration1.z)) * 180 / Math.PI;
-            //
-            //Debug.Log(Pitch);
-            //
-            //q = Quaternion.Euler((float)Pitch, 0, 0);
-            
-            // eigentlich so
             rotation += gyroscope * delta_t_s * G_Gain;
 
-            float tmp = rotation.x;
-            rotation.x = -rotation.y;
-            rotation.y = tmp;
-
-            //Debug.Log("gyroscope degree = " + rotation.x);
-            //Debug.Log("accelerometer degree = " + AccXangle);
+            q = Quaternion.Euler(AccXangle, 0, -AccYangle);
+            q2 = Quaternion.Euler(-rotation.y, rotation.z, -rotation.x);
 
             // complementary filter
             float filter = 0.98f;
 
+            //rotation_filtered.x = filter * (rotation_filtered.x + -gyroscope.y * delta_t_s * G_Gain) + (1 - filter) * AccXangle;
+            //rotation_filtered.z = filter * (rotation_filtered.z + -gyroscope.x * delta_t_s * G_Gain) + (1 - filter) * -AccYangle;
+            //rotation_filtered.y = gyroscope.z * delta_t_s * G_Gain;
+
             //rotation.x = filter * rotation.x + (1 - filter) * AccXangle;
             //rotation.y = filter * rotation.y + (1 - filter) * AccYangle;
 
-            // TODO: Achsen sind zwischen ACC und GYRO unterschiedlich!!
-            // -y = x von gyro
+            // in one equation
+            //rotation.x = filter * (rotation.x + gyroscope.x * delta_t_s * G_Gain) + (1 - filter) * AccXangle;
+            //rotation.y = filter * (rotation.y + gyroscope.y * delta_t_s * G_Gain) + (1 - filter) * AccYangle;
 
-            // switching axis
+            // So sind die einzelnen Achsen richtig
 
-            //float tmp = rotation.x;
+            //q = Quaternion.Euler(0, 0, -AccYangle);
+            //q2 = Quaternion.Euler(0, 0, -rotation.x);
 
-            //rotation.x = rotation.y;
+            //q = Quaternion.Euler(AccXangle, 0, 0);
+            //q2 = Quaternion.Euler(-rotation.y, 0, 0);
 
-            //rotation.y = tmp;
+            //q doesn't give z rotation
+            //q2 = Quaternion.Euler(0, rotation.z, 0);
 
-            q = Quaternion.Euler(AccXangle, 0, 0);
-            q = Quaternion.Euler(rotation.x, 0, 0);
+            q3 = Quaternion.Euler(rotation_filtered);
         }
 
         // Die ersten 1000 Messungen setzen den Bias, also die Gravitation
