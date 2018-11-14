@@ -225,7 +225,7 @@ public class UDPReceive : MonoBehaviour {
         Debug.Log("exit start");
     }
 
-    private async void sendUDPMessage(byte[] message) {
+    public async void sendUDPMessage(byte[] message) {
         Windows.Networking.HostName hnip = readIPAddressAndPortFromFile ? new Windows.Networking.HostName(IPAddressFromFile) : new Windows.Networking.HostName(IPAddress);
         Debug.Log("Send message to IPAddress " + hnip.DisplayName + " on Port " + port.ToString());
         using(var stream = await socket.GetOutputStreamAsync(hnip, port.ToString())) {

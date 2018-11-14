@@ -32,6 +32,10 @@ using System.Runtime.InteropServices.WindowsRuntime;
 
 public class SensorViewControl : MonoBehaviour
 {
+    // Max
+    public GameObject GloveController;
+    byte[] bytebuffer;
+    // Max end
 
     public RawImage DisplayImage = null;
     [HideInInspector]
@@ -135,6 +139,10 @@ public class SensorViewControl : MonoBehaviour
     {
         Debug.Log("tap detected");
         //UseDepth = !UseDepth;
+#if WINDOWS_UWP
+        GloveController.GetComponent<UDPReceive>().sendUDPMessage(bytebuffer);
+        Debug.Log("message Send");
+#endif 
     }
 
 
@@ -318,7 +326,7 @@ public class SensorViewControl : MonoBehaviour
                         currentDepthData = UseDepth ? _undistort.UndistortDepthImage(_rawBytesDepth) : _undistort.UndistortInfraredImage(_rawBytesDepth);
 
                         // Serialize and pack data. This buffer can be used for TCP packages 
-                        byte[] bytebuffer = new byte[HoloDepthPoseBuffer.Length + HoloVCamPoseBuffer.Length + currentDepthData.Length];
+                        bytebuffer = new byte[HoloDepthPoseBuffer.Length + HoloVCamPoseBuffer.Length + currentDepthData.Length];
                         Buffer.BlockCopy(HoloDepthPoseBuffer, 0, bytebuffer, 0, HoloDepthPoseBuffer.Length);
                         Buffer.BlockCopy(HoloVCamPoseBuffer, 0, bytebuffer, HoloDepthPoseBuffer.Length, HoloVCamPoseBuffer.Length);
                         Buffer.BlockCopy(currentDepthData, 0, bytebuffer, HoloDepthPoseBuffer.Length + HoloVCamPoseBuffer.Length, currentDepthData.Length);

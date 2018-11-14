@@ -127,6 +127,12 @@ public class UDPSend : MonoBehaviour
                 Debug.Log("Ping from Hololens received");                
             }
         }
+        else
+        {
+            byte[] received = client.EndReceive(res, ref remoteEndPoint);
+            client.BeginReceive(new AsyncCallback(recv), null);
+            Debug.Log("Packet from Hololens");
+        }
     }
 
     // OnGUI
