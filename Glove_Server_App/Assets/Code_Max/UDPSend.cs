@@ -124,8 +124,15 @@ public class UDPSend : MonoBehaviour
                 Buffer.BlockCopy(BitConverter.GetBytes(data.Length), 0, data, 0, BitConverter.GetBytes(data.Length).Length);
                 Buffer.BlockCopy(udpPing, 0, data, sizeof(int), udpPing.Length);
                 client.Send(data, data.Length, remoteEndPoint);
-                Debug.Log("Ping from Hololens received");                
+                Debug.Log("Ping from Hololens received");
             }
+        }
+        // Hier soll das Depth Image testweise empfangen werden
+        else
+        {
+            byte[] received = client.EndReceive(res, ref remoteEndPoint);
+            client.BeginReceive(new AsyncCallback(recv), null);
+            Debug.Log("Hololens paket received");
         }
     }
 
