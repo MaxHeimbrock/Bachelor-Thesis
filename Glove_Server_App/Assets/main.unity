@@ -1307,7 +1307,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   glove_controller: {fileID: 1300774465}
-  acc_rotation: 1
+  acc_rotation: 0
   gyro_rotation: 1
   translate: 0
   axis: 0
