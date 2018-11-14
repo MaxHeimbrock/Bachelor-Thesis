@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AHRS;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -30,11 +31,14 @@ public class Glove
     public Quaternion z;
 
     float G_Gain = 0.07f; // to get degrees per second with 2000dps http://ozzmaker.com/berryimu/
+    float Accel_Factor = 16384.0f;
 
     private Vector3 acceleration_bias;
     private Vector3 gyro_bias;
     private int bias_counter = 0;
     private int bias_length = 100;
+
+    public MadgwickAHRS mAHRS = new MadgwickAHRS(0.00005f);
 
     long time0;
 
@@ -111,9 +115,7 @@ public class Glove
     */
 
     public void applyEthernetPacketIMU(Vector3 acceleration1, Vector3 gyroscope)
-    {
-        //Debug.Log(acceleration1);
-
+    {   
         // testing double integration, just playing around
 
         long time1 = DateTime.Now.Ticks;
@@ -122,12 +124,12 @@ public class Glove
 
         if (bias_counter > bias_length)
         {
-            acceleration1 -= acceleration_bias;
-            // Bias makes it worse?
+            acceleration1 -= acceleration_bias;           
+
             gyroscope -= gyro_bias;
 
-            acceleration1 /= 16384;
-            
+            acceleration1 /= Accel_Factor;
+
             TimeSpan elapsedSpan = new TimeSpan(time1 - time0);
             long delta_t_ms = elapsedSpan.Milliseconds;
             float delta_t_s = delta_t_ms / 1000f;
@@ -142,37 +144,27 @@ public class Glove
             velocity = velocity1;
             acceleration = acceleration1;
 
-            // Orientation Tests            
+            // Orientation Tests
 
-            if (acceleration1.Equals(Vector3.zero))
-            {
-                AccXangle = 0;
-                AccYangle = 0;
-            }
-            else
-            {
-                acceleration *= 100;
+            mAHRS.Update(-gyroscope.x * G_Gain, gyroscope.z * G_Gain, -gyroscope.y * G_Gain, acceleration1.x, acceleration1.y, acceleration1.z);
+            q3 = new Quaternion(mAHRS.Quaternion[0], mAHRS.Quaternion[1], mAHRS.Quaternion[2], mAHRS.Quaternion[3]);
 
-                // X-axis
-                AccXangle = (float)((Math.Atan2(acceleration1.x, acceleration1.z) + Math.PI) * (180 / Math.PI)); // andere Rechnung http://ozzmaker.com/berryimu/
+            // X-axis
+            AccXangle = (float)((Math.Atan2(acceleration1.x, acceleration1.z) + Math.PI) * (180 / Math.PI)); // andere Rechnung http://ozzmaker.com/berryimu/
 
-                // diese Rechnung korrigiert Orientierung zu -180 bis 180 grad
-                if (AccXangle > 180)
-                    AccXangle -= (float)360;
+            // diese Rechnung korrigiert Orientierung zu -180 bis 180 grad
+            if (AccXangle > 180)
+                AccXangle -= (float)360;
 
-                // Y-axis
-                AccYangle = (float)((Math.Atan2(acceleration1.y, acceleration1.z) + Math.PI) * (180 / Math.PI)); // andere Rechnung
+            // Y-axis
+            AccYangle = (float)((Math.Atan2(acceleration1.y, acceleration1.z) + Math.PI) * (180 / Math.PI)); // andere Rechnung
 
-                // diese Rechnung korrigiert Orientierung zu -180 bis 180 grad
-                if (AccYangle > 180)
-                    AccYangle -= (float)360;
-            }
+            // diese Rechnung korrigiert Orientierung zu -180 bis 180 grad
+            if (AccYangle > 180)
+                AccYangle -= (float)360;
 
             rotation += gyroscope * delta_t_s * G_Gain;
-
-            //Debug.Log(-rotation.y);
-            //Debug.Log(gyroscope);
-
+            
             q = Quaternion.Euler(AccXangle, 0, -AccYangle);
             q2 = Quaternion.Euler(-rotation.y, rotation.z, -rotation.x);
 
@@ -200,21 +192,20 @@ public class Glove
 
             //q doesn't give z rotation
             y = Quaternion.Euler(0, rotation.z, 0);
-
-            q3 = Quaternion.Euler(rotation_filtered);
         }
 
         // get bias
         else if (bias_counter == bias_length)
         {
             // TODO Hier ist noch ein Fehler 
+            //acceleration_bias /= bias_length;
             acceleration_bias /= bias_length;
             gyro_bias /= bias_length;
 
 
             bias_counter++;
-            Debug.Log("Acceleration bias is " + acceleration_bias);
             Debug.Log("Gyroscope bias is " + gyro_bias);
+            Debug.Log("Acceleration bias is " + acceleration_bias);
         }
         else
         {
