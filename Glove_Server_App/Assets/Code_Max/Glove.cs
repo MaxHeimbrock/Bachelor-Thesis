@@ -124,7 +124,7 @@ public class Glove
 
         if (bias_counter > bias_length)
         {
-            acceleration1 -= acceleration_bias;           
+            //acceleration1 -= acceleration_bias;           
 
             gyroscope -= gyro_bias;
 
@@ -146,7 +146,7 @@ public class Glove
 
             // Orientation Tests
 
-            mAHRS.Update(-gyroscope.x * G_Gain, gyroscope.z * G_Gain, -gyroscope.y * G_Gain, acceleration1.x, acceleration1.y, acceleration1.z);
+            mAHRS.Update(-gyroscope.x * G_Gain, gyroscope.z * G_Gain, -gyroscope.y * G_Gain, acceleration1.y, acceleration1.x, acceleration1.z);
             q3 = new Quaternion(mAHRS.Quaternion[0], mAHRS.Quaternion[1], mAHRS.Quaternion[2], mAHRS.Quaternion[3]);
 
             // X-axis
