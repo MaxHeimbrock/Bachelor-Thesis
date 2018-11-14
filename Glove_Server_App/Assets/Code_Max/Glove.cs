@@ -112,6 +112,8 @@ public class Glove
 
     public void applyEthernetPacketIMU(Vector3 acceleration1, Vector3 gyroscope)
     {
+        //Debug.Log(acceleration1);
+
         // testing double integration, just playing around
 
         long time1 = DateTime.Now.Ticks;
@@ -140,22 +142,32 @@ public class Glove
             velocity = velocity1;
             acceleration = acceleration1;
 
-            // Orientation Tests
+            // Orientation Tests            
 
-            // X-axis
-            AccXangle = (float)((Math.Atan2(acceleration1.x, acceleration1.z) + Math.PI) * (180/Math.PI)); // andere Rechnung http://ozzmaker.com/berryimu/
+            if (acceleration1.Equals(Vector3.zero))
+            {
+                AccXangle = 0;
+                AccYangle = 0;
+            }
+            else
+            {
+                acceleration *= 100;
 
-            // diese Rechnung korrigiert Orientierung zu -180 bis 180 grad
-            if (AccXangle > 180)
-                AccXangle -= (float)360;
+                // X-axis
+                AccXangle = (float)((Math.Atan2(acceleration1.x, acceleration1.z) + Math.PI) * (180 / Math.PI)); // andere Rechnung http://ozzmaker.com/berryimu/
 
-            // Y-axis
-            AccYangle = (float)((Math.Atan2(acceleration1.y, acceleration1.z) + Math.PI) * (180 / Math.PI)); // andere Rechnung
-            
-            // diese Rechnung korrigiert Orientierung zu -180 bis 180 grad
-            if (AccYangle > 180)
-                AccYangle -= (float)360;            
-            
+                // diese Rechnung korrigiert Orientierung zu -180 bis 180 grad
+                if (AccXangle > 180)
+                    AccXangle -= (float)360;
+
+                // Y-axis
+                AccYangle = (float)((Math.Atan2(acceleration1.y, acceleration1.z) + Math.PI) * (180 / Math.PI)); // andere Rechnung
+
+                // diese Rechnung korrigiert Orientierung zu -180 bis 180 grad
+                if (AccYangle > 180)
+                    AccYangle -= (float)360;
+            }
+
             rotation += gyroscope * delta_t_s * G_Gain;
 
             //Debug.Log(-rotation.y);
@@ -171,8 +183,8 @@ public class Glove
             //rotation_filtered.z = filter * (rotation_filtered.z + -gyroscope.x * delta_t_s * G_Gain) + (1 - filter) * -AccYangle;
             //rotation_filtered.y = gyroscope.z * delta_t_s * G_Gain;
 
-            rotation.x = filter * rotation.x + (1 - filter) * AccYangle;
-            rotation.y = filter * rotation.y + (1 - filter) * -AccXangle;
+            //rotation.x = filter * rotation.x + (1 - filter) * AccYangle;
+            //rotation.y = filter * rotation.y + (1 - filter) * -AccXangle;
 
             // in one equation
             //rotation.x = filter * (rotation.x + gyroscope.x * delta_t_s * G_Gain) + (1 - filter) * AccXangle;

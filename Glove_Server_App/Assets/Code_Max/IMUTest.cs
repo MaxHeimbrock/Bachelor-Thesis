@@ -6,12 +6,12 @@ public class IMUTest : MonoBehaviour {
 
     public GameObject glove_controller;
     private Glove glove;
-
-    public int mode = 1;
-
+    
     public bool acc_rotation = true;
     public bool gyro_rotation = true;
     public bool translate = false;
+
+    public int axis;
 
     // Use this for initialization
 	void Start () {
@@ -23,37 +23,23 @@ public class IMUTest : MonoBehaviour {
         if (glove == null)
             glove = glove_controller.GetComponent<EthernetGloveController>().glove;
         else
-        {
-            switch(mode)
-            {
-                case 1:
-                    this.transform.rotation = glove.x * glove.y * glove.z;
-                    break;
-                case 2:
-                    this.transform.rotation = glove.x * glove.z * glove.y;
-                    break;
-                case 3:
-                    this.transform.rotation = glove.y * glove.x * glove.z;
-                    break;
-                case 4:
-                    this.transform.rotation = glove.y * glove.z * glove.x;
-                    break;
-                case 5:
-                    this.transform.rotation = glove.z * glove.y * glove.x;
-                    break;
-                case 6:
-                    this.transform.rotation = glove.z * glove.x * glove.y;
-                    break;
-            }
-
+        {                       
             if (translate)
                 this.transform.position = glove.position;
             if (acc_rotation && !gyro_rotation)
                 this.transform.rotation = glove.q;
             else if (gyro_rotation && !acc_rotation)
-                this.transform.rotation = glove.q2;
+            {
+                if (axis == 1)
+                    this.transform.localRotation = glove.x;
+                else if (axis == 2)
+                    this.transform.localRotation = glove.y;
+                else if (axis == 3)
+                    this.transform.localRotation = glove.z;
+            }
             else if (acc_rotation && gyro_rotation)
                 this.transform.rotation = glove.q3;
+            
         }
     }
 }
