@@ -94,7 +94,7 @@ public class Glove
         {
             Int64 tmp = ((Int64)newValues[i]) - ((Int64)offsets[i]);
             double tmpd = (double)tmp; // I use double here to avoid loosing to much precision
-            tmpd = 0.001f * tmpd; // That should be the same scale as for the serial glove
+            tmpd = 0.00001f * tmpd; // That should be the same scale as for the serial glove
             double filtered_value = (1.0f - filter) * tmpd + filter * values[i];
             values[i] = (float)filtered_value; // finally cut it to float, the precision should be fine at that point
             //Debug.Log(values[1]);
@@ -124,7 +124,7 @@ public class Glove
 
         if (bias_counter > bias_length)
         {
-            Debug.Log(acceleration1);
+            //Debug.Log(acceleration1);
 
             acceleration1 -= acceleration_bias;
             acceleration1 /= Accel_Factor;
