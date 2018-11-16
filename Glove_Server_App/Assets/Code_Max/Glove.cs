@@ -124,12 +124,12 @@ public class Glove
 
         if (bias_counter > bias_length)
         {
-            //acceleration1 -= acceleration_bias;           
+            acceleration1 -= acceleration_bias;           
+            acceleration1 /= Accel_Factor;
 
             gyroscope -= gyro_bias;
 
-            acceleration1 /= Accel_Factor;
-
+            // delta t in seconds or miliseconds
             TimeSpan elapsedSpan = new TimeSpan(time1 - time0);
             long delta_t_ms = elapsedSpan.Milliseconds;
             float delta_t_s = delta_t_ms / 1000f;
@@ -197,11 +197,10 @@ public class Glove
         // get bias
         else if (bias_counter == bias_length)
         {
-            // TODO Hier ist noch ein Fehler 
-            //acceleration_bias /= bias_length;
+            // Mittelwert berechnen und Gravitation behalten
             acceleration_bias /= bias_length;
+            acceleration_bias -= new Vector3(0, 0, -Accel_Factor);
             gyro_bias /= bias_length;
-
 
             bias_counter++;
             Debug.Log("Gyroscope bias is " + gyro_bias);
