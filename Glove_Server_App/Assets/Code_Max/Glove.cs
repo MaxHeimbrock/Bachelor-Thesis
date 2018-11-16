@@ -124,7 +124,9 @@ public class Glove
 
         if (bias_counter > bias_length)
         {
-            acceleration1 -= acceleration_bias;           
+            Debug.Log(acceleration1);
+
+            acceleration1 -= acceleration_bias;
             acceleration1 /= Accel_Factor;
 
             gyroscope -= gyro_bias;
@@ -198,6 +200,7 @@ public class Glove
         else if (bias_counter == bias_length)
         {
             // Mittelwert berechnen und Gravitation behalten
+            // TODO: Gravitation eigentlich in y-Achse --> gleich in EthernetGloveController Achsen angleichen
             acceleration_bias /= bias_length;
             acceleration_bias -= new Vector3(0, 0, -Accel_Factor);
             gyro_bias /= bias_length;
