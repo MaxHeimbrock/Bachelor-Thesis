@@ -42,6 +42,9 @@ public class Glove
 
     long time0;
 
+    public int timestamp0 = 0;
+    public int timestamp1 = 0;
+
     public Glove()
     {
         cnt = 0;
@@ -135,7 +138,9 @@ public class Glove
             TimeSpan elapsedSpan = new TimeSpan(time1 - time0);
             long delta_t_ms = elapsedSpan.Milliseconds;
             float delta_t_s = delta_t_ms / 1000f;
-            
+
+            float delta_timestamp_s = (timestamp1 - timestamp0)/10000.0f;
+
             //velocity1 = velocity + acceleration + (acceleration1 - acceleration) / 2;
             //position1 = position + velocity + (velocity1 - velocity) / 2;
 
@@ -165,8 +170,9 @@ public class Glove
             if (AccYangle > 180)
                 AccYangle -= (float)360;
 
+            //rotation += gyroscope * delta_timestamp_s * G_Gain;
             rotation += gyroscope * delta_t_s * G_Gain;
-            
+
             q = Quaternion.Euler(AccXangle, 0, -AccYangle);
             q2 = Quaternion.Euler(-rotation.y, rotation.z, -rotation.x);
 
@@ -194,6 +200,8 @@ public class Glove
 
             //q doesn't give z rotation
             y = Quaternion.Euler(0, rotation.z, 0);
+
+            //Debug.Log("time: " + delta_t_ms);
         }
 
         // get bias
@@ -218,6 +226,9 @@ public class Glove
             bias_counter++;
         }
 
+        //Debug.Log("timestamp: " + (timestamp1 - timestamp0));        
+
+        timestamp0 = timestamp1;
         time0 = time1;
     }
 
