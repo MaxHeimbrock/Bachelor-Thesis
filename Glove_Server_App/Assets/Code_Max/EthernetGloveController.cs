@@ -112,9 +112,14 @@ public class EthernetGloveController : MonoBehaviour
         Int16[] gyro = new Int16[3];
         Vector3 gyroVec;
 
-        // Data Format: uint16_t cnt || uint16_t version/svn_revision || int16_t acceleration[3] || int16_t gyro[3]
+        // Data Format: uint16_t cnt || uint16_t version/svn_revision || int16_t acceleration[3] || int16_t gyro[3] || uint32_t timestamp || uint32_t temperature;
         System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16), acc, 0, 3 * sizeof(Int16));
         System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16) + 3 * sizeof(Int16), gyro, 0, 3 * sizeof(Int16));
+        int timestamp = BitConverter.ToInt32(data, sizeof(UInt16) + sizeof(UInt16) + 3 * sizeof(Int16) + 3 * sizeof(Int16));
+        //System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16) + 3 * sizeof(Int16) + 3 * sizeof(Int16), timestamp, 0, sizeof(int));
+
+        // TODO setter
+        glove.timestamp1 = timestamp;
 
         accVec = new Vector3(acc[0], acc[1], acc[2]);
         gyroVec = new Vector3(gyro[0], gyro[1], gyro[2]);
