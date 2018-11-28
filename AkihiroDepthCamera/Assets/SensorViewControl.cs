@@ -12,11 +12,10 @@ using Windows.Graphics.Imaging;
 using System.Runtime.InteropServices.WindowsRuntime;
 #endif
 
-public class SensorViewControlOld : MonoBehaviour {
+public class SensorViewControl : MonoBehaviour {
 
     private Texture2D tex = null;
     private byte[] bytes = null;
-    private byte[] my_bytes = null;
     // Use this for initialization
     void Start() {
 #if !UNITY_EDITOR
@@ -76,25 +75,9 @@ public class SensorViewControlOld : MonoBehaviour {
             var softwarebitmap = videomediaframe?.SoftwareBitmap;
             if (softwarebitmap != null)
             {
-                // dont want convert to RGBA8
-                //softwarebitmap = SoftwareBitmap.Convert(softwarebitmap, BitmapPixelFormat.Rgba8, BitmapAlphaMode.Premultiplied);
+                softwarebitmap = SoftwareBitmap.Convert(softwarebitmap, BitmapPixelFormat.Rgba8, BitmapAlphaMode.Premultiplied);
                 int w = softwarebitmap.PixelWidth;
                 int h = softwarebitmap.PixelHeight;
-
-                // my code
-                
-                if (my_bytes == null)
-                {
-                    my_bytes = new byte[w * h * 2];
-                }
-
-                softwarebitmap.CopyToBuffer(my_bytes.AsBuffer());
-                softwarebitmap.Dispose();
-                UInt16 depth_at_center = BitConverter.ToUInt16(my_bytes, (w / 2) * (h / 2));
-
-                Debug.Log("Depth at Center: " + depth_at_center/1000f);
-
-                /*
                 if (bytes==null)
                 {
                     bytes = new byte[w * h * 4];
@@ -107,16 +90,16 @@ public class SensorViewControlOld : MonoBehaviour {
                         tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
                         GetComponent<Renderer>().material.mainTexture = tex;
                     }
-                
-                //-
-                //Test
-                //Debug.Log("Red Value is" + bytes[(w/2) * (h/2) * 4]);
-                //Debug.Log("Green Value is" + bytes[(w/2) * (h/2) * 4 + 1]);
-                //Debug.Log("Blue Value is" + bytes[(w/2) * (h/2) * 4 + 2]);
-                //Debug.Log("Alpha Value is" + bytes[(w/2) * (h/2) * 4 + 3]);
-                //Debug.Log("Scale is " + depthScaleInMeters);
 
-                //-
+    //-
+    //Test
+    Debug.Log("Red Value is" + bytes[(w/2) * (h/2) * 4]);
+    Debug.Log("Green Value is" + bytes[(w/2) * (h/2) * 4 + 1]);
+    Debug.Log("Blue Value is" + bytes[(w/2) * (h/2) * 4 + 2]);
+    Debug.Log("Alpha Value is" + bytes[(w/2) * (h/2) * 4 + 3]);
+    Debug.Log("Scale is " + depthScaleInMeters);
+
+    //-
                     for (int i = 0; i < bytes.Length / 4; ++i)
                     {
                         byte b = bytes[i * 4];
@@ -136,7 +119,6 @@ public class SensorViewControlOld : MonoBehaviour {
                     tex.LoadRawTextureData(bytes);
                     tex.Apply();
                 }, true);
-                */
             }
             mediaframereference.Dispose();
         }
