@@ -27,6 +27,10 @@ public class EthernetGloveController : MonoBehaviour
     public static int valuesPort = 64059; //65259 for IMU
     public static int IMUPort = 64159;
 
+    private Int16 imu_cnt = 0;
+    private long time0 = DateTime.Now.Ticks;
+    int timestamp0 = -1;
+
     // Use this for initialization
     void Start()
     {
@@ -47,8 +51,6 @@ public class EthernetGloveController : MonoBehaviour
         // von mir hier hin verschoben
         if (Input.GetKey("space"))
             glove.set_zero();
-
-        //Debug.Log(glove.acceleration);
     }
 
     public void ping()
@@ -85,7 +87,6 @@ public class EthernetGloveController : MonoBehaviour
         byte[] data = valuesClient.EndReceive(res, ref valuesRemoteEndPoint);
         valuesClient.BeginReceive(new AsyncCallback(recvValues), null);
         //Debug.Log("Received Value package from glove");
-        connected = true;
 
         UInt32[] jointValues = new UInt32[40];
 
@@ -96,6 +97,13 @@ public class EthernetGloveController : MonoBehaviour
 
         // Apply joint values to glove object
         glove.apply_ethernetJointPacket(jointValues);
+
+        // If first packet
+        if (connected == false)
+        {
+            Debug.Log("Glove is active");
+            connected = true;
+        }
     }
 
     //CallBack for IMU
@@ -110,16 +118,30 @@ public class EthernetGloveController : MonoBehaviour
         Vector3 accVec;
 
         Int16[] gyro = new Int16[3];
-        Vector3 gyroVec;
+        Vector3 gyroVec;        
 
         // Data Format: uint16_t cnt || uint16_t version/svn_revision || int16_t acceleration[3] || int16_t gyro[3] || uint32_t timestamp || uint32_t temperature;
         System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16), acc, 0, 3 * sizeof(Int16));
         System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16) + 3 * sizeof(Int16), gyro, 0, 3 * sizeof(Int16));
         int timestamp = BitConverter.ToInt32(data, sizeof(UInt16) + sizeof(UInt16) + 3 * sizeof(Int16) + 3 * sizeof(Int16));
-        //System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16) + 3 * sizeof(Int16) + 3 * sizeof(Int16), timestamp, 0, sizeof(int));
+        if (timestamp0 == -1)
+            timestamp0 = timestamp;
 
         // TODO setter
         glove.timestamp1 = timestamp;
+        imu_cnt++;
+
+        /*
+        if (imu_cnt == 10000)
+        {
+            TimeSpan elapsedSpan = new TimeSpan(DateTime.Now.Ticks - time0);
+            long delta_t_ms = elapsedSpan.Milliseconds;
+            long delta_t_s = elapsedSpan.Seconds;
+            delta_t_ms += delta_t_s * 1000;
+            Debug.Log(delta_t_ms);
+            Debug.Log(timestamp - timestamp0);
+        }
+        */
 
         accVec = new Vector3(acc[0], acc[1], acc[2]);
         gyroVec = new Vector3(gyro[0], gyro[1], gyro[2]);

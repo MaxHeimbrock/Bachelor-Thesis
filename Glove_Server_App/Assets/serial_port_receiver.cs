@@ -161,7 +161,7 @@ public class serial_port_receiver : MonoBehaviour {
 			reader.ReadByte ();
 			reader.ReadByte ();
 
-			glove.apply_packet (packet);
+			//glove.apply_packet (packet);
 
 		}
 	}

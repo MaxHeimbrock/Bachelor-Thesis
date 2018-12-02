@@ -6,12 +6,10 @@ public class IMUTest : MonoBehaviour {
 
     public GameObject glove_controller;
     private Glove glove;
-    
-    public bool acc_rotation = true;
-    public bool gyro_rotation = true;
-    public bool translate = false;
+   
+    public mode orientationMode = mode.acc;
 
-    public int axis;
+    public enum mode {acc, gyro, filtered, madgwick};
 
     // Use this for initialization
 	void Start () {
@@ -24,22 +22,24 @@ public class IMUTest : MonoBehaviour {
             glove = glove_controller.GetComponent<EthernetGloveController>().glove;
         else
         {                       
-            if (translate)
-                this.transform.position = glove.position;
-            if (acc_rotation && !gyro_rotation)
-                this.transform.rotation = glove.q;
-            else if (gyro_rotation && !acc_rotation)
+            if (orientationMode == mode.acc)
             {
-                if (axis == 1)
-                    this.transform.localRotation = glove.x;
-                else if (axis == 2)
-                    this.transform.localRotation = glove.y;
-                else if (axis == 3)
-                    this.transform.localRotation = glove.z;
+                this.transform.rotation = Quaternion.Inverse(glove.q_acc);
             }
-            else if (acc_rotation && gyro_rotation)
-                this.transform.rotation = glove.q3;
-            
+            else if (orientationMode == mode.gyro)
+            {
+                this.transform.rotation = Quaternion.Inverse(glove.q_gyro);
+            }
+            else if (orientationMode == mode.filtered)
+            {
+                this.transform.rotation = Quaternion.Inverse(glove.q_filtered);
+            }
+            else if (orientationMode == mode.madgwick)
+            {
+                this.transform.rotation = Quaternion.Inverse(glove.q_madgwick);
+                this.transform.Rotate(180,0,0);
+            }
+            // this.transform.rotation = Quaternion.Inverse(glove.q3);
         }
     }
 }

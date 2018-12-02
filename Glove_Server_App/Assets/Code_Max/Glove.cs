@@ -17,18 +17,12 @@ public class Glove
     // for imu testing
     private Vector3 acceleration;
     private Vector3 velocity;
-    public Vector3 position;
-    public Quaternion q;
-    public Quaternion q2;
-    public Quaternion q3;
-    public float AccXangle;
-    public float AccYangle;
-    public Vector3 rotation;
-    public Vector3 rotation_filtered;
-
-    public Quaternion x;
-    public Quaternion y;
-    public Quaternion z;
+    private Vector3 gyro_current_rotation = new Vector3(0,0,0);
+    private Vector3 filtered_rotation = new Vector3(0, 0, 0);
+    public Quaternion q_acc;
+    public Quaternion q_gyro;
+    public Quaternion q_filtered;
+    public Quaternion q_madgwick;
 
     float G_Gain = 0.07f; // to get degrees per second with 2000dps http://ozzmaker.com/berryimu/
     float Accel_Factor = 16384.0f;
@@ -38,7 +32,8 @@ public class Glove
     private int bias_counter = 0;
     private int bias_length = 100;
 
-    public MadgwickAHRS mAHRS = new MadgwickAHRS(0.00005f);
+    public MadgwickAHRS madgwickARHS = new MadgwickAHRS(0.00005f);
+    public MahonyAHRS mahonyARHS = new MahonyAHRS(0.00005f);
 
     long time0;
 
@@ -55,7 +50,6 @@ public class Glove
 
         acceleration = new Vector3(0, 0, 0);
         velocity = new Vector3(0, 0, 0);
-        position = new Vector3(0, 0, 5);
 
         time0 = 0;
 }
@@ -68,22 +62,7 @@ public class Glove
         {
             offsets[i] = raw_values[i];
         }        
-    }
-
-    public void apply_packet(Packet packet)
-    {
-     //  version = packet.version;
-     //  cnt++;
-     //
-     //  for (int i = 0; i < Constants.NB_SENSORS; i++)
-     //      raw_values[i] = (Int64)(raw_values[i] + packet.values[i]);
-     //
-     //  raw_values[packet.key] = packet.value;
-     //
-     //  for (int i = 0; i < Constants.NB_SENSORS; i++)
-     //      values[i] = 0.001f * (raw_values[i] - offsets[i]);
-    }
-
+    }  
 
     public void apply_ethernetJointPacket(UInt32[] newValues)
     {
@@ -104,104 +83,40 @@ public class Glove
         }
     }
 
-    /* taken from apply packet but didnt work
-    public void apply_ethernetJointPacket(UInt32[] newValues)
-    {
-        cnt++;
-                
-        for (int i = 0; i < Constants.NB_SENSORS; i++)
-        {
-            raw_values[i] = (Int64)(raw_values[i] + newValues[i]);
-            values[i] = 0.001f * (raw_values[i] - offsets[i]);
-        }
-    }
-    */
-
     public void applyEthernetPacketIMU(Vector3 acceleration1, Vector3 gyroscope)
     {   
-        // testing double integration, just playing around
-
         long time1 = DateTime.Now.Ticks;
-        Vector3 velocity1;
-        Vector3 position1;
 
         if (bias_counter > bias_length)
         {
-            //Debug.Log(acceleration1);
-
-            acceleration1 -= acceleration_bias;
-            acceleration1 /= Accel_Factor;
-
-            gyroscope -= gyro_bias;
-
             // delta t in seconds or miliseconds
             TimeSpan elapsedSpan = new TimeSpan(time1 - time0);
             long delta_t_ms = elapsedSpan.Milliseconds;
             float delta_t_s = delta_t_ms / 1000f;
 
-            float delta_timestamp_s = (timestamp1 - timestamp0)/10000.0f;
+            // TODO: Bias nötig?
+            acceleration1 -= acceleration_bias;
+            acceleration1 /= Accel_Factor;
+            gyroscope -= gyro_bias;
 
-            //velocity1 = velocity + acceleration + (acceleration1 - acceleration) / 2;
-            //position1 = position + velocity + (velocity1 - velocity) / 2;
+            Vector3 angleFromAcc = CalcAngleFromAcc(acceleration1);
+            q_acc = Quaternion.Euler(new Vector3(angleFromAcc.y, 0, angleFromAcc.x));
+            //Debug.Log(angleFromAcc);
 
-            velocity1 = velocity + acceleration1 * delta_t_s;
-            position1 = position + velocity1 * delta_t_s;
+            gyro_current_rotation += IntegrateGyro(gyroscope, delta_t_s);
+            q_gyro = Quaternion.Euler(new Vector3(gyro_current_rotation.y, -gyro_current_rotation.z, gyro_current_rotation.x));
+            //Debug.Log(gyro_current_rotation);
 
-            position = position1;
-            velocity = velocity1;
-            acceleration = acceleration1;
+            FilterRotation(gyroscope, delta_t_s, angleFromAcc, 0.98f);
+            q_filtered = Quaternion.Euler(new Vector3(filtered_rotation.y, -filtered_rotation.z, filtered_rotation.x));
+
+            // dont know how to convert
+            float delta_timestamp_s = (timestamp1 - timestamp0)/10000.0f;        
 
             // Orientation Tests
 
-            mAHRS.Update(-gyroscope.x * G_Gain, gyroscope.z * G_Gain, -gyroscope.y * G_Gain, acceleration1.y, acceleration1.x, acceleration1.z);
-            q3 = new Quaternion(mAHRS.Quaternion[0], mAHRS.Quaternion[1], mAHRS.Quaternion[2], mAHRS.Quaternion[3]);
-
-            // X-axis
-            AccXangle = (float)((Math.Atan2(acceleration1.x, acceleration1.z) + Math.PI) * (180 / Math.PI)); // andere Rechnung http://ozzmaker.com/berryimu/
-
-            // diese Rechnung korrigiert Orientierung zu -180 bis 180 grad
-            if (AccXangle > 180)
-                AccXangle -= (float)360;
-
-            // Y-axis
-            AccYangle = (float)((Math.Atan2(acceleration1.y, acceleration1.z) + Math.PI) * (180 / Math.PI)); // andere Rechnung
-
-            // diese Rechnung korrigiert Orientierung zu -180 bis 180 grad
-            if (AccYangle > 180)
-                AccYangle -= (float)360;
-
-            //rotation += gyroscope * delta_timestamp_s * G_Gain;
-            rotation += gyroscope * delta_t_s * G_Gain;
-
-            q = Quaternion.Euler(AccXangle, 0, -AccYangle);
-            q2 = Quaternion.Euler(-rotation.y, rotation.z, -rotation.x);
-
-            // complementary filter
-            float filter = 0.98f;
-
-            //rotation_filtered.x = filter * (rotation_filtered.x + -gyroscope.y * delta_t_s * G_Gain) + (1 - filter) * AccXangle;
-            //rotation_filtered.z = filter * (rotation_filtered.z + -gyroscope.x * delta_t_s * G_Gain) + (1 - filter) * -AccYangle;
-            //rotation_filtered.y = gyroscope.z * delta_t_s * G_Gain;
-
-            //rotation.x = filter * rotation.x + (1 - filter) * AccYangle;
-            //rotation.y = filter * rotation.y + (1 - filter) * -AccXangle;
-
-            // in one equation
-            //rotation.x = filter * (rotation.x + gyroscope.x * delta_t_s * G_Gain) + (1 - filter) * AccXangle;
-            //rotation.y = filter * (rotation.y + gyroscope.y * delta_t_s * G_Gain) + (1 - filter) * AccYangle;
-
-            // So sind die einzelnen Achsen richtig
-            
-            //q = Quaternion.Euler(0, 0, -AccYangle);
-            z = Quaternion.Euler(0, 0, -rotation.x);
-
-            //q = Quaternion.Euler(AccXangle, 0, 0);
-            x = Quaternion.Euler(-rotation.y, 0, 0);
-
-            //q doesn't give z rotation
-            y = Quaternion.Euler(0, rotation.z, 0);
-
-            //Debug.Log("time: " + delta_t_ms);
+            madgwickARHS.Update(gyroscope.x * G_Gain, gyroscope.y * G_Gain, gyroscope.z * G_Gain, acceleration1.x, acceleration1.y, acceleration1.z);
+            q_madgwick = new Quaternion(madgwickARHS.Quaternion[0], -madgwickARHS.Quaternion[1], -madgwickARHS.Quaternion[3], -madgwickARHS.Quaternion[2]);
         }
 
         // get bias
@@ -216,6 +131,8 @@ public class Glove
             bias_counter++;
             Debug.Log("Gyroscope bias is " + gyro_bias);
             Debug.Log("Acceleration bias is " + acceleration_bias);
+
+            set_zero();
         }
         else
         {
@@ -224,12 +141,62 @@ public class Glove
             gyro_bias += gyroscope;
 
             bias_counter++;
-        }
-
-        //Debug.Log("timestamp: " + (timestamp1 - timestamp0));        
+        }      
 
         timestamp0 = timestamp1;
         time0 = time1;
+    }
+
+    // Local space IMU -> left handed, z up
+    Vector3 CalcAngleFromAcc(Vector3 acc)
+    {
+        // TODO: Hier kommt es zu einem Flip
+
+        float rot_x = 0;
+        float rot_y = 0;
+
+        // X-axis - http://ozzmaker.com/berryimu/ // https://stackoverflow.com/questions/3755059/3d-accelerometer-calculate-the-orientation
+        rot_x = (float)((Math.Atan2(acc.y, acc.z) + Math.PI) * (180 / Math.PI));
+        //rot_x = -(float)(Math.Atan2(acc.y, Math.Sqrt(acc.x * acc.x + acc.z * acc.z)) * (180 / Math.PI));
+            
+
+        // diese Rechnung korrigiert Orientierung zu -180 bis 180 grad
+        if (rot_x > 180)
+            rot_x -= (float)360;
+
+        // Y-axis - http://ozzmaker.com/berryimu/ // https://stackoverflow.com/questions/3755059/3d-accelerometer-calculate-the-orientation
+        //rot_y = (float)(Math.Atan2(-acc.x, Math.Sqrt(acc.y * acc.y + acc.z * acc.z)) * (180 / Math.PI));
+        rot_y = (float)((Math.Atan2(acc.z, acc.x) + Math.PI * 1/2) * (180 / Math.PI));
+        //rot_y = 0;
+
+        // diese Rechnung korrigiert Orientierung zu -180 bis 180 grad
+        if (rot_y > 180)
+            rot_y -= (float)360;
+
+        return new Vector3(rot_x, rot_y, 0);
+    }
+
+    // Local space IMU -> left handed, z up
+    Vector3 IntegrateGyro(Vector3 gyro, float delta_t_s)
+    {
+        return (gyro * delta_t_s * G_Gain);
+    }
+
+    // Local space IMU -> left handed, z up
+    void FilterRotation(Vector3 gyro, float delta_t_s, Vector3 acc_angles, float filter)
+    {
+        Vector3 integrated_gyro = IntegrateGyro(gyro, delta_t_s);
+
+        // Acc is only trustable till around 45° right now - still a flip happens
+        if (acc_angles.x < 20)
+            filtered_rotation.x = filter * (filtered_rotation.x + integrated_gyro.x) + (1 - filter) * acc_angles.x;
+        else
+            filtered_rotation.x = filtered_rotation.x + integrated_gyro.x;
+        if (acc_angles.y < 20)
+            filtered_rotation.y = filter * (filtered_rotation.y + integrated_gyro.y) + (1 - filter) * acc_angles.y;
+        else
+            filtered_rotation.y = filtered_rotation.y + integrated_gyro.y;
+        filtered_rotation.z = filtered_rotation.z + integrated_gyro.z;
     }
 
     public TrackingData GetTrackingData()
