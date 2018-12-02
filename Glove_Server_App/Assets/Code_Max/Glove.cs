@@ -19,6 +19,7 @@ public class Glove
     private Vector3 velocity;
     private Vector3 gyro_current_rotation = new Vector3(0,0,0);
     private Vector3 filtered_rotation = new Vector3(0, 0, 0);
+    public float filter = 0.98f;
     public Quaternion q_acc;
     public Quaternion q_gyro;
     public Quaternion q_filtered;
@@ -32,8 +33,8 @@ public class Glove
     private int bias_counter = 0;
     private int bias_length = 100;
 
-    public MadgwickAHRS madgwickARHS = new MadgwickAHRS(0.00005f);
-    public MahonyAHRS mahonyARHS = new MahonyAHRS(0.00005f);
+    private MadgwickAHRS madgwickARHS = new MadgwickAHRS(0.00005f);
+    private MahonyAHRS mahonyARHS = new MahonyAHRS(0.00005f);
 
     long time0;
 
@@ -107,15 +108,14 @@ public class Glove
             q_gyro = Quaternion.Euler(new Vector3(gyro_current_rotation.y, -gyro_current_rotation.z, gyro_current_rotation.x));
             //Debug.Log(gyro_current_rotation);
 
-            FilterRotation(gyroscope, delta_t_s, angleFromAcc, 0.98f);
+            FilterRotation(gyroscope, delta_t_s, angleFromAcc, filter);
             q_filtered = Quaternion.Euler(new Vector3(filtered_rotation.y, -filtered_rotation.z, filtered_rotation.x));
 
             // dont know how to convert
             float delta_timestamp_s = (timestamp1 - timestamp0)/10000.0f;        
-
-            // Orientation Tests
-
+            
             madgwickARHS.Update(gyroscope.x * G_Gain, gyroscope.y * G_Gain, gyroscope.z * G_Gain, acceleration1.x, acceleration1.y, acceleration1.z);
+            // in IMUTest wird zusätzlich noch um 180° zur x-Achse rotiert
             q_madgwick = new Quaternion(madgwickARHS.Quaternion[0], -madgwickARHS.Quaternion[1], -madgwickARHS.Quaternion[3], -madgwickARHS.Quaternion[2]);
         }
 
@@ -123,7 +123,6 @@ public class Glove
         else if (bias_counter == bias_length)
         {
             // Mittelwert berechnen und Gravitation behalten
-            // TODO: Gravitation eigentlich in y-Achse --> gleich in EthernetGloveController Achsen angleichen
             acceleration_bias /= bias_length;
             acceleration_bias -= new Vector3(0, 0, -Accel_Factor);
             gyro_bias /= bias_length;
