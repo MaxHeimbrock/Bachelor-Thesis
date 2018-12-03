@@ -16,9 +16,11 @@ while (cap.isOpened()):
     if ret == True:
 
         # Display the resulting frame
-        cv2.imshow('Frame', frame)
+        #cv2.imshow('Frame', frame)
 
-        print(frame[0][0][0])
+        height, width = frame.shape[:2]
+        #print red value of center of image
+        print(frame[int(height/2)][int(width/2)][2])
 
         # Press Q on keyboard to  exit
         if cv2.waitKey(25) & 0xFF == ord('q'):
