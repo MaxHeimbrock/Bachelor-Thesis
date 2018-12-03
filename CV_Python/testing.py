@@ -19,8 +19,20 @@ while (cap.isOpened()):
         #cv2.imshow('Frame', frame)
 
         height, width = frame.shape[:2]
-        #print red value of center of image
-        print(frame[int(height/2)][int(width/2)][2])
+        #print red value of center of image (u, v, colorchannel)
+        #print(frame[int(height/2)][int(width/2)][2])
+
+        count = 0
+
+        if frame[int(height/2)][int(width/2)][2] != 0:
+            #searches in pixel and changes pixel colour
+            #frame[np.where((frame == [0, 0, 0]).all(axis=2))] = [0, 33, 166]
+
+            #trying to search in array with vectorisation
+            print (np.where((frame == [0, 0, 0]).all(axis=2)))
+
+            cv2.imshow('Frame', frame)
+            cv2.waitKey(0)
 
         # Press Q on keyboard to  exit
         if cv2.waitKey(25) & 0xFF == ord('q'):
