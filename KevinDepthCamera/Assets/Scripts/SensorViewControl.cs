@@ -542,6 +542,8 @@ class UndistortionDepthImage
                 Xc /= Xf;
                 Yc /= Xf;
 
+
+                // here the final precomputed arrays are set
                 depthCorrection[xCounter, yCounter] = 1 + Xc * Xc + Yc * Yc;
                 XCorrection[xCounter, yCounter] = Xc;
                 YCorrection[xCounter, yCounter] = Yc;
@@ -600,6 +602,8 @@ class UndistortionDepthImage
                     }
                     else
                     {
+                        // depthCorrection, XCorrection and YCorrection are precomputed at initialisation and can be used here for the complete undistortion
+    
                         fvalue /= depthCorrection[x, y];
                         float Xc = XCorrection[x, y] * fvalue;
                         float Yc = YCorrection[x, y] * fvalue;
