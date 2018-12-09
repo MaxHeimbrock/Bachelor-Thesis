@@ -15,10 +15,16 @@ while (cap.isOpened()):
     ret, frame = cap.read()
     if ret == True:
 
+        height, width = frame.shape[:2]
+
         # Display the resulting frame
-        cv2.imshow('Frame', frame)
+        #cv2.imshow('Frame', frame)
 
         height, width = frame.shape[:2]
+
+        if frame[int(height / 2)][int(width / 2)][2] != 0:
+            #print(frame[int(height / 2)][int(width / 2)])
+            cv2.imshow('Frame', frame)
 
         # Press Q on keyboard to  exit
         if cv2.waitKey(25) & 0xFF == ord('q'):
