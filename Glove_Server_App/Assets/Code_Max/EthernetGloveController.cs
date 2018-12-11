@@ -30,6 +30,7 @@ public class EthernetGloveController : MonoBehaviour
     private Int16 imu_cnt = 0;
     private long time0 = DateTime.Now.Ticks;
     int timestamp0 = -1;
+    StringBuilder sb = new StringBuilder();
 
     // Use this for initialization
     void Start()
@@ -51,6 +52,9 @@ public class EthernetGloveController : MonoBehaviour
         // von mir hier hin verschoben
         if (Input.GetKey("space"))
             glove.set_zero();
+
+        if (Input.GetKey("l"))
+            WriteIMUToFile();
     }
 
     public void ping()
@@ -118,19 +122,13 @@ public class EthernetGloveController : MonoBehaviour
         Vector3 accVec;
 
         Int16[] gyro = new Int16[3];
-        Vector3 gyroVec;        
+        Vector3 gyroVec;
 
         // Data Format: uint16_t cnt || uint16_t version/svn_revision || int16_t acceleration[3] || int16_t gyro[3] || uint32_t timestamp || uint32_t temperature;
         System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16), acc, 0, 3 * sizeof(Int16));
         System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16) + 3 * sizeof(Int16), gyro, 0, 3 * sizeof(Int16));
         int timestamp = BitConverter.ToInt32(data, sizeof(UInt16) + sizeof(UInt16) + 3 * sizeof(Int16) + 3 * sizeof(Int16));
-        if (timestamp0 == -1)
-            timestamp0 = timestamp;
-
-        // TODO setter
-        glove.timestamp1 = timestamp;
-        imu_cnt++;
-
+        
         /*
         if (imu_cnt == 10000)
         {
@@ -146,6 +144,17 @@ public class EthernetGloveController : MonoBehaviour
         accVec = new Vector3(acc[0], acc[1], acc[2]);
         gyroVec = new Vector3(gyro[0], gyro[1], gyro[2]);
 
+        if (timestamp0 == -1)
+        {
+            timestamp0 = timestamp;            
+        }
+
+        // TODO setter
+        glove.timestamp1 = timestamp;
+        imu_cnt++;
+
+        LogIMU(timestamp, accVec, gyroVec);        
+
         glove.applyEthernetPacketIMU(accVec, gyroVec);
 
         // 2000 degrees/sec default settings
@@ -160,7 +169,7 @@ public class EthernetGloveController : MonoBehaviour
 
         // den Ping zum Remote-Client senden.
         pingClient.Send(message, message.Length, remoteEndPointPing);
-    }        
+    }
 
     // OnGUI
     void OnGUI()
@@ -173,5 +182,26 @@ public class EthernetGloveController : MonoBehaviour
         else
             GUI.Box(new Rect(100, 200, 500, 500), "Glove active - getting data", labelStyle);
     }
-}
 
+    public void LogIMU (int timestamp, Vector3 accVec, Vector3 gyroVec)
+    {
+        float G_Gain = 0.07f;
+        float Accel_Factor = 16384.0f;
+
+        gyroVec *= G_Gain;
+        accVec /= Accel_Factor;
+
+        sb.Append(timestamp + ", ");
+        sb.Append(accVec.x + ", " + accVec.y + ", " + accVec.z + ", ");
+        sb.Append(gyroVec.x + ", " + gyroVec.y + ", " + gyroVec.z);
+        sb.Append("\n");
+    }
+
+    public void WriteIMUToFile()
+    {
+        Debug.Log("IMU_Log");
+
+        System.IO.File.WriteAllText("C:\\Users\\Max\\Documents\\GitHub\\Bachelor-Thesis\\Glove_Server_App\\IMU_log.txt", sb.ToString());
+    }
+
+}
