@@ -41,6 +41,11 @@ public class Glove
     public int timestamp0 = 0;
     public int timestamp1 = 0;
 
+    public float acc_threshold = 0.1f;
+    public float LPF_filter = 0.25f;
+    public int LPF_filter_size = 25;
+    private Vector3[] filter_array;
+
     public Glove()
     {
         cnt = 0;
@@ -79,7 +84,9 @@ public class Glove
             double tmpd = (double)tmp; // I use double here to avoid loosing to much precision
             tmpd = 0.00001f * tmpd; // That should be the same scale as for the serial glove
             double filtered_value = (1.0f - filter) * tmpd + filter * values[i];
-            values[i] = (float)filtered_value; // finally cut it to float, the precision should be fine at that point
+
+            // Auskommentiert um besser IMU zu debuggen
+            //values[i] = (float)filtered_value; // finally cut it to float, the precision should be fine at that point
             //Debug.Log(values[1]);
         }
     }
@@ -99,6 +106,9 @@ public class Glove
             acceleration1 -= acceleration_bias;
             acceleration1 /= Accel_Factor;
             gyroscope -= gyro_bias;
+            
+            //acceleration1 = thresholdAcc(acceleration1, acc_threshold);
+            acceleration1 = lowPassFilter(acceleration1);
 
             Vector3 angleFromAcc = CalcAngleFromAcc(acceleration1);
             q_acc = Quaternion.Euler(new Vector3(angleFromAcc.y, 0, angleFromAcc.x));
@@ -144,6 +154,51 @@ public class Glove
 
         timestamp0 = timestamp1;
         time0 = time1;
+    }
+
+    Vector3 thresholdAcc(Vector3 acc1, Vector3 acc0, float t)
+    {
+        //Debug.Log(Math.Abs(acc1.x - acc0.x));
+
+        if (Math.Abs(acc1.x - acc0.x) < t)
+            acc1.x = 0;
+
+        if (Math.Abs(acc1.y - acc0.y) < t)
+            acc1.y = 0;
+        if (Math.Abs(acc1.z - acc0.z) < t)
+            acc1.z = 0;
+
+        return acc1;
+    }
+
+    Vector3 lowPassFilter(Vector3 acc)
+    {
+        // initialize filter_array
+        if (filter_array == null)
+        {
+            filter_array = new Vector3[LPF_filter_size];
+            for (int i = 0; i < LPF_filter_size; i++)
+                filter_array[i] = acc;
+        }
+
+        acc = thresholdAcc(acc, filter_array[LPF_filter_size - 1], acc_threshold);
+
+        Vector3 sum = Vector3.zero;
+
+        for (int i = 0; i < LPF_filter_size; i++)
+        {
+            sum += filter_array[i];
+        }
+
+        sum /= LPF_filter_size;
+
+        // push new value in filter_array
+        for (int i = 0; i < LPF_filter_size - 1; i++)
+            filter_array[i] = filter_array[i + 1];
+
+        filter_array[LPF_filter_size - 1] = acc;
+
+        return sum;
     }
 
     // Local space IMU -> left handed, z up
