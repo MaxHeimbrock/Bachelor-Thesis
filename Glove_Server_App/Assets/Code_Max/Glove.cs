@@ -41,9 +41,9 @@ public class Glove
     public int timestamp0 = 0;
     public int timestamp1 = 0;
 
-    public float acc_threshold = 0.1f;
+    public float acc_threshold = 0.005f;
     public float LPF_filter = 0.25f;
-    public int LPF_filter_size = 25;
+    public int LPF_filter_size = 50;
     private Vector3[] filter_array;
 
     public Glove()
@@ -161,12 +161,11 @@ public class Glove
         //Debug.Log(Math.Abs(acc1.x - acc0.x));
 
         if (Math.Abs(acc1.x - acc0.x) < t)
-            acc1.x = 0;
-
+            acc1.x = acc0.x;
         if (Math.Abs(acc1.y - acc0.y) < t)
-            acc1.y = 0;
+            acc1.y = acc0.y;
         if (Math.Abs(acc1.z - acc0.z) < t)
-            acc1.z = 0;
+            acc1.z = acc0.z;
 
         return acc1;
     }
