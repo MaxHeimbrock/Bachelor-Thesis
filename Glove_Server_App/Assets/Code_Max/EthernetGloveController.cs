@@ -173,6 +173,9 @@ public class EthernetGloveController : MonoBehaviour
             elapsedTime += delta_timestamp;
         }
 
+        if (elapsedTime < 0)
+            elapsedTime = 85;
+
         // TODO setter
         glove.timestamp1 = timestamp;
         imu_cnt++;
