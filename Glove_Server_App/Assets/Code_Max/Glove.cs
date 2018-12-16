@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Glove
 {
@@ -48,6 +49,7 @@ public class Glove
     public int LPF_filter_size = 50;
     private Vector3[] filter_array;
 
+    // Interactions
     public float clap_threshold = 1.95f;
     public float clap_before_threshold = 0.45f;
 
