@@ -132,11 +132,11 @@ public class Glove
             float delta_timestamp_s = (timestamp1 - timestamp0)/10000.0f;        
             
             madgwickARHS.Update(gyroscope.x * G_Gain, gyroscope.y * G_Gain, gyroscope.z * G_Gain, acceleration1.x, acceleration1.y, acceleration1.z);
+            q_madgwick = new Quaternion(madgwickARHS.Quaternion[0], madgwickARHS.Quaternion[1], madgwickARHS.Quaternion[3], -madgwickARHS.Quaternion[2]);
             // in IMUTest wird zusätzlich noch um 180° zur x-Achse rotiert
-            //q_madgwick = new Quaternion(madgwickARHS.Quaternion[0], -madgwickARHS.Quaternion[1], -madgwickARHS.Quaternion[3], -madgwickARHS.Quaternion[2]);
-            q_madgwick = new Quaternion(madgwickARHS.Quaternion[0], -madgwickARHS.Quaternion[1], -madgwickARHS.Quaternion[3], -madgwickARHS.Quaternion[2]);
+            q_madgwick *= Quaternion.AngleAxis(180, Vector3.right);
 
-            FilterRotationQuaternion(q_madgwick, delta_timestamp_s, angleFromAcc, filter);
+            FilterRotationQuaternion(q_madgwick, delta_t_s, angleFromAcc, filter);
             q_madgwick_filtered = Quaternion.Euler(new Vector3(filtered_rotation_q.y, -filtered_rotation_q.z, filtered_rotation_q.x));
         }
         
@@ -283,21 +283,25 @@ public class Glove
             filtered_rotation.y = filter * (filtered_rotation.y + integrated_gyro.y) + (1 - filter) * acc_angles.y;
         else
             filtered_rotation.y = filtered_rotation.y + integrated_gyro.y;
+
         filtered_rotation.z = filtered_rotation.z + integrated_gyro.z;
     }
 
     void FilterRotationQuaternion(Quaternion q_madgwick, float delta_t_s, Vector3 acc_angles, float filter)
-    {       
+    {
+        filter = 0.98f;
+
         // Acc is only trustable till around 45° right now - still a flip happens
         if (acc_angles.x < 20)
-            filtered_rotation_q.x = filter * (filtered_rotation_q.x + q_madgwick.eulerAngles.x) + (1 - filter) * acc_angles.x;
+            filtered_rotation_q.x = filter * q_madgwick.eulerAngles.x + (1 - filter) * acc_angles.x;
         else
-            filtered_rotation_q.x = filtered_rotation_q.x + q_madgwick.eulerAngles.x;
+            filtered_rotation_q.x = q_madgwick.eulerAngles.x;
         if (acc_angles.y < 20)
-            filtered_rotation_q.y = filter * (filtered_rotation_q.y + q_madgwick.eulerAngles.y) + (1 - filter) * acc_angles.y;
+            filtered_rotation_q.y = filter * q_madgwick.eulerAngles.y + (1 - filter) * acc_angles.y;
         else
-            filtered_rotation_q.y = filtered_rotation_q.y + q_madgwick.eulerAngles.y;
-        filtered_rotation_q.z = filtered_rotation_q.z + q_madgwick.eulerAngles.z;
+            filtered_rotation_q.y = q_madgwick.eulerAngles.y;
+
+        filtered_rotation_q.z = q_madgwick.eulerAngles.z;
     }
 
     public TrackingData GetTrackingData()

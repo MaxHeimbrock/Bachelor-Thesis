@@ -37,16 +37,11 @@ public class IMUTest : MonoBehaviour {
             else if (orientationMode == mode.madgwick)
             {
                 this.transform.rotation = Quaternion.Inverse(glove.q_madgwick);
-                // Because Madgwick filter always flips around first
-                //this.transform.Rotate(180,0,0);
             }
             else if (orientationMode == mode.madgwickFiltered)
             {
                 this.transform.rotation = Quaternion.Inverse(glove.q_madgwick_filtered);
-                // Because Madgwick filter always flips around first
-                //this.transform.Rotate(180, 0, 0);
             }
-            // this.transform.rotation = Quaternion.Inverse(glove.q3);
         }
     }
 }
