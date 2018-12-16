@@ -86,7 +86,7 @@ public class Glove
             double filtered_value = (1.0f - filter) * tmpd + filter * values[i];
 
             // Auskommentiert um besser IMU zu debuggen
-            //values[i] = (float)filtered_value; // finally cut it to float, the precision should be fine at that point
+            values[i] = (float)filtered_value; // finally cut it to float, the precision should be fine at that point
             //Debug.Log(values[1]);
         }
     }
