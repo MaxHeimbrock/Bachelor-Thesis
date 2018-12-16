@@ -15,15 +15,17 @@ public class Glove
     private UInt32[] raw_values;
     
     // for imu testing
-    private Vector3 acceleration;
+    private Vector3 acceleration = Vector3.zero;
     private Vector3 velocity;
     private Vector3 gyro_current_rotation = new Vector3(0,0,0);
     private Vector3 filtered_rotation = new Vector3(0, 0, 0);
+    private Vector3 filtered_rotation_q = new Vector3(0, 0, 0);
     public float filter = 0.98f;
     public Quaternion q_acc;
     public Quaternion q_gyro;
     public Quaternion q_filtered;
     public Quaternion q_madgwick;
+    public Quaternion q_madgwick_filtered;
 
     float G_Gain = 0.07f; // to get degrees per second with 2000dps http://ozzmaker.com/berryimu/
     float Accel_Factor = 16384.0f;
@@ -45,6 +47,9 @@ public class Glove
     public float LPF_filter = 0.25f;
     public int LPF_filter_size = 50;
     private Vector3[] filter_array;
+
+    public float clap_threshold = 1.95f;
+    public float clap_before_threshold = 0.45f;
 
     public Glove()
     {
@@ -96,7 +101,7 @@ public class Glove
         long time1 = DateTime.Now.Ticks;
 
         if (bias_counter > bias_length)
-        {
+        {            
             // delta t in seconds or miliseconds
             TimeSpan elapsedSpan = new TimeSpan(time1 - time0);
             long delta_t_ms = elapsedSpan.Milliseconds;
@@ -106,8 +111,10 @@ public class Glove
             acceleration1 -= acceleration_bias;
             acceleration1 /= Accel_Factor;
             gyroscope -= gyro_bias;
-            
-            //acceleration1 = thresholdAcc(acceleration1, acc_threshold);
+
+            detect_clap(acceleration1);
+
+            acceleration1 = thresholdAcc(acceleration1, acceleration, acc_threshold);
             acceleration1 = lowPassFilter(acceleration1);
 
             Vector3 angleFromAcc = CalcAngleFromAcc(acceleration1);
@@ -126,9 +133,13 @@ public class Glove
             
             madgwickARHS.Update(gyroscope.x * G_Gain, gyroscope.y * G_Gain, gyroscope.z * G_Gain, acceleration1.x, acceleration1.y, acceleration1.z);
             // in IMUTest wird zusätzlich noch um 180° zur x-Achse rotiert
+            //q_madgwick = new Quaternion(madgwickARHS.Quaternion[0], -madgwickARHS.Quaternion[1], -madgwickARHS.Quaternion[3], -madgwickARHS.Quaternion[2]);
             q_madgwick = new Quaternion(madgwickARHS.Quaternion[0], -madgwickARHS.Quaternion[1], -madgwickARHS.Quaternion[3], -madgwickARHS.Quaternion[2]);
-        }
 
+            FilterRotationQuaternion(q_madgwick, delta_timestamp_s, angleFromAcc, filter);
+            q_madgwick_filtered = Quaternion.Euler(new Vector3(filtered_rotation_q.y, -filtered_rotation_q.z, filtered_rotation_q.x));
+        }
+        
         // get bias
         else if (bias_counter == bias_length)
         {
@@ -154,8 +165,31 @@ public class Glove
 
         timestamp0 = timestamp1;
         time0 = time1;
+
+        acceleration = acceleration1;
     }
 
+    // detect Claps: accel in positive z when all past accel values in filter_array show no accel -> clap detected
+    public void detect_clap(Vector3 acc)
+    {
+        if (filter_array != null)
+        {
+            float filter_array_sum_z = 0;
+
+            for (int i = 0; i < LPF_filter_size; i++)
+            {
+                filter_array_sum_z += Math.Abs(filter_array[i].z);
+            }
+
+            filter_array_sum_z /= LPF_filter_size;
+
+            if (acc.z > clap_threshold && filter_array_sum_z < clap_before_threshold)
+                Debug.Log("Clap");
+        }
+    }
+
+
+    // If difference between old and new accel data is below t, use old data again
     Vector3 thresholdAcc(Vector3 acc1, Vector3 acc0, float t)
     {
         //Debug.Log(Math.Abs(acc1.x - acc0.x));
@@ -250,6 +284,20 @@ public class Glove
         else
             filtered_rotation.y = filtered_rotation.y + integrated_gyro.y;
         filtered_rotation.z = filtered_rotation.z + integrated_gyro.z;
+    }
+
+    void FilterRotationQuaternion(Quaternion q_madgwick, float delta_t_s, Vector3 acc_angles, float filter)
+    {       
+        // Acc is only trustable till around 45° right now - still a flip happens
+        if (acc_angles.x < 20)
+            filtered_rotation_q.x = filter * (filtered_rotation_q.x + q_madgwick.eulerAngles.x) + (1 - filter) * acc_angles.x;
+        else
+            filtered_rotation_q.x = filtered_rotation_q.x + q_madgwick.eulerAngles.x;
+        if (acc_angles.y < 20)
+            filtered_rotation_q.y = filter * (filtered_rotation_q.y + q_madgwick.eulerAngles.y) + (1 - filter) * acc_angles.y;
+        else
+            filtered_rotation_q.y = filtered_rotation_q.y + q_madgwick.eulerAngles.y;
+        filtered_rotation_q.z = filtered_rotation_q.z + q_madgwick.eulerAngles.z;
     }
 
     public TrackingData GetTrackingData()

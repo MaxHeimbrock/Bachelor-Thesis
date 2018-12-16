@@ -9,7 +9,7 @@ public class IMUTest : MonoBehaviour {
    
     public mode orientationMode = mode.acc;
 
-    public enum mode {acc, gyro, filtered, madgwick};
+    public enum mode {acc, gyro, filtered, madgwick, madgwickFiltered};
 
     // Use this for initialization
 	void Start () {
@@ -38,7 +38,13 @@ public class IMUTest : MonoBehaviour {
             {
                 this.transform.rotation = Quaternion.Inverse(glove.q_madgwick);
                 // Because Madgwick filter always flips around first
-                this.transform.Rotate(180,0,0);
+                //this.transform.Rotate(180,0,0);
+            }
+            else if (orientationMode == mode.madgwickFiltered)
+            {
+                this.transform.rotation = Quaternion.Inverse(glove.q_madgwick_filtered);
+                // Because Madgwick filter always flips around first
+                //this.transform.Rotate(180, 0, 0);
             }
             // this.transform.rotation = Quaternion.Inverse(glove.q3);
         }
