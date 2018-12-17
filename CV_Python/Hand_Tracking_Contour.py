@@ -25,20 +25,49 @@ while (cap.isOpened()):
             # draw in blue the contours that were found
             #cv2.drawContours(frame, contours, -1, 255, 3)
 
-            # find the biggest area
-            c = max(contours, key=cv2.contourArea)
+            # a contour is simply a NumPy array of (x, y)-coordinates.
 
-            x, y, w, h = cv2.boundingRect(c)
+            # find the biggest contour --> Hand
+            cnt = max(contours, key=cv2.contourArea)
 
-            hull = cv2.convexHull(c)
+            # finds hightest point
+            topmost = tuple(cnt[cnt[:, :, 1].argmin()][0])
 
+            # build bounding rectangle
+            x, y, w, h = cv2.boundingRect(cnt)
+
+            # find convex hull and defects
+            hull = cv2.convexHull(cnt, returnPoints = False)
+
+            # [ start point, end point, farthest point, approximate distance to farthest point ]
+            defects = cv2.convexityDefects(cnt, hull)
+
+            hull = cv2.convexHull(cnt)
             cv2.drawContours(frame, hull, -1, 255, 3)
+            #cv2.drawContours(frame, defects, -1, 255, 3)
+
+            M = cv2.moments(cnt)
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+
+            cv2.circle(frame, (cX, cY), 5, (255, 255, 255), -1)
 
             # draw the book contour (in green)
             #cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
             # stop at one point where hand is in the middle
             if frame[int(height / 2)][int(width / 2)][2] != 0:
+                #print(contours)
+                print(topmost)
+
+                for i in range(defects.shape[0]):
+                    s, e, f, d = defects[i, 0]
+                    start = tuple(cnt[s][0])
+                    end = tuple(cnt[e][0])
+                    far = tuple(cnt[f][0])
+                    cv2.line(frame, start, end, [0, 255, 0], 2)
+                    cv2.circle(frame, far, 5, [255, 0, 0], -1)
+
                 cv2.waitKey(0)
 
         # Display the resulting frame
