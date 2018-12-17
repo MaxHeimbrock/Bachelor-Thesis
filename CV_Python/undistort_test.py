@@ -54,14 +54,39 @@ while (cap.isOpened()):
             # print (np.where((frame == [0, 0, 0]).all(axis=2)))
             cv2.imshow('frame', frame)
 
-            newcameramtx, roi = cv2.getOptimalNewCameraMatrix(camera_matrix, dist_coeffs, (width, height), 1,
-                                                              (width, height))
-            mapx, mapy = cv2.initUndistortRectifyMap(newcameramtx, dist_coeffs, None, newcameramtx, (width, height), 5)
-            dst = cv2.remap(frame, mapx, mapy, cv2.INTER_LINEAR)
+            #newcameramtx, roi = cv2.getOptimalNewCameraMatrix(camera_matrix, dist_coeffs, (width, height), 1,(width, height))
+            #mapx, mapy = cv2.initUndistortRectifyMap(newcameramtx, dist_coeffs, None, newcameramtx, (width, height), 5)
+            #dst = cv2.remap(frame, mapx, mapy, cv2.INTER_LINEAR)
 
-            cv2.imshow('undist_frame', dst)
+            #cv2.imshow('undist_frame', dst)
 
-            print(is_similar(frame, dst))
+            #print(is_similar(frame, dst))
+            imgray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            ret, thresh = cv2.threshold(imgray, 127, 255, 0)
+            im2, contours, hierarchy = cv2.findContours(imgray, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            cv2.drawContours(im2, contours, -1, (0, 255, 0), 3)
+            cv2.imshow('im2', im2)
+            # create hull array for convex hull points
+            hull = []
+
+            # calculate points for each contour
+            for i in range(len(contours)):
+                # creating convex hull object for each contour
+                hull.append(cv2.convexHull(contours[i], False))
+
+            # create an empty black image
+            drawing = np.zeros((thresh.shape[0], thresh.shape[1], 3), np.uint8)
+
+            # draw contours and hull points
+            for i in range(len(contours)):
+                color_contours = (0, 255, 0)  # green - color for contours
+                color = (255, 0, 0)  # blue - color for convex hull
+                # draw ith contour
+                cv2.drawContours(drawing, contours, i, color_contours, 1, 8, hierarchy)
+                # draw ith convex hull object
+                cv2.drawContours(drawing, hull, i, color, 1, 8)
+
+            cv2.imshow('im2', drawing)
 
             cv2.waitKey(0)
             break
