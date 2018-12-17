@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class IMUTest : MonoBehaviour {
 
@@ -9,7 +10,9 @@ public class IMUTest : MonoBehaviour {
    
     public mode orientationMode = mode.acc;
 
-    public enum mode {acc, gyro, filtered, madgwick};
+    public Scrollbar bar;
+
+    public enum mode {acc, gyro, filtered, madgwick, madgwickFiltered};
 
     // Use this for initialization
 	void Start () {
@@ -19,9 +22,11 @@ public class IMUTest : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         if (glove == null)
+        {
             glove = glove_controller.GetComponent<EthernetGloveController>().glove;
+        }
         else
-        {                       
+        {
             if (orientationMode == mode.acc)
             {
                 this.transform.rotation = Quaternion.Inverse(glove.q_acc);
@@ -37,10 +42,13 @@ public class IMUTest : MonoBehaviour {
             else if (orientationMode == mode.madgwick)
             {
                 this.transform.rotation = Quaternion.Inverse(glove.q_madgwick);
-                // Because Madgwick filter always flips around first
-                this.transform.Rotate(180,0,0);
+                Debug.Log(glove.q_madgwick.eulerAngles.x);
+                bar.value = glove.q_madgwick.eulerAngles.z/360;
             }
-            // this.transform.rotation = Quaternion.Inverse(glove.q3);
+            else if (orientationMode == mode.madgwickFiltered)
+            {
+                this.transform.rotation = Quaternion.Inverse(glove.q_madgwick_filtered);
+            }
         }
     }
 }
