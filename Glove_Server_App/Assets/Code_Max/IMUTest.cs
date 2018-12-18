@@ -42,7 +42,6 @@ public class IMUTest : MonoBehaviour {
             else if (orientationMode == mode.madgwick)
             {
                 this.transform.rotation = Quaternion.Inverse(glove.q_madgwick);
-                Debug.Log(glove.q_madgwick.eulerAngles.x);
                 bar.value = glove.q_madgwick.eulerAngles.z/360;
             }
             else if (orientationMode == mode.madgwickFiltered)

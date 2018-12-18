@@ -36,6 +36,11 @@ public class Glove
     private int bias_counter = 0;
     private int bias_length = 100;
 
+    // Calibration with Adnane
+    private Vector3 acc_bias_adnane = new Vector3(0.0397429f, -0.0665699f, -0.024349f);
+    private Vector3 gyro_bias_adnane = new Vector3(-0.903895f, 0.44357f, -0.429229f);
+    private Matrix4x4 gyro_correction_matrix = new Matrix4x4(new Vector4(0.864768f, -0.532357234176f, 0.0513571014144f, 0), new Vector4(0.515507329899f, 0.863067f, -0.0330214612602f, 0), new Vector4(-0.03419220999f, 0.060746958228f, 1.00266f, 0), new Vector4(0, 0, 0, 1));
+
     private MadgwickAHRS madgwickARHS = new MadgwickAHRS(0.00005f);
     private MahonyAHRS mahonyARHS = new MahonyAHRS(0.00005f);
 
@@ -110,9 +115,8 @@ public class Glove
             float delta_t_s = delta_t_ms / 1000f;
 
             // TODO: Bias nötig?
-            acceleration1 -= acceleration_bias;
-            acceleration1 /= Accel_Factor;
-            gyroscope -= gyro_bias;
+            gyroscope = CorrectGyro(gyroscope);
+            acceleration1 = CorrectAccel(acceleration1);
 
             detect_clap(acceleration1);
 
@@ -133,7 +137,7 @@ public class Glove
             // dont know how to convert
             float delta_timestamp_s = (timestamp1 - timestamp0)/10000.0f;        
             
-            madgwickARHS.Update(gyroscope.x * G_Gain, gyroscope.y * G_Gain, gyroscope.z * G_Gain, acceleration1.x, acceleration1.y, acceleration1.z);
+            madgwickARHS.Update(gyroscope.x, gyroscope.y, gyroscope.z, acceleration1.x, acceleration1.y, acceleration1.z);
             q_madgwick = new Quaternion(madgwickARHS.Quaternion[0], madgwickARHS.Quaternion[1], madgwickARHS.Quaternion[3], -madgwickARHS.Quaternion[2]);
             // in IMUTest wird zusätzlich noch um 180° zur x-Achse rotiert
             q_madgwick *= Quaternion.AngleAxis(180, Vector3.right);
@@ -148,7 +152,9 @@ public class Glove
             // Mittelwert berechnen und Gravitation behalten
             acceleration_bias /= bias_length;
             acceleration_bias -= new Vector3(0, 0, -Accel_Factor);
+            acceleration_bias /= Accel_Factor;
             gyro_bias /= bias_length;
+            gyro_bias *= G_Gain;
 
             bias_counter++;
             Debug.Log("Gyroscope bias is " + gyro_bias);
@@ -171,6 +177,25 @@ public class Glove
         acceleration = acceleration1;
     }
 
+    // corrects gyroscope measurement with bias and G_Gain
+    Vector3 CorrectGyro(Vector3 gyro)
+    {
+        gyro *= G_Gain;
+        gyro -= gyro_bias_adnane;
+        Vector4 gyro_temp = new Vector4(gyro.x, gyro.y, gyro.z, 0);
+        gyro_temp = gyro_correction_matrix.MultiplyVector(gyro_temp);
+        //return new Vector3(gyro_temp.x, gyro_temp.y, gyro_temp.z);
+        return gyro;
+    }
+
+    // corrects acceleromter measurement with bias and Accel_Factor
+    Vector3 CorrectAccel(Vector3 acc)
+    {
+        acc /= Accel_Factor;
+        acc -= acc_bias_adnane;
+        return acc;
+    }
+
     // detect Claps: accel in positive z when all past accel values in filter_array show no accel -> clap detected
     public void detect_clap(Vector3 acc)
     {
@@ -189,7 +214,6 @@ public class Glove
                 Debug.Log("Clap");
         }
     }
-
 
     // If difference between old and new accel data is below t, use old data again
     Vector3 thresholdAcc(Vector3 acc1, Vector3 acc0, float t)
@@ -268,7 +292,7 @@ public class Glove
     // Local space IMU -> left handed, z up
     Vector3 IntegrateGyro(Vector3 gyro, float delta_t_s)
     {
-        return (gyro * delta_t_s * G_Gain);
+        return (gyro * delta_t_s);
     }
 
     // Local space IMU -> left handed, z up

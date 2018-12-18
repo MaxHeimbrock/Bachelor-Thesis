@@ -244,7 +244,7 @@ public class EthernetGloveController : MonoBehaviour
     {
         Debug.Log("IMU_Log");
 
-        System.IO.File.WriteAllText("C:\\Users\\Max\\Documents\\GitHub\\Bachelor-Thesis\\Glove_Server_App\\IMU_log.txt", sb.ToString());
+        System.IO.File.WriteAllText("C:\\Users\\Max\\Documents\\GitHub\\Bachelor-Thesis\\Glove_Server_App\\IMU_Calibration\\IMU_log.txt", sb.ToString());
     }
     
     // initialized to discard first two seconds
