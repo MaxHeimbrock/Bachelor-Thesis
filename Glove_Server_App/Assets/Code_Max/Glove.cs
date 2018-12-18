@@ -139,7 +139,7 @@ public class Glove
             
             madgwickARHS.Update(gyroscope.x, gyroscope.y, gyroscope.z, acceleration1.x, acceleration1.y, acceleration1.z);
             q_madgwick = new Quaternion(madgwickARHS.Quaternion[0], madgwickARHS.Quaternion[1], madgwickARHS.Quaternion[3], -madgwickARHS.Quaternion[2]);
-            // in IMUTest wird zusätzlich noch um 180° zur x-Achse rotiert
+            // zusätzlich noch um 180° zur x-Achse rotiert
             q_madgwick *= Quaternion.AngleAxis(180, Vector3.right);
 
             FilterRotationQuaternion(q_madgwick, delta_t_s, angleFromAcc, filter);
