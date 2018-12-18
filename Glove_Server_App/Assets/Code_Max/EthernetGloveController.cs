@@ -218,11 +218,11 @@ public class EthernetGloveController : MonoBehaviour
 
         if (logStatus == logging.logStarted)
         {
-            GUI.Box(new Rect(100, 250, 500, 500), "seconds: " + secondsCountRounded, labelStyle);
-            GUI.Box(new Rect(100, 300, 500, 500), "rep: " + repCount, labelStyle);
+            GUI.Box(new Rect(100, 300, 500, 500), "seconds: " + secondsCountRounded, labelStyle);
+            GUI.Box(new Rect(100, 350, 500, 500), "rep: " + repCount, labelStyle);
 
             if ((int)secondsCount >= 40)
-                GUI.Box(new Rect(100, 350, 500, 500), "TURN", labelStyle);
+                GUI.Box(new Rect(100, 400, 500, 500), "TURN", labelStyle);
         }
     }
 

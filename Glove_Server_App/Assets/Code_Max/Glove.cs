@@ -26,7 +26,9 @@ public class Glove
     public Quaternion q_gyro;
     public Quaternion q_filtered;
     public Quaternion q_madgwick;
+    public Quaternion q_mahony;
     public Quaternion q_madgwick_filtered;
+    public Quaternion q_acc_first_pose;
 
     float G_Gain = 0.07f; // to get degrees per second with 2000dps http://ozzmaker.com/berryimu/
     float Accel_Factor = 16384.0f;
@@ -43,6 +45,7 @@ public class Glove
 
     private MadgwickAHRS madgwickARHS = new MadgwickAHRS(0.00005f);
     private MahonyAHRS mahonyARHS = new MahonyAHRS(0.00005f);
+    bool first_pose = true;
 
     long time0;
 
@@ -135,12 +138,26 @@ public class Glove
             q_filtered = Quaternion.Euler(new Vector3(filtered_rotation.y, -filtered_rotation.z, filtered_rotation.x));
 
             // dont know how to convert
-            float delta_timestamp_s = (timestamp1 - timestamp0)/10000.0f;        
-            
+            float delta_timestamp_s = (timestamp1 - timestamp0)/10000.0f;    
+
+            // Give initial pose for madgwick and mahony from accelerometer angles --> best if glove is relatively flat on table
+            if (first_pose)
+            {
+                q_acc_first_pose = q_acc;
+                first_pose = false;
+            }
+
             madgwickARHS.Update(gyroscope.x, gyroscope.y, gyroscope.z, acceleration1.x, acceleration1.y, acceleration1.z);
             q_madgwick = new Quaternion(madgwickARHS.Quaternion[0], madgwickARHS.Quaternion[1], madgwickARHS.Quaternion[3], -madgwickARHS.Quaternion[2]);
             // zusätzlich noch um 180° zur x-Achse rotiert
             q_madgwick *= Quaternion.AngleAxis(180, Vector3.right);
+            q_madgwick *= q_acc_first_pose;
+
+            mahonyARHS.Update(gyroscope.x, gyroscope.y, gyroscope.z, acceleration1.x, acceleration1.y, acceleration1.z);
+            q_mahony = new Quaternion(mahonyARHS.Quaternion[0], mahonyARHS.Quaternion[1], mahonyARHS.Quaternion[3], -mahonyARHS.Quaternion[2]);
+            // zusätzlich noch um 180° zur x-Achse rotiert
+            q_mahony *= Quaternion.AngleAxis(180, Vector3.right);
+            q_mahony *= q_acc_first_pose;
 
             FilterRotationQuaternion(q_madgwick, delta_t_s, angleFromAcc, filter);
             q_madgwick_filtered = Quaternion.Euler(new Vector3(filtered_rotation_q.y, -filtered_rotation_q.z, filtered_rotation_q.x));

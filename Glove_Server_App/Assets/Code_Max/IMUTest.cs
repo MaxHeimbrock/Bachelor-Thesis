@@ -11,10 +11,10 @@ public class IMUTest : MonoBehaviour {
     public mode orientationMode = mode.acc;
 
     public Scrollbar bar;
-    public float scrollspeed = 0.015f;
+    private float scrollspeed = 0.015f;
     public float scroll_value = 0f;
 
-    public enum mode {acc, gyro, filtered, madgwick, madgwickFiltered};
+    public enum mode {acc, gyro, filtered, madgwick, mahony, madgwickFiltered};
 
     // Use this for initialization
 	void Start () {
@@ -47,6 +47,10 @@ public class IMUTest : MonoBehaviour {
                 //scroll_absolute(glove.q_madgwick.eulerAngles.z);
                 //scroll_relative(glove.q_madgwick.eulerAngles.z);
                 scroll_relative_exp(glove.q_madgwick.eulerAngles.z);
+            }
+            else if (orientationMode == mode.mahony)
+            {
+                this.transform.rotation = Quaternion.Inverse(glove.q_mahony);
             }
             else if (orientationMode == mode.madgwickFiltered)
             {
@@ -95,6 +99,10 @@ public class IMUTest : MonoBehaviour {
         scroll += 0.5f;
         scroll = scroll % 1;
         scroll -= 0.5f;
+        
+        Mathf.Pow(scroll, 3);
+
+        Debug.Log(scroll);
 
         // TODO
 
