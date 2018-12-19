@@ -43,7 +43,7 @@ while (cap.isOpened()):
             defects = cv2.convexityDefects(cnt, hull)
 
             hull = cv2.convexHull(cnt)
-            cv2.drawContours(frame, hull, -1, 255, 3)
+            cv2.drawContours(frame, hull, -1, [255, 255, 0], 3)
             #cv2.drawContours(frame, defects, -1, 255, 3)
 
             M = cv2.moments(cnt)
@@ -52,7 +52,7 @@ while (cap.isOpened()):
 
             cv2.circle(frame, (cX, cY), 5, (255, 255, 255), -1)
 
-            # draw the book contour (in green)
+            # draw the rectangle bounding box of contour (in green)
             #cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
             # stop at one point where hand is in the middle
@@ -68,14 +68,16 @@ while (cap.isOpened()):
                     cv2.line(frame, start, end, [0, 255, 0], 2)
                     cv2.circle(frame, far, 5, [255, 0, 0], -1)
 
-                cv2.waitKey(0)
-
         # Display the resulting frame
         cv2.imshow('Imgray', frame)
 
         # Press Q on keyboard to exit
         if cv2.waitKey(25) & 0xFF == ord('q'):
             break
+
+        # Press p for pause
+        elif cv2.waitKey(25) & 0xFF == ord('p'):
+            cv2.waitKey(0)
 
     # Break the loop
     else:
