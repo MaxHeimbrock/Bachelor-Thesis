@@ -13,8 +13,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Hand_Tracking_Contour.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="206">
-              <caret line="35" column="38" lean-forward="true" selection-start-line="35" selection-start-column="38" selection-end-line="35" selection-end-column="38" />
+            <state relative-caret-position="260">
+              <caret line="62" column="49" lean-forward="true" selection-start-line="62" selection-start-column="49" selection-end-line="62" selection-end-column="49" />
             </state>
           </provider>
         </entry>
@@ -33,6 +33,7 @@
       <find>cv</find>
       <find>drawing</find>
       <find>drawContours</find>
+      <find>print</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -267,8 +268,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Hand_Tracking_Contour.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="206">
-          <caret line="35" column="38" lean-forward="true" selection-start-line="35" selection-start-column="38" selection-end-line="35" selection-end-column="38" />
+        <state relative-caret-position="260">
+          <caret line="62" column="49" lean-forward="true" selection-start-line="62" selection-start-column="49" selection-end-line="62" selection-end-column="49" />
         </state>
       </provider>
     </entry>
