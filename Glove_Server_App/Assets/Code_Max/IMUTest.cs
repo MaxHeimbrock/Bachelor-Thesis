@@ -45,8 +45,8 @@ public class IMUTest : MonoBehaviour {
             {
                 this.transform.rotation = Quaternion.Inverse(glove.q_madgwick);
                 //scroll_absolute(glove.q_madgwick.eulerAngles.z);
-                //scroll_relative(glove.q_madgwick.eulerAngles.z);
-                scroll_relative_exp(glove.q_madgwick.eulerAngles.z);
+                scroll_relative(glove.q_madgwick.eulerAngles.z);
+                //scroll_relative_exp(glove.q_madgwick.eulerAngles.z);
             }
             else if (orientationMode == mode.mahony)
             {

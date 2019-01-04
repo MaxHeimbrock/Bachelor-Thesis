@@ -14,7 +14,9 @@ public class Glove
 
     private UInt32[] offsets;
     private UInt32[] raw_values;
-    
+
+    public bool moveHand = true;
+
     // for imu testing
     private Vector3 acceleration = Vector3.zero;
     private Vector3 velocity;
@@ -101,7 +103,9 @@ public class Glove
             double filtered_value = (1.0f - filter) * tmpd + filter * values[i];
 
             // Auskommentiert um besser IMU zu debuggen
-            //values[i] = (float)filtered_value; // finally cut it to float, the precision should be fine at that point
+            if (moveHand == true)
+                values[i] = (float)filtered_value; // finally cut it to float, the precision should be fine at that point
+            
             //Debug.Log(values[1]);
         }
     }
