@@ -15,7 +15,7 @@ public class Glove
     private UInt32[] offsets;
     private UInt32[] raw_values;
 
-    public bool moveHand = true;
+    public bool moveHand = true; 
 
     // for imu testing
     private Vector3 acceleration = Vector3.zero;
@@ -60,8 +60,16 @@ public class Glove
     private Vector3[] filter_array;
 
     // Interactions
-    public float clap_threshold = 1.95f;
-    public float clap_before_threshold = 0.45f;
+    public float clap_threshold = 1.90f;
+    public float clap_before_threshold = 0.40f;
+
+    private bool fist_detection_activated = false;
+    public float fist_threshold = 20f;
+
+    public Canvas canvas;
+    private bool showCanvas = false;
+
+    public IMUTest imuTest;
 
     public Glove()
     {
@@ -84,11 +92,15 @@ public class Glove
         for (int i = 0; i < Constants.NB_SENSORS; i++)
         {
             offsets[i] = raw_values[i];
-        }        
+        }
+
+        fist_detection_activated = false;
     }  
 
     public void apply_ethernetJointPacket(UInt32[] newValues)
     {
+        float sum = 0;
+
         cnt++;
  
         float filter = 0.9f;
@@ -105,9 +117,19 @@ public class Glove
             // Auskommentiert um besser IMU zu debuggen
             if (moveHand == true)
                 values[i] = (float)filtered_value; // finally cut it to float, the precision should be fine at that point
-            
+
             //Debug.Log(values[1]);
+
+            sum += values[i];
         }
+
+        if (sum < fist_threshold && fist_detection_activated == false)
+            fist_detection_activated = true;
+
+        if (sum > fist_threshold && fist_detection_activated == true)
+            imuTest.fistDetected();
+
+        //Debug.Log(sum);
     }
 
     public void applyEthernetPacketIMU(Vector3 acceleration1, Vector3 gyroscope)
@@ -232,7 +254,11 @@ public class Glove
             filter_array_sum_z /= LPF_filter_size;
 
             if (acc.z > clap_threshold && filter_array_sum_z < clap_before_threshold)
+            {
                 Debug.Log("Clap");
+
+                imuTest.clapDetected();
+            }                
         }
     }
 

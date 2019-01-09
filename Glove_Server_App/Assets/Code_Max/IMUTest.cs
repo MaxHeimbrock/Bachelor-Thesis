@@ -11,21 +11,34 @@ public class IMUTest : MonoBehaviour {
     public mode orientationMode = mode.acc;
 
     public Scrollbar bar;
-    private float scrollspeed = 0.015f;
+    private float scrollspeed = 0.01f;
     public float scroll_value = 0f;
+
+    public Canvas canvas;
+    private bool showCanvas = true;
+
+    public int numberOfButtons = 36;
+    private Button[] buttonList;
+    public ButtonCreator buttonCreator;
 
     public enum mode {acc, gyro, filtered, madgwick, mahony, madgwickFiltered};
 
     // Use this for initialization
 	void Start () {
         //glove = glove_controller.GetComponent<EthernetGloveController>().glove;
+        buttonList = new Button[numberOfButtons];
+
     }
 	
 	// Update is called once per frame
 	void Update () {
+
+        canvas.gameObject.SetActive(showCanvas);
+
         if (glove == null)
         {
             glove = glove_controller.GetComponent<EthernetGloveController>().glove;
+            glove.imuTest = this;            
         }
         else
         {
@@ -43,14 +56,14 @@ public class IMUTest : MonoBehaviour {
             }
             else if (orientationMode == mode.madgwick)
             {
-                this.transform.rotation = Quaternion.Inverse(glove.q_madgwick);
-                //scroll_absolute(glove.q_madgwick.eulerAngles.z);
-                scroll_relative(glove.q_madgwick.eulerAngles.z);
-                //scroll_relative_exp(glove.q_madgwick.eulerAngles.z);
+                this.transform.rotation = Quaternion.Inverse(glove.q_madgwick);                
             }
             else if (orientationMode == mode.mahony)
             {
                 this.transform.rotation = Quaternion.Inverse(glove.q_mahony);
+                //scroll_absolute(glove.q_mahony.eulerAngles.z);
+                //scroll_relative(glove.q_mahony.eulerAngles.z);
+                scroll_relative_exp(glove.q_mahony.eulerAngles.z);
             }
             else if (orientationMode == mode.madgwickFiltered)
             {
@@ -100,13 +113,27 @@ public class IMUTest : MonoBehaviour {
         scroll = scroll % 1;
         scroll -= 0.5f;
         
-        Mathf.Pow(scroll, 3);
-
-        Debug.Log(scroll);
-
-        // TODO
+        Mathf.Pow(scroll, 3); 
 
         scroll_value += scroll * scrollspeed;
         bar.value = scroll_value;
+
+        bar.value = 1 - scroll_value;
+    }
+
+    public void clapDetected()
+    {
+        showCanvas = !showCanvas;
+        scroll_value = 0f;
+    }
+
+    public void fistDetected()
+    {
+        buttonCreator.clicked();
+    }
+
+    public void createButtons()
+    {
+        
     }
 }
