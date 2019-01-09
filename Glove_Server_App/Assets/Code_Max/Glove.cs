@@ -15,8 +15,6 @@ public class Glove
     private UInt32[] offsets;
     private UInt32[] raw_values;
 
-    public bool moveHand = true; 
-
     // for imu testing
     private Vector3 acceleration = Vector3.zero;
     private Vector3 velocity;
@@ -66,9 +64,6 @@ public class Glove
     private bool fist_detection_activated = false;
     public float fist_threshold = 20f;
 
-    public Canvas canvas;
-    private bool showCanvas = false;
-
     public IMUTest imuTest;
 
     public Glove()
@@ -114,9 +109,7 @@ public class Glove
             tmpd = 0.00001f * tmpd; // That should be the same scale as for the serial glove
             double filtered_value = (1.0f - filter) * tmpd + filter * values[i];
 
-            // Auskommentiert um besser IMU zu debuggen
-            if (moveHand == true)
-                values[i] = (float)filtered_value; // finally cut it to float, the precision should be fine at that point
+            values[i] = (float)filtered_value; // finally cut it to float, the precision should be fine at that point
 
             //Debug.Log(values[1]);
 
