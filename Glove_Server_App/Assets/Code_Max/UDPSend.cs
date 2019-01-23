@@ -14,7 +14,13 @@ public class UDPSend : MonoBehaviour
     
     public int port = 11110;  // define in init
 
-    public string myIP = "192.168.1.210";
+    //public string myIP = "192.168.1.210";
+
+    // zu hause
+    //public string myIP = "192.168.178.33";
+
+    // default klappt
+    public string myIP = "0.0.0.0";
 
     // "connection" things
     IPEndPoint remoteEndPoint;
@@ -55,7 +61,7 @@ public class UDPSend : MonoBehaviour
     // init
     public void init()    {
         
-        IPEndPoint listeningEndPoint = new IPEndPoint(IPAddress.Parse(myIP), port);
+        IPEndPoint listeningEndPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), port);
         client = new UdpClient(listeningEndPoint);
 
         client.BeginReceive(new AsyncCallback(recv), null);
@@ -64,37 +70,43 @@ public class UDPSend : MonoBehaviour
     //______________________________________ Code von Alex
 
     private void sendSinglePoseUpdate(TrackingData trD)
-    {       
-        // data format = length (int) | Type (byte) | SEQ (uint) |  jointValues (float[40]) | pose (4*4 floats) | velocity (3 floats) | acceleration (3 floats) | time (long)
-       
-        byte[] data = new byte[sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * 4 * sizeof(float) + 3 * sizeof(float) + 3 * sizeof(float) + sizeof(long)];
+    {
+        float[] orientation = new float[4];
+        orientation[0] = trD.orientation.w;
+        orientation[1] = trD.orientation.x;
+        orientation[2] = trD.orientation.y;
+        orientation[3] = trD.orientation.z;
+
+        Quaternion rotation = new Quaternion();
+        rotation.w = 1;
+
+        // data format = length (int) | Type (byte) | SEQ (uint) |  jointValues (float[40]) | orientation (float[4]) | gesture (int) | time (long)
+
+        byte[] data = new byte[sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float) + sizeof(int) + sizeof(long)];
         
         Buffer.BlockCopy(BitConverter.GetBytes(data.Length), 0, data, 0, BitConverter.GetBytes(data.Length).Length);
         data[sizeof(int)] = (byte)1;//Type: 1 = default format
         Buffer.BlockCopy(BitConverter.GetBytes(seq), 0, data, sizeof(int) + sizeof(byte), BitConverter.GetBytes(seq).Length);
 
         // Maybe inefficient
+
+        // jointValues
         for (int i = 0; i < 40; i++)
         {
             Buffer.BlockCopy(BitConverter.GetBytes(trD.JointValues[i]), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + i * sizeof(float), sizeof(float));
         }
 
-        for (int i = 0; i < 16; i++)
+        // orientation
+        for (int i = 0; i < 4; i++)
         {
-            Buffer.BlockCopy(BitConverter.GetBytes(trD.pose[i]), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + i * sizeof(float), sizeof(float));
+            Buffer.BlockCopy(BitConverter.GetBytes(orientation[i]), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + i * sizeof(float), sizeof(float));
         }
 
-        for (int i = 0; i < 3; i++)
-        {
-            Buffer.BlockCopy(BitConverter.GetBytes(trD.velocity[i]), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 16 * sizeof(float) + i * sizeof(float), sizeof(float));
-        }
-
-        for (int i = 0; i < 3; i++)
-        {
-            Buffer.BlockCopy(BitConverter.GetBytes(trD.acceleration[i]), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 16 * sizeof(float) + 3 * sizeof(float) + i * sizeof(float), sizeof(float));
-        }
-                
-        Buffer.BlockCopy(BitConverter.GetBytes(currentTicks), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 16 * sizeof(float) + 3 * sizeof(float) + 3 * sizeof(float), sizeof(long));
+        // gesture
+        Buffer.BlockCopy(BitConverter.GetBytes(trD.gesture), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float), sizeof(int));
+        
+        // time
+        Buffer.BlockCopy(BitConverter.GetBytes(currentTicks), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float) + sizeof(int), sizeof(long));
                 
         client.Send(data, data.Length, remoteEndPoint);
         
@@ -126,13 +138,6 @@ public class UDPSend : MonoBehaviour
                 client.Send(data, data.Length, remoteEndPoint);
                 Debug.Log("Ping from Hololens received");
             }
-        }
-        // Hier soll das Depth Image testweise empfangen werden
-        else
-        {
-            byte[] received = client.EndReceive(res, ref remoteEndPoint);
-            client.BeginReceive(new AsyncCallback(recv), null);
-            Debug.Log("Hololens paket received");
         }
     }
 

@@ -64,6 +64,8 @@ public class Glove
     private bool fist_detection_activated = false;
     public float fist_threshold = 20f;
 
+    public int gesture = 0;
+
     public IMUTest imuTest;
 
     public Glove()
@@ -213,6 +215,8 @@ public class Glove
         acceleration = acceleration1;
     }
 
+    #region IMU calc functions
+
     // corrects gyroscope measurement with bias and G_Gain
     Vector3 CorrectGyro(Vector3 gyro)
     {
@@ -235,6 +239,8 @@ public class Glove
     // detect Claps: accel in positive z when all past accel values in filter_array show no accel -> clap detected
     public void detect_clap(Vector3 acc)
     {
+        gesture = 0;
+
         if (filter_array != null)
         {
             float filter_array_sum_z = 0;
@@ -251,6 +257,8 @@ public class Glove
                 Debug.Log("Clap");
 
                 imuTest.clapDetected();
+
+                gesture = 1;
             }                
         }
     }
@@ -370,22 +378,14 @@ public class Glove
         filtered_rotation_q.z = q_madgwick.eulerAngles.z;
     }
 
+    #endregion
+
     public TrackingData GetTrackingData()
     {
-        // All Dummy Values but acc for testing
-        //float[] JointValues = new float[40];
 
-        //for (int i = 0; i < JointValues.Length; i++)
-            //JointValues[i] = i;
-
-        Vector3 vel = new Vector3(1, 2, 3);
-        //Vector3 acc = new Vector3(2, 4, 6);
-        Matrix4x4 pose = new Matrix4x4(new Vector4(1, 0, 0, 0), new Vector4(0, 1, 0, 0), new Vector4(0, 0, 1, 0), new Vector4(0, 0, 0, 1));
-
-        return new TrackingData(values, pose, vel, acceleration, 2.0);
-    }
-
-    }
+        return new TrackingData(values, q_mahony, 1, 1);
+    }    
+}
 
 static class Constants
 {
@@ -395,12 +395,12 @@ static class Constants
 
 public class TrackingData
 {
-
     public float[] JointValues;
-    public Matrix4x4 pose;
-    public Vector3 velocity;
-    public Vector3 acceleration;
-    public double timestamp;
+    public long timestamp;
+    public Quaternion orientation;
+
+    // 0 for nothing, 1 for clap detected
+    public int gesture;
 
     // Dummy for testing
     public TrackingData()
@@ -410,12 +410,11 @@ public class TrackingData
         for (int i = 0; i < JointValues.Length; i++)
             JointValues[i] = i;
 
-        pose = Matrix4x4.identity;
-
-        velocity = new Vector3(1, 1, 1);
-        acceleration = new Vector3(2, 3, 4);
+        orientation = Quaternion.identity;
 
         timestamp = 1;
+
+        gesture = 0;
     }
 
     // Dummy for testing
@@ -423,21 +422,19 @@ public class TrackingData
     {
         JointValues = values;
 
-        pose = Matrix4x4.identity;
-
-        velocity = new Vector3(1, 1, 1);
-        acceleration = new Vector3(2, 3, 4);
+        orientation = Quaternion.identity;
 
         timestamp = 1;
+
+        gesture = 0;
     }
 
-    public TrackingData(float[] JointValues, Matrix4x4 pose, Vector3 velocity, Vector3 acceleration, double timestamp)
+    public TrackingData(float[] JointValues, Quaternion orientation, long timestamp, int gesture)
     {
         this.JointValues = JointValues;
-        this.pose = pose;
-        this.velocity = velocity;
-        this.acceleration = acceleration;
+        this.orientation = orientation;
         this.timestamp = timestamp;
+        this.gesture = gesture;
     }
 
     public TrackingData Copy()

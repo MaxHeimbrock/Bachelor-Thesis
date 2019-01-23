@@ -32,82 +32,52 @@ public class Glove
     {
         public UInt16 NB_SENSORS = 40;
         public UInt32 cnt;
-        public float[] values;
         public UInt16 version;
 
         public Int64[] raw_values;
         //private Int64[] raw_values;
         private Int64[] offsets;
 
-        public Glove()
-        {
-            cnt = 0;
-            version = 0;
-            raw_values = new Int64[Constants.NB_SENSORS];
-            offsets = new Int64[Constants.NB_SENSORS];
-            values = new float[Constants.NB_SENSORS];        
-        }
+        public float[] values;
+        public double timestamp;
+        public Quaternion orientation;
 
-        public void set_zero()
-        {
-            for (int i = 0; i < Constants.NB_SENSORS; i++)
-            {
-                offsets[i] = raw_values[i];
-            }
-        }
+        // 0 for nothing, 1 for clap detected
+        public int gesture;
 
-    /*
-    public void apply_packet(Packet packet)
+    public Glove()
     {
-        version = packet.version;
-        cnt++;
+        cnt = 0;
+        version = 0;
+        raw_values = new Int64[Constants.NB_SENSORS];
+        offsets = new Int64[Constants.NB_SENSORS];
+        values = new float[Constants.NB_SENSORS];
 
-        for (int i = 0; i < Constants.NB_SENSORS; i++)
-        {
-            raw_values[i] = (Int64)(raw_values[i] + packet.values[i]);
-        }
-        raw_values[packet.key] = packet.value;
-
-        for (int i = 0; i < Constants.NB_SENSORS; i++)
-        {
-            values[i] = 0.001f * (raw_values[i] - offsets[i]);
-        }
-        //Debug.Log ("cnt " + cnt);
+        orientation = new Quaternion();
     }
-    */
-    public void apply_packet(long[] jointValues)
+
+    public void set_zero()
     {
         for (int i = 0; i < Constants.NB_SENSORS; i++)
         {
-            raw_values[i] = (Int64)(raw_values[i] + jointValues[i]);
+            offsets[i] = raw_values[i];
         }
-
-        for (int i = 0; i < Constants.NB_SENSORS; i++)
-        {
-            values[i] = 0.001f * (raw_values[i] - offsets[i]);
-        }
-
-
-        /*
-        for (int i = 0; i < 40; i++)
-        {
-            raw_values[i] += jointValues[i];
-        }*/
-    }
-
-    }
+    }    
+}
 
     //----------------------------------------------------------------------------------------
 
 public class UDPReceive : MonoBehaviour {
     
     public Dictionary<string, TrackingData> trackedPoints = new Dictionary<string, TrackingData>();
-    
-    public static string IPAddress = "192.168.1.210";
-    public static int port = 11110;
 
-    public bool readIPAddressAndPortFromFile = false;
-    private string IPAddressFromFile;
+    // Narvis
+    //public static string IPAddress = "192.168.1.210";
+
+    // zu hause
+    public static string IPAddress = "192.168.178.33";
+    public static int port = 11110;
+    
     private bool initialized = false;
     private bool connected = false;
 
@@ -124,109 +94,46 @@ public class UDPReceive : MonoBehaviour {
     public long ownFirstTick = 0;
 
     public Glove glove;
-    private long before = 0;    
+    private long before = 0;
 
 #if WINDOWS_UWP
-
-    ////////////////////
-    // READ FROM FILE //
-    ////////////////////
-
-    public void ReadIPAddress() {
-        try {
-            using( Stream stream = OpenFileForRead( ApplicationData.Current.RoamingFolder.Path, "ipaddress.txt" ) ) {
-                if( stream != null ) {
-                    byte[] data = new byte[stream.Length];
-                    stream.Read( data, 0, data.Length );
-                    string readFromFile = Encoding.ASCII.GetString( data );
-                    string[] splitString = readFromFile.Split(':');        
-                    IPAddressFromFile = splitString[0].Trim();
-                    if(splitString.Length == 2) {
-                        port = int.Parse(splitString[1].Trim());
-                    }
-                }
-            }
-        }
-        catch( Exception e ) {
-            Debug.Log("Error thrown when reading IP address.\n" + e );
-        }
-    }
-
-    private static Stream OpenFileForRead(string folderName, string fileName) {
-        Stream stream = null;
-        bool taskFinish = false;
-
-        Task task = new Task(
-            async () => {
-                try {
-                    StorageFolder folder = await StorageFolder.GetFolderFromPathAsync( folderName );
-                    var item = await folder.TryGetItemAsync( fileName );
-                    if( item != null ) {
-                        StorageFile file = await folder.GetFileAsync( fileName );
-                        if( file != null ) {
-                            stream = await file.OpenStreamForReadAsync();
-                        }
-                    }
-                }
-                catch( Exception ) { }
-                finally { taskFinish = true; }
-
-            } );
-        task.Start();
-        while( !taskFinish ) {
-            task.Wait();
-        }
-
-        return stream;
-    }
-
-    /////////////////////////////////////////////////////////////////////////    
-
+ 
     private DatagramSocket socket;
-    public Queue<Action> ExecuteOnMainThread;
 
     private int UDPPingReplyLength = Encoding.UTF8.GetBytes("UDPPingReply").Length + 4;
 
     void initUDPReceiver() {
-        if(!readIPAddressAndPortFromFile || (readIPAddressAndPortFromFile && !string.IsNullOrEmpty(IPAddressFromFile) )) {
-            ExecuteOnMainThread = new Queue<Action>();
-            Debug.Log("Waiting for a connection...");
+        Debug.Log("Waiting for a connection...");
 
-            socket = new DatagramSocket();
-            socket.MessageReceived += Socket_MessageReceived;
+        socket = new DatagramSocket();
+        socket.MessageReceived += Socket_MessageReceived;
 
-            HostName IP = null;
-            try {
-                var icp = NetworkInformation.GetInternetConnectionProfile();
+        HostName IP = null;
+        try {
+            var icp = NetworkInformation.GetInternetConnectionProfile();
 
-                IP = Windows.Networking.Connectivity.NetworkInformation.GetHostNames()
-                .SingleOrDefault(
-                    hn =>
-                        hn.IPInformation?.NetworkAdapter != null && hn.IPInformation.NetworkAdapter.NetworkAdapterId
-                        == icp.NetworkAdapter.NetworkAdapterId);
+            IP = Windows.Networking.Connectivity.NetworkInformation.GetHostNames()
+            .SingleOrDefault(
+                hn =>
+                    hn.IPInformation?.NetworkAdapter != null && hn.IPInformation.NetworkAdapter.NetworkAdapterId
+                    == icp.NetworkAdapter.NetworkAdapterId);
 
-                _ = socket.BindEndpointAsync(IP, port.ToString());
+            _ = socket.BindEndpointAsync(IP, port.ToString());
 
-                if(autoConnect) {
-                    //UDPPing
-                    before = System.DateTime.Now.Ticks;
-                    sendUDPMessage(Encoding.UTF8.GetBytes("UDPPing"));
-                }
-                initialized = true;
-
-            }
-            catch(Exception e) {
-                Debug.Log("Hier gecrasht");
-                Debug.Log(e.ToString());
-                Debug.Log(SocketError.GetStatus(e.HResult).ToString());
-                return;
-            }
+            initialized = true;
         }
+        catch(Exception e) {
+            Debug.Log("Hier gecrasht");
+            Debug.Log(e.ToString());
+            Debug.Log(SocketError.GetStatus(e.HResult).ToString());
+            return;
+        }
+
         Debug.Log("exit start");
     }
 
     public async void sendUDPMessage(byte[] message) {
-        Windows.Networking.HostName hnip = readIPAddressAndPortFromFile ? new Windows.Networking.HostName(IPAddressFromFile) : new Windows.Networking.HostName(IPAddress);
+        Windows.Networking.HostName hnip = new Windows.Networking.HostName(IPAddress);
         Debug.Log("Send message to IPAddress " + hnip.DisplayName + " on Port " + port.ToString());
         using(var stream = await socket.GetOutputStreamAsync(hnip, port.ToString())) {
             using(var writer = new Windows.Storage.Streams.DataWriter(stream)) {
@@ -276,7 +183,7 @@ public class UDPReceive : MonoBehaviour {
         byte type = trackingMessage[sizeof(int)];
         if(type == 1) {
             //This is tracking data in binary format
-            // data format = length (int) | Type (byte) | SEQ (uint) |  jointValues (float[40]) | pose (4*4 floats) | velocity (3 floats) | acceleration (3 floats) | time (long)
+            // data format = length (int) | Type (byte) | SEQ (uint) |  jointValues (float[40]) | orientation (float[4]) | gesture (int) | time (long)
             int length = BitConverter.ToInt32(trackingMessage, 0);
             if(trackingMessage.Length != length) {
                 Debug.Log("Malformed Packet");
@@ -290,53 +197,28 @@ public class UDPReceive : MonoBehaviour {
             uint seq = BitConverter.ToUInt32(trackingMessage, sizeof(int) + sizeof(byte));
             if(seq > prevSEQ || ( seq < 10000 && prevSEQ > UInt32.MaxValue * 0.75 )) { //tracking data is newer than what we already have
                 float[] jointValues = new float[40];
-                float[] poseMatrixIntermediate = new float[16];
-                float[] velocityIntermediate = new float[3];
-                float[] accelerationIntermediate = new float[3];
+                float[] orientationArray = new float[4];
 
+                // jointValues
                 System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint), jointValues, 0, 40 * sizeof(float));
-                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float), poseMatrixIntermediate, 0, 16 * sizeof(float));
-                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 16 * sizeof(float), velocityIntermediate, 0, 3 * sizeof(float));
-                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 16 * sizeof(float) + 3 * sizeof(float), accelerationIntermediate, 0, 3 * sizeof(float));
+
+                // orientationArray
+                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float), orientationArray, 0, 4 * sizeof(float));
+                
+                int gesture = BitConverter.ToInt32(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float));
               
-                long currentTick = BitConverter.ToInt64(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 16 * sizeof(float) + 3 * sizeof(float) + 3 * sizeof(float));
+                long currentTick = BitConverter.ToInt64(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float) + sizeof(int));
 
                 if(remoteTime == 0) {
                     ownFirstTick = System.DateTime.Now.Ticks;
                     remoteTime = currentTick + ( (long)( ( rtt / 2.0 ) * TimeSpan.TicksPerMillisecond ) );
                     remoteTimeOffset = remoteTime - ownFirstTick;
-                }
-
-                Matrix4x4 poseMatrix = new Matrix4x4();
-                //column Major - row major switcheroo and right left handed conversion
-                poseMatrix[0, 0] = (float)poseMatrixIntermediate[0 * 4 + 0];
-                poseMatrix[0, 1] = (float)poseMatrixIntermediate[2 * 4 + 0];
-                poseMatrix[0, 2] = (float)poseMatrixIntermediate[1 * 4 + 0];
-                poseMatrix[0, 3] = (float)poseMatrixIntermediate[3 * 4 + 0];
-
-                poseMatrix[1, 0] = (float)poseMatrixIntermediate[0 * 4 + 2];
-                poseMatrix[1, 1] = (float)poseMatrixIntermediate[2 * 4 + 2];
-                poseMatrix[1, 2] = (float)poseMatrixIntermediate[1 * 4 + 2];
-                poseMatrix[1, 3] = (float)poseMatrixIntermediate[3 * 4 + 2];
-
-                poseMatrix[2, 0] = (float)poseMatrixIntermediate[0 * 4 + 1];
-                poseMatrix[2, 1] = (float)poseMatrixIntermediate[2 * 4 + 1];
-                poseMatrix[2, 2] = (float)poseMatrixIntermediate[1 * 4 + 1];
-                poseMatrix[2, 3] = (float)poseMatrixIntermediate[3 * 4 + 1];
-
-                poseMatrix[3, 0] = (float)poseMatrixIntermediate[0 * 4 + 3];
-                poseMatrix[3, 1] = (float)poseMatrixIntermediate[2 * 4 + 3];
-                poseMatrix[3, 2] = (float)poseMatrixIntermediate[1 * 4 + 3];
-                poseMatrix[3, 3] = (float)poseMatrixIntermediate[3 * 4 + 3];
-
-                // Alex magic ausgeklammert
-                //poseMatrix = Matrix4x4.Rotate(Quaternion.Euler(0, 180, 180)) * poseMatrix;
-
-                Vector3 pos = new Vector3(poseMatrix[0, 3] / 1000.0f, poseMatrix[1, 3] / 1000.0f, poseMatrix[2, 3] / 1000.0f);
-                Quaternion rotation = poseMatrix.rotation;
-
-                Vector3 velocity = new Vector3(velocityIntermediate[0], velocityIntermediate[1], velocityIntermediate[2]);
-                Vector3 acceleration = new Vector3(accelerationIntermediate[0], accelerationIntermediate[1], accelerationIntermediate[2]);
+                }        
+    
+                glove.orientation.w = orientationArray[0];
+                glove.orientation.x = orientationArray[1];
+                glove.orientation.y = orientationArray[2];
+                glove.orientation.z = orientationArray[3];
                 
                 glove.values = jointValues;                
 
@@ -346,9 +228,6 @@ public class UDPReceive : MonoBehaviour {
     }   
 
     public void Start() {
-        if(readIPAddressAndPortFromFile) {
-            ReadIPAddress();
-        }
 
         glove = new Glove();
 
@@ -356,10 +235,16 @@ public class UDPReceive : MonoBehaviour {
     }
     
     void Update() {
+
+
+        // TODO test this without init in update
+        /*
+
         if(!initialized) {
-            ReadIPAddress();
             initUDPReceiver();
         }
+
+        */
 
         if (autoConnect && !connected)
         {

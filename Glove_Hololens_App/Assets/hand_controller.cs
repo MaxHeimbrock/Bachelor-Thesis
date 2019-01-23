@@ -183,7 +183,15 @@ public class hand_controller : MonoBehaviour {
 		rot = Quaternion.AngleAxis(q[19], Vector3.forward);
 		little_dip.transform.localRotation = rot0[19]*rot;
 
-	}
+        this.transform.rotation = Quaternion.Inverse(glove.orientation);
+        //this.transform.rotation = glove.orientation;
+
+        if (glove.gesture == 1)
+        {
+            Debug.Log("Clap");
+            glove.gesture = 0;
+        }
+    }
 
 
 
