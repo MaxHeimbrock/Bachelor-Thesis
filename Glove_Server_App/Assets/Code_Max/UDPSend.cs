@@ -37,25 +37,46 @@ public class UDPSend : MonoBehaviour
     static long currentTicks = 0;
 
     // for testing
-    private TrackingData glove;
+    private Glove glove;
+    private TrackingData trackingData;
         
     // start from unity3d
     public void Start()
     {
         init();
+
+        try
+        {
+            glove = glove_controller.GetComponent<EthernetGloveController>().glove;
+
+            glove.UDP_Send = this;
+        }
+        catch (Exception notReady)
+        {
+            Debug.Log("Not ready");
+        }
     }
 
     public void Update()
     {
         currentTicks = DateTime.Now.Ticks;
-        
-        if (SerialPortUsed)
-            glove = glove_controller.GetComponent<serial_port_receiver>().glove.GetTrackingData();
-        else
-            glove = glove_controller.GetComponent<EthernetGloveController>().glove.GetTrackingData();
 
-        if (connected && autosend)
-            sendSinglePoseUpdate(glove);
+        if (glove != null)
+        {
+            if (SerialPortUsed)
+                trackingData = glove.GetTrackingData();
+            else
+                trackingData = glove.GetTrackingData();
+
+            if (connected && autosend)
+                sendSinglePoseUpdate(trackingData);
+        }
+        else
+        {
+            glove = glove_controller.GetComponent<EthernetGloveController>().glove;
+
+            glove.UDP_Send = this;
+        }
     }       
 
     // init
@@ -84,8 +105,13 @@ public class UDPSend : MonoBehaviour
 
         byte[] data = new byte[sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float) + sizeof(int) + sizeof(long)];
         
+        // lenght
         Buffer.BlockCopy(BitConverter.GetBytes(data.Length), 0, data, 0, BitConverter.GetBytes(data.Length).Length);
+
+        // type
         data[sizeof(int)] = (byte)1;//Type: 1 = default format
+
+        // SEQ
         Buffer.BlockCopy(BitConverter.GetBytes(seq), 0, data, sizeof(int) + sizeof(byte), BitConverter.GetBytes(seq).Length);
 
         // Maybe inefficient
@@ -109,12 +135,31 @@ public class UDPSend : MonoBehaviour
         Buffer.BlockCopy(BitConverter.GetBytes(currentTicks), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float) + sizeof(int), sizeof(long));
                 
         client.Send(data, data.Length, remoteEndPoint);
-        
-        //Debug.Log("pose " + seq + " send!");
-        seq++;
-        
+
+        //Debug.Log("pose " + seq + " send!");        
+
+        seq++;        
     }
-    
+
+    public void sendGesture(Glove.Gesture gesture)
+    {
+        // data format = length (int) | Type (byte) | gesture (int)
+
+        byte[] data = new byte[sizeof(int) + sizeof(byte) + sizeof(int)];
+
+        // length
+        Buffer.BlockCopy(BitConverter.GetBytes(data.Length), 0, data, 0, BitConverter.GetBytes(data.Length).Length);
+
+        // type 2 for gesture
+        data[sizeof(int)] = (byte)2;
+
+        Buffer.BlockCopy(BitConverter.GetBytes((int)gesture), 0, data, sizeof(int) + sizeof(byte), sizeof(int));
+        if (connected)
+            client.Send(data, data.Length, remoteEndPoint);
+
+        Debug.Log("Send " + gesture);
+    }
+
     //CallBack
     private void recv(IAsyncResult res)
     {
@@ -160,7 +205,7 @@ public class UDPSend : MonoBehaviour
         // ------------------------
         if (connected && !autosend)
             if (GUI.Button(new Rect(100, 200, 300, 100), "send pose", buttonStyle))
-                sendSinglePoseUpdate(glove);        
+                sendSinglePoseUpdate(trackingData);        
     }
 }
 

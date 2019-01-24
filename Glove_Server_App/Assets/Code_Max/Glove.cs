@@ -62,11 +62,13 @@ public class Glove
     public float clap_before_threshold = 0.40f;
 
     private bool fist_detection_activated = false;
-    public float fist_threshold = 20f;
+    public float fist_threshold = 20f;    
 
-    public int gesture = 0;
+    public enum Gesture {Clap, Fist };
 
     public IMUTest imuTest;
+
+    public UDPSend UDP_Send;
 
     public Glove()
     {
@@ -122,7 +124,11 @@ public class Glove
             fist_detection_activated = true;
 
         if (sum > fist_threshold && fist_detection_activated == true)
+        {
             imuTest.fistDetected();
+            Debug.Log("Fist");
+            UDP_Send.sendGesture(Gesture.Fist);
+        }
 
         //Debug.Log(sum);
     }
@@ -175,9 +181,11 @@ public class Glove
             q_madgwick *= q_acc_first_pose;
 
             mahonyARHS.Update(gyroscope.x, gyroscope.y, gyroscope.z, acceleration1.x, acceleration1.y, acceleration1.z);
-            q_mahony = new Quaternion(mahonyARHS.Quaternion[0], mahonyARHS.Quaternion[1], mahonyARHS.Quaternion[3], -mahonyARHS.Quaternion[2]);
+            q_mahony = new Quaternion(mahonyARHS.Quaternion[0], -mahonyARHS.Quaternion[1], mahonyARHS.Quaternion[3], mahonyARHS.Quaternion[2]);
             // zusätzlich noch um 180° zur x-Achse rotiert
             q_mahony *= Quaternion.AngleAxis(180, Vector3.right);
+            // zusätzliche Rotationen für die Hololens
+            //q_mahony *= Quaternion.AngleAxis(180, Vector3.up);
             q_mahony *= q_acc_first_pose;
 
             FilterRotationQuaternion(q_madgwick, delta_t_s, angleFromAcc, filter);
@@ -239,8 +247,6 @@ public class Glove
     // detect Claps: accel in positive z when all past accel values in filter_array show no accel -> clap detected
     public void detect_clap(Vector3 acc)
     {
-        gesture = 0;
-
         if (filter_array != null)
         {
             float filter_array_sum_z = 0;
@@ -258,7 +264,7 @@ public class Glove
 
                 imuTest.clapDetected();
 
-                gesture = 1;
+                UDP_Send.sendGesture(Gesture.Clap);
             }                
         }
     }
@@ -382,7 +388,6 @@ public class Glove
 
     public TrackingData GetTrackingData()
     {
-
         return new TrackingData(values, q_mahony, 1, 1);
     }    
 }

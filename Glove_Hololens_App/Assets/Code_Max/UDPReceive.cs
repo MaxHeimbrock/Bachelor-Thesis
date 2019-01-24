@@ -42,8 +42,8 @@ public class Glove
         public double timestamp;
         public Quaternion orientation;
 
-        // 0 for nothing, 1 for clap detected
-        public int gesture;
+    // 0 for nothing, 1 for clap detected
+    public enum Gesture { Clap, Fist };
 
     public Glove()
     {
@@ -94,6 +94,8 @@ public class UDPReceive : MonoBehaviour {
     public long ownFirstTick = 0;
 
     public Glove glove;
+    public GameObject hand;
+    private hand_controller handController;
     private long before = 0;
 
 #if WINDOWS_UWP
@@ -181,7 +183,8 @@ public class UDPReceive : MonoBehaviour {
         }
 
         byte type = trackingMessage[sizeof(int)];
-        if(type == 1) {
+        if(type == 1) 
+        {
             //This is tracking data in binary format
             // data format = length (int) | Type (byte) | SEQ (uint) |  jointValues (float[40]) | orientation (float[4]) | gesture (int) | time (long)
             int length = BitConverter.ToInt32(trackingMessage, 0);
@@ -225,11 +228,31 @@ public class UDPReceive : MonoBehaviour {
                 prevSEQ = seq;
             }
         }
+
+        // gesture packet
+        else if(type == 2)
+        {
+            int gesture;
+
+            //System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte), gesture, 0, sizeof(int));
+            gesture = BitConverter.ToInt32(trackingMessage, sizeof(int) + sizeof(byte));
+
+            if (gesture == 0)
+                handController.ClapDetected();
+
+            else if (gesture == 1)
+                handController.FistDetected();
+
+            else
+                Debug.Log("wrong gesture");
+        }
     }   
 
     public void Start() {
 
         glove = new Glove();
+
+        handController = hand.GetComponent<hand_controller>();
 
         initUDPReceiver();
     }

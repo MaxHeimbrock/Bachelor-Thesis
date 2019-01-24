@@ -93,7 +93,7 @@ public class ButtonCreator : MonoBehaviour
 
     void OnClick()
     {
-        Debug.Log("clicked!ABC");
+        Debug.Log("clicked button with fist");
 
         RectTransform RT1 = buttonList[buttonHighlight].GetComponent<RectTransform>();
         RT1.sizeDelta = buttonClickBig;
