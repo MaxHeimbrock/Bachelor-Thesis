@@ -72,10 +72,10 @@ public class UDPReceive : MonoBehaviour {
     public Dictionary<string, TrackingData> trackedPoints = new Dictionary<string, TrackingData>();
 
     // Narvis
-    //public static string IPAddress = "192.168.1.210";
+    public static string IPAddress = "192.168.1.210";
 
     // zu hause
-    public static string IPAddress = "192.168.178.33";
+    //public static string IPAddress = "192.168.178.33";
     public static int port = 11110;
     
     private bool initialized = false;
