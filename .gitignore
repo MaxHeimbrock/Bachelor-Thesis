@@ -7,6 +7,7 @@ Assets/AssetStoreTools*
 
 # ignore build folders
 Glove_Server_App/App/
+Glove_Server_App/Assets/HoloToolkit/
 Glove_Hololens_App/App/
 Umeyama_Test/App/
 AkihiroDepthCamera/App/
