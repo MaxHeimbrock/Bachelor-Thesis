@@ -5,6 +5,9 @@ using UnityEngine;
 public class hand_controller : MonoBehaviour {
 	public GameObject glove_controller;
 
+    public GameObject textObject;
+    private TextMesh textMesh;
+
 	public GameObject wrist;
 
 	public GameObject thumb_base;
@@ -27,13 +30,17 @@ public class hand_controller : MonoBehaviour {
 	public GameObject little_pip;
 	public GameObject little_dip;
 
-	private Glove glove; 
+	private Glove glove;
+
+    private int gesture = 0;
 
 	private Quaternion[]  rot0;
 	private float[]  q;
 	// Use this for initialization
 	void Start () {
-		
+
+        textMesh = textObject.GetComponent<TextMesh>();
+
 		rot0 = new Quaternion[40];
 		rot0[0] = thumb_base.transform.localRotation;
 		rot0[1] = thumb_base.transform.localRotation;
@@ -183,10 +190,31 @@ public class hand_controller : MonoBehaviour {
 		rot = Quaternion.AngleAxis(q[19], Vector3.forward);
 		little_dip.transform.localRotation = rot0[19]*rot;
 
-	}
+        this.transform.rotation = Quaternion.Inverse(glove.orientation);
+        //this.transform.rotation = glove.orientation;
+        
+        textMesh.text = "nothing";
 
+        if (gesture == 1)
+            textMesh.text = "clap";
 
+        if (gesture == 2)
+            textMesh.text = "fist";
+    }
 
+    public void ClapDetected()
+    {
+        //textMesh.text = "clap";
+
+        gesture = 1;
+    }
+
+    public void FistDetected()
+    {
+        //textMesh.text = "fist";
+
+        gesture = 2;
+    }
 
 	void receive_thread_fcn(){
 

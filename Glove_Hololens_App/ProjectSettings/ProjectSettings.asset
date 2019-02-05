@@ -608,7 +608,7 @@ PlayerSettings:
   scriptingDefineSymbols: {}
   platformArchitecture: {}
   scriptingBackend:
-    Metro: 1
+    Metro: 2
     Standalone: 0
   il2cppCompilerConfiguration: {}
   incrementalIl2cppBuild: {}
