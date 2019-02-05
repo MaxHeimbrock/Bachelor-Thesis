@@ -48,6 +48,11 @@ public class Glove
     bool first_pose = true;
 
     long time0;
+    long time1;
+    long elapsedTimeServer;
+
+    long elapsedTimeGlove_microseconds;
+    float elapsedTimeGlove_milliseconds = 0;
 
     public int timestamp0 = 0;
     public int timestamp1 = 0;
@@ -82,6 +87,8 @@ public class Glove
         velocity = new Vector3(0, 0, 0);
 
         time0 = 0;
+        elapsedTimeServer = 0;
+        elapsedTimeGlove_microseconds = 0;
 }
 
     public void set_zero()
@@ -133,16 +140,18 @@ public class Glove
         //Debug.Log(sum);
     }
 
-    public void applyEthernetPacketIMU(Vector3 acceleration1, Vector3 gyroscope)
+    public void applyEthernetPacketIMU(Vector3 acceleration1, Vector3 gyroscope, int timestamp)
     {   
-        long time1 = DateTime.Now.Ticks;
+        //long time1 = DateTime.Now.Ticks;
 
         if (bias_counter > bias_length)
-        {            
+        {
             // delta t in seconds or miliseconds
-            TimeSpan elapsedSpan = new TimeSpan(time1 - time0);
-            long delta_t_ms = elapsedSpan.Milliseconds;
-            float delta_t_s = delta_t_ms / 1000f;
+            //TimeSpan elapsedSpan = new TimeSpan(time1 - time0);
+            //long delta_t_ms = elapsedSpan.Milliseconds;
+            //float delta_t_s = delta_t_ms / 1000f;
+
+            float delta_t_s = (float)GetTime(timestamp);
 
             // TODO: Bias nötig?
             gyroscope = CorrectGyro(gyroscope);
@@ -389,7 +398,39 @@ public class Glove
     public TrackingData GetTrackingData()
     {
         return new TrackingData(values, q_mahony, 1, 1);
-    }    
+    } 
+    
+    private long GetTime()
+    {
+        time1 = DateTime.Now.Ticks;
+
+        TimeSpan elapsedSpan = new TimeSpan(time1 - time0);
+        long delta_t_ms = elapsedSpan.Milliseconds;
+        float delta_t_s = delta_t_ms / 1000f;
+
+        elapsedTimeServer += delta_t_ms;
+        
+        //Debug.Log(elapsedTimeServer);
+
+        time0 = time1;
+
+        return 0;
+    }
+
+    private long GetTime(int timestamp_in_ticks)
+    {
+        int timestamp_microseconds = timestamp_in_ticks * 39;
+
+        elapsedTimeGlove_microseconds += timestamp_microseconds;
+
+        float timestamp_in_milliseconds = (float)timestamp_microseconds / 1000;
+        elapsedTimeGlove_milliseconds = timestamp_in_milliseconds;
+
+        // this is it - just get delta time
+        //Debug.Log(elapsedTimeGlove_milliseconds);
+
+        return 0;
+    }
 }
 
 static class Constants

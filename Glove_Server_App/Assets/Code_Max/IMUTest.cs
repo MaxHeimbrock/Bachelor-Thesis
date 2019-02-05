@@ -10,13 +10,9 @@ public class IMUTest : MonoBehaviour {
    
     public mode orientationMode = mode.acc;
 
-    public Scrollbar bar;
     private float scrollspeed = 0.01f;
     public float scroll_value = 0f;
-
-    public Canvas canvas;
-    private bool showCanvas = true;
-
+    
     public int numberOfButtons = 36;
     private Button[] buttonList;
     public ButtonCreator buttonCreator;
@@ -32,8 +28,6 @@ public class IMUTest : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-
-        canvas.gameObject.SetActive(showCanvas);
 
         if (glove == null)
         {
@@ -63,7 +57,7 @@ public class IMUTest : MonoBehaviour {
                 this.transform.rotation = Quaternion.Inverse(glove.q_mahony);
                 //scroll_absolute(glove.q_mahony.eulerAngles.z);
                 //scroll_relative(glove.q_mahony.eulerAngles.z);
-                scroll_relative_exp(glove.q_mahony.eulerAngles.z);
+                //scroll_relative_exp(glove.q_mahony.eulerAngles.z);
             }
             else if (orientationMode == mode.madgwickFiltered)
             {
@@ -71,6 +65,8 @@ public class IMUTest : MonoBehaviour {
             }
         }
     }
+
+    /*
 
     private void scroll_absolute(float z_angle)
     {
@@ -121,9 +117,10 @@ public class IMUTest : MonoBehaviour {
         bar.value = 1 - scroll_value;
     }
 
+    */
+
     public void clapDetected()
     {
-        showCanvas = !showCanvas;
         scroll_value = 0f;
     }
 

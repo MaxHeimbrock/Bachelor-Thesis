@@ -189,7 +189,7 @@ public class EthernetGloveController : MonoBehaviour
             }
         }
 
-        glove.applyEthernetPacketIMU(accVec, gyroVec);
+        glove.applyEthernetPacketIMU(accVec, gyroVec, timestamp);
 
         // 2000 degrees/sec default settings
         // max acceleration 2g 
