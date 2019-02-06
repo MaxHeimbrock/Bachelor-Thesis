@@ -2,21 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static GloveConnector;
 
-public class GloveConnectionInterface : MonoBehaviour {
+public interface GloveConnectionInterface {    
 
-    public enum GloveVersion {USB_Glove, Ethernet_Glove, Wifi_Glove};
-    public GloveVersion gloveVersion = GloveVersion.Wifi_Glove;
+    ValuePacket GetValuePacket();
 
-    const int SENSOR_NUMBER = 40;
+    IMUPacket GetIMUPacket();
 
-	// Use this for initialization
-	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
 }

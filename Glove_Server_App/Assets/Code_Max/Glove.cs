@@ -5,9 +5,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Glove
+public class Glove : MonoBehaviour
 {
-    /*
     public UInt16 NB_SENSORS = 40;
     public UInt32 cnt;
     public float[] values;
@@ -504,6 +503,5 @@ public class TrackingData
     public TrackingData Copy()
     {
         return (TrackingData)this.MemberwiseClone();
-    }
-    */
+    }    
 }

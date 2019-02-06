@@ -6,9 +6,9 @@ using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
 
-public class EthernetGloveController : MonoBehaviour
+public class EthernetGloveController : MonoBehaviour, GloveConnectionInterface
 {
-    public Glove glove;
+    //public Glove glove;
     public const UInt16 NB_VALUES_GLOVE = 40;
 
     // "connection" things for Ping
@@ -72,13 +72,11 @@ public class EthernetGloveController : MonoBehaviour
             this.gyroscope = gyroscope;
             this.timestamp = timestamp;
         }
-    }
+    }    
 
     // Use this for initialization
     void Start()
     {
-        glove = new Glove();
-
         // Testing
         initUDPReceiverValues();
 
@@ -89,11 +87,7 @@ public class EthernetGloveController : MonoBehaviour
     void Update()
     {
         if (autoconnect && connected == false)
-            ping();
-
-        // von mir hier hin verschoben
-        if (Input.GetKey("space"))
-            glove.set_zero();
+            ping();        
 
         // IMU logging - start with 'k' - finish with 'l'
         if (Input.GetKey("k") && logStatus == logging.noLogging)
@@ -313,4 +307,13 @@ public class EthernetGloveController : MonoBehaviour
         return delta_time_seconds;
     }
 
+    public GloveConnector.ValuePacket GetValuePacket()
+    {
+        throw new NotImplementedException();
+    }
+
+    public GloveConnector.IMUPacket GetIMUPacket()
+    {
+        throw new NotImplementedException();
+    }
 }
