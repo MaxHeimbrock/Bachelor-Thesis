@@ -3,11 +3,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
-public class Glove
+public class Manager : MonoBehaviour
 {
-    /*
     public UInt16 NB_SENSORS = 40;
     public UInt32 cnt;
     public float[] values;
@@ -19,7 +17,7 @@ public class Glove
     // for imu testing
     private Vector3 acceleration = Vector3.zero;
     private Vector3 velocity;
-    private Vector3 gyro_current_rotation = new Vector3(0,0,0);
+    private Vector3 gyro_current_rotation = new Vector3(0, 0, 0);
     private Vector3 filtered_rotation = new Vector3(0, 0, 0);
     private Vector3 filtered_rotation_q = new Vector3(0, 0, 0);
     public float filter = 0.98f;
@@ -57,7 +55,7 @@ public class Glove
 
     long last_timestamp_microseconds;
     float elapsed_seconds_glove = 0;
-    
+
     public int timestamp0 = 0;
     public int timestamp1 = 0;
 
@@ -71,53 +69,37 @@ public class Glove
     public float clap_before_threshold = 0.40f;
 
     private bool fist_detection_activated = false;
-    public float fist_threshold = 20f;    
+    public float fist_threshold = 20f;
 
-    public enum Gesture {Clap, Fist };
+    public enum Gesture { Clap, Fist };
 
     public IMUTest imuTest;
 
     public UDPSend UDP_Send;
 
-    public Glove()
-    {
-        cnt = 0;
-        version = 0;
-        raw_values = new UInt32[Constants.NB_SENSORS];
-        offsets = new UInt32[Constants.NB_SENSORS];
-        values = new float[Constants.NB_SENSORS];
-
-        acceleration = new Vector3(0, 0, 0);
-        velocity = new Vector3(0, 0, 0);
-
-        time0 = 0;
-        elapsedTimeServer = 0;
-        elapsedTimeGlove_microseconds = 0;
-}
-
     public void set_zero()
     {
         Debug.Log("set_zero");
 
-        for (int i = 0; i < Constants.NB_SENSORS; i++)
+        for (int i = 0; i < NB_SENSORS; i++)
         {
             offsets[i] = raw_values[i];
         }
 
         fist_detection_activated = false;
-    }  
+    }
 
     public void apply_ethernetJointPacket(UInt32[] newValues)
     {
         float sum = 0;
 
         cnt++;
- 
+
         float filter = 0.9f;
 
         raw_values = newValues;
- 
-        for (int i = 0; i < Constants.NB_SENSORS; i++)
+
+        for (int i = 0; i < NB_SENSORS; i++)
         {
             Int64 tmp = ((Int64)newValues[i]) - ((Int64)offsets[i]);
             double tmpd = (double)tmp; // I use double here to avoid loosing to much precision
@@ -138,7 +120,7 @@ public class Glove
         {
             imuTest.fistDetected();
             Debug.Log("Fist");
-            UDP_Send.sendGesture(Gesture.Fist);
+            //UDP_Send.sendGesture(Gesture.Fist);
         }
 
         //Debug.Log(sum);
@@ -150,7 +132,7 @@ public class Glove
     }
 
     public void applyEthernetPacketIMU(Vector3 acceleration1, Vector3 gyroscope, int timestamp)
-    {   
+    {
         long time1 = DateTime.Now.Ticks;
 
         if (bias_counter > bias_length)
@@ -181,7 +163,7 @@ public class Glove
 
             FilterRotation(gyroscope, delta_t_s_imu, angleFromAcc, filter);
             q_filtered = Quaternion.Euler(new Vector3(filtered_rotation.y, -filtered_rotation.z, filtered_rotation.x));
-            
+
             // Give initial pose for madgwick and mahony from accelerometer angles --> best if glove is relatively flat on table
             if (first_pose)
             {
@@ -206,7 +188,7 @@ public class Glove
             FilterRotationQuaternion(q_madgwick, delta_t_s_imu, angleFromAcc, filter);
             q_madgwick_filtered = Quaternion.Euler(new Vector3(filtered_rotation_q.y, -filtered_rotation_q.z, filtered_rotation_q.x));
         }
-        
+
         // get bias
         else if (bias_counter == bias_length)
         {
@@ -230,7 +212,7 @@ public class Glove
             gyro_bias += gyroscope;
 
             bias_counter++;
-        }      
+        }
 
         timestamp0 = timestamp1;
         time0 = time1;
@@ -279,8 +261,8 @@ public class Glove
 
                 imuTest.clapDetected();
 
-                UDP_Send.sendGesture(Gesture.Clap);
-            }                
+                //UDP_Send.sendGesture(Gesture.Clap);
+            }
         }
     }
 
@@ -340,7 +322,7 @@ public class Glove
         // X-axis - http://ozzmaker.com/berryimu/ // https://stackoverflow.com/questions/3755059/3d-accelerometer-calculate-the-orientation
         rot_x = (float)((Math.Atan2(acc.y, acc.z) + Math.PI) * (180 / Math.PI));
         //rot_x = -(float)(Math.Atan2(acc.y, Math.Sqrt(acc.x * acc.x + acc.z * acc.z)) * (180 / Math.PI));
-            
+
 
         // diese Rechnung korrigiert Orientierung zu -180 bis 180 grad
         if (rot_x > 180)
@@ -348,7 +330,7 @@ public class Glove
 
         // Y-axis - http://ozzmaker.com/berryimu/ // https://stackoverflow.com/questions/3755059/3d-accelerometer-calculate-the-orientation
         //rot_y = (float)(Math.Atan2(-acc.x, Math.Sqrt(acc.y * acc.y + acc.z * acc.z)) * (180 / Math.PI));
-        rot_y = (float)((Math.Atan2(acc.z, acc.x) + Math.PI * 1/2) * (180 / Math.PI));
+        rot_y = (float)((Math.Atan2(acc.z, acc.x) + Math.PI * 1 / 2) * (180 / Math.PI));
         //rot_y = 0;
 
         // diese Rechnung korrigiert Orientierung zu -180 bis 180 grad
@@ -405,8 +387,8 @@ public class Glove
     public TrackingData GetTrackingData()
     {
         return new TrackingData(values, q_mahony, 1, 1);
-    } 
-    
+    }
+
     private long GetTime()
     {
         time1 = DateTime.Now.Ticks;
@@ -416,7 +398,7 @@ public class Glove
         float delta_t_s = delta_t_ms / 1000f;
 
         elapsedTimeServer += delta_t_ms;
-        
+
         //Debug.Log(elapsedTimeServer);
 
         time0 = time1;
@@ -448,62 +430,54 @@ public class Glove
 
         return delta_time_seconds;
     }
-}
 
-static class Constants
-{
-    public const int NB_SENSORS = 40;
-    public const bool IS_BLUETOOTH = false;
-    internal static int NB_VALUES_GLOVE;
-}
-
-public class TrackingData
-{
-    public float[] JointValues;
-    public long timestamp;
-    public Quaternion orientation;
-
-    // 0 for nothing, 1 for clap detected
-    public int gesture;
-
-    // Dummy for testing
-    public TrackingData()
+    public class TrackingData
     {
-        JointValues = new float[40];
+        public float[] JointValues;
+        public long timestamp;
+        public Quaternion orientation;
 
-        for (int i = 0; i < JointValues.Length; i++)
-            JointValues[i] = i;
+        // 0 for nothing, 1 for clap detected
+        public int gesture;
 
-        orientation = Quaternion.identity;
+        // Dummy for testing
+        public TrackingData()
+        {
+            JointValues = new float[40];
 
-        timestamp = 1;
+            for (int i = 0; i < JointValues.Length; i++)
+                JointValues[i] = i;
 
-        gesture = 0;
+            orientation = Quaternion.identity;
+
+            timestamp = 1;
+
+            gesture = 0;
+        }
+
+        // Dummy for testing
+        public TrackingData(float[] values)
+        {
+            JointValues = values;
+
+            orientation = Quaternion.identity;
+
+            timestamp = 1;
+
+            gesture = 0;
+        }
+
+        public TrackingData(float[] JointValues, Quaternion orientation, long timestamp, int gesture)
+        {
+            this.JointValues = JointValues;
+            this.orientation = orientation;
+            this.timestamp = timestamp;
+            this.gesture = gesture;
+        }
+
+        public TrackingData Copy()
+        {
+            return (TrackingData)this.MemberwiseClone();
+        }
     }
-
-    // Dummy for testing
-    public TrackingData(float[] values)
-    {
-        JointValues = values;
-
-        orientation = Quaternion.identity;
-
-        timestamp = 1;
-
-        gesture = 0;
-    }
-
-    public TrackingData(float[] JointValues, Quaternion orientation, long timestamp, int gesture)
-    {
-        this.JointValues = JointValues;
-        this.orientation = orientation;
-        this.timestamp = timestamp;
-        this.gesture = gesture;
-    }
-
-    public TrackingData Copy()
-    {
-        return (TrackingData)this.MemberwiseClone();
-    }
-    */
 }
