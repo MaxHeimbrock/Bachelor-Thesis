@@ -7,14 +7,6 @@ using UnityEngine.UI;
 
 public class Glove : MonoBehaviour
 {
-    public UInt16 NB_SENSORS = 40;
-    public UInt32 cnt;
-    public float[] values;
-    public UInt16 version;
-
-    private UInt32[] offsets;
-    private UInt32[] raw_values;
-
     // for imu testing
     private Vector3 acceleration = Vector3.zero;
     private Vector3 velocity;
@@ -80,73 +72,13 @@ public class Glove : MonoBehaviour
 
     public Glove()
     {
-        cnt = 0;
-        version = 0;
-        raw_values = new UInt32[Constants.NB_SENSORS];
-        offsets = new UInt32[Constants.NB_SENSORS];
-        values = new float[Constants.NB_SENSORS];
-
         acceleration = new Vector3(0, 0, 0);
         velocity = new Vector3(0, 0, 0);
 
         time0 = 0;
         elapsedTimeServer = 0;
         elapsedTimeGlove_microseconds = 0;
-}
-
-    public void set_zero()
-    {
-        Debug.Log("set_zero");
-
-        for (int i = 0; i < Constants.NB_SENSORS; i++)
-        {
-            offsets[i] = raw_values[i];
-        }
-
-        fist_detection_activated = false;
-    }  
-
-    public void apply_ethernetJointPacket(UInt32[] newValues)
-    {
-        float sum = 0;
-
-        cnt++;
- 
-        float filter = 0.9f;
-
-        raw_values = newValues;
- 
-        for (int i = 0; i < Constants.NB_SENSORS; i++)
-        {
-            Int64 tmp = ((Int64)newValues[i]) - ((Int64)offsets[i]);
-            double tmpd = (double)tmp; // I use double here to avoid loosing to much precision
-            tmpd = 0.00001f * tmpd; // That should be the same scale as for the serial glove
-            double filtered_value = (1.0f - filter) * tmpd + filter * values[i];
-
-            values[i] = (float)filtered_value; // finally cut it to float, the precision should be fine at that point
-
-            //Debug.Log(values[1]);
-
-            sum += values[i];
-        }
-
-        if (sum < fist_threshold && fist_detection_activated == false)
-            fist_detection_activated = true;
-
-        if (sum > fist_threshold && fist_detection_activated == true)
-        {
-            imuTest.fistDetected();
-            Debug.Log("Fist");
-            UDP_Send.sendGesture(Gesture.Fist);
-        }
-
-        //Debug.Log(sum);
-    }
-
-    public void Update()
-    {
-
-    }
+    }    
 
     public void applyEthernetPacketIMU(Vector3 acceleration1, Vector3 gyroscope, int timestamp)
     {   
@@ -219,8 +151,6 @@ public class Glove : MonoBehaviour
             bias_counter++;
             Debug.Log("Gyroscope bias is " + gyro_bias);
             Debug.Log("Acceleration bias is " + acceleration_bias);
-
-            set_zero();
         }
         else
         {
@@ -403,7 +333,8 @@ public class Glove : MonoBehaviour
 
     public TrackingData GetTrackingData()
     {
-        return new TrackingData(values, q_mahony, 1, 1);
+        //return new TrackingData(values, q_mahony, 1, 1);
+        return new TrackingData(null, q_mahony, 1, 1);
     } 
     
     private long GetTime()

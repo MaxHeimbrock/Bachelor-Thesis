@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class hand_controller : MonoBehaviour {
-	public GameObject glove_controller;
+
+	public GloveConnector gloveConnector;
 
 	public GameObject wrist;
 
@@ -27,7 +28,7 @@ public class hand_controller : MonoBehaviour {
 	public GameObject little_pip;
 	public GameObject little_dip;
 
-	private Glove glove; 
+	private float[] angles; 
 
 	private Quaternion[]  rot0;
 	private float[]  q;
@@ -68,10 +69,13 @@ public class hand_controller : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (glove == null) {
-			glove = glove_controller.GetComponent<EthernetGloveController> ().glove;
-			return;
-		}
+		angles = gloveConnector.GetAngles();
+
+        if (angles == null)
+        {
+            Debug.Log("angles in handcontroller null");
+            return;
+        }
 
 		float t = Time.fixedTime;
 		//Debug.Log (t);
@@ -88,37 +92,37 @@ public class hand_controller : MonoBehaviour {
 		}*/
 
 		q[0] = 0.0f;
-		q[1] = 180.0f/Mathf.PI*glove.values [1];
-		q[2] = 180.0f/Mathf.PI*glove.values [2]; 
-		q[3] = 180.0f/Mathf.PI*glove.values [3]; 
+		q[1] = 180.0f/Mathf.PI*angles[1];
+		q[2] = 180.0f/Mathf.PI*angles[2]; 
+		q[3] = 180.0f/Mathf.PI*angles[3]; 
 
 		q [4] = 0.0f;
-		q[5] = 180.0f/Mathf.PI*glove.values [9]; 
-		q[6] = 180.0f/Mathf.PI*glove.values [11];  // fake !!!!
-		q[7] = 180.0f/Mathf.PI*glove.values [11]; 
+		q[5] = 180.0f/Mathf.PI*angles[9]; 
+		q[6] = 180.0f/Mathf.PI*angles[11];  // fake !!!!
+		q[7] = 180.0f/Mathf.PI*angles[11]; 
 		//
 		q[8] = 0.0f;
-		q[9] =  180.0f/Mathf.PI*glove.values [17]; 
-		q[10] = 180.0f/Mathf.PI*glove.values [18]; 
-		q[11] = 180.0f/Mathf.PI*glove.values [19]; 
+		q[9] =  180.0f/Mathf.PI*angles[17]; 
+		q[10] = 180.0f/Mathf.PI*angles[18]; 
+		q[11] = 180.0f/Mathf.PI*angles[19]; 
 
 		q [12] = 0.0f;
-		q[13] = 180.0f/Mathf.PI*glove.values [25]; 
-		q[14] = 180.0f/Mathf.PI*glove.values [26]; 
-		q[15] = 180.0f/Mathf.PI*glove.values [27]; 
+		q[13] = 180.0f/Mathf.PI*angles[25]; 
+		q[14] = 180.0f/Mathf.PI*angles[26]; 
+		q[15] = 180.0f/Mathf.PI*angles[27]; 
 
 		q [16] = 0.0f;
-		q[17] = 180.0f/Mathf.PI*glove.values [33]; 
-		q[18] = 180.0f/Mathf.PI*glove.values [34]; 
-		q[19] = 180.0f/Mathf.PI*glove.values [35]; 
+		q[17] = 180.0f/Mathf.PI*angles[33]; 
+		q[18] = 180.0f/Mathf.PI*angles[34]; 
+		q[19] = 180.0f/Mathf.PI*angles[35]; 
 
 
 		//6 -- does not wortk
 		//14-- back right corner board
 		//22-- side lerft(thumb)
 		//30-- side right(little)
-		q [20] = 180.0f/Mathf.PI*(0.0f*glove.values [6] + glove.values [14] ); 
-		q[21] = 180.0f/Mathf.PI*( glove.values [22] - glove.values [30]); 
+		q [20] = 180.0f/Mathf.PI*(0.0f*angles[6] + angles[14] ); 
+		q[21] = 180.0f/Mathf.PI*( angles[22] - angles[30]); 
 
 		for (int i = 0; i < 40; i++) {
 			if(i==0){continue;}

@@ -8,7 +8,7 @@ using UnityEngine;
 
 public class WifiGloveConnection : MonoBehaviour
 {
-    public Glove glove;   
+    //public Glove glove;   
 
     // "connection" things for receiving
     IPEndPoint valuesRemoteEndPoint;
@@ -33,7 +33,7 @@ public class WifiGloveConnection : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        glove = new Glove();
+        //glove = new Glove();
 
         // Testing
         initUDPReceiverValues();
@@ -46,7 +46,7 @@ public class WifiGloveConnection : MonoBehaviour
     {
         // von mir hier hin verschoben
         if (Input.GetKey("space"))
-            glove.set_zero();
+            //glove.set_zero();
 
         // IMU logging - start with 'k' - finish with 'l'
         if (Input.GetKey("k") && logStatus == logging.noLogging)
@@ -92,7 +92,7 @@ public class WifiGloveConnection : MonoBehaviour
         //Debug.Log(jointValues[1]);
 
         // Apply joint values to glove object
-        glove.apply_ethernetJointPacket(jointValues);
+        //glove.apply_ethernetJointPacket(jointValues);
 
         // If first packet
         if (connected == false)
@@ -156,7 +156,7 @@ public class WifiGloveConnection : MonoBehaviour
             elapsedTime = 85;
 
         // TODO setter
-        glove.timestamp1 = timestamp;
+        //glove.timestamp1 = timestamp;
         imu_cnt++;
 
         // make stringbuilder threadsafe, since method is async
@@ -168,7 +168,7 @@ public class WifiGloveConnection : MonoBehaviour
             }
         }
 
-        glove.applyEthernetPacketIMU(accVec, gyroVec, timestamp);
+        //glove.applyEthernetPacketIMU(accVec, gyroVec, timestamp);
 
         // 2000 degrees/sec default settings
         // max acceleration 2g 

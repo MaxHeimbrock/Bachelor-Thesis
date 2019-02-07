@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class IMUTest : MonoBehaviour {
 
     public GameObject glove_controller;
-    private Glove glove;
+    //private Glove glove;
    
     public mode orientationMode = mode.acc;
 
@@ -28,10 +28,10 @@ public class IMUTest : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-
+        /*
         if (glove == null)
         {
-            glove = glove_controller.GetComponent<EthernetGloveController>().glove;
+            //glove = glove_controller.GetComponent<EthernetGloveController>().glove;
             glove.imuTest = this;            
         }
         else
@@ -64,6 +64,7 @@ public class IMUTest : MonoBehaviour {
                 this.transform.rotation = Quaternion.Inverse(glove.q_madgwick_filtered);
             }
         }
+        */
     }
 
     /*

@@ -47,7 +47,7 @@ public class UDPSend : MonoBehaviour
 
         try
         {
-            glove = glove_controller.GetComponent<EthernetGloveController>().glove;
+            //glove = glove_controller.GetComponent<EthernetGloveController>().glove;
 
             glove.UDP_Send = this;
         }
@@ -73,7 +73,7 @@ public class UDPSend : MonoBehaviour
         }
         else
         {
-            glove = glove_controller.GetComponent<EthernetGloveController>().glove;
+            //glove = glove_controller.GetComponent<EthernetGloveController>().glove;
 
             glove.UDP_Send = this;
         }

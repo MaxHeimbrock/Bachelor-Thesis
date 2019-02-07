@@ -128,7 +128,7 @@ GameObject:
   - component: {fileID: 94760016}
   - component: {fileID: 94760015}
   - component: {fileID: 94760014}
-  - component: {fileID: 94760018}
+  - component: {fileID: 94760013}
   m_Layer: 0
   m_Name: Mahony
   m_TagString: Untagged
@@ -136,6 +136,18 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &94760013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 94760012}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ab8831912e43084db6c9dc240229721, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gloveConnector: {fileID: 1300774466}
 --- !u!65 &94760014
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -207,22 +219,6 @@ Transform:
   m_Father: {fileID: 1122630962}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &94760018
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 94760012}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e02655293aaab454ca03230f16302107, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  glove_controller: {fileID: 1300774465}
-  orientationMode: 4
-  scroll_value: 0
-  numberOfButtons: 36
-  buttonCreator: {fileID: 0}
 --- !u!1 &106338260 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 100012, guid: 6026bbac16ba6c14ba925a570e2ea46c, type: 3}
@@ -1247,7 +1243,7 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 639621804}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: faf898e0acc5a2d4cadec4f25340366d, type: 3}
   m_Name: 
@@ -1644,7 +1640,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d6ea8f1a6c5dd5b4cbdceded7457a180, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  glove_controller: {fileID: 1300774465}
+  gloveConnector: {fileID: 0}
   wrist: {fileID: 85183109}
   thumb_base: {fileID: 808676278}
   thumb_pip: {fileID: 1955013543}
@@ -1859,7 +1855,7 @@ GameObject:
   - component: {fileID: 1300774467}
   - component: {fileID: 1300774466}
   m_Layer: 0
-  m_Name: GloveController
+  m_Name: GloveConnector
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1873,9 +1869,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1300774465}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6859d84ababf6974ab341315c5d13f0a, type: 3}
+  m_Script: {fileID: 11500000, guid: 33772326515e7e14db6acf25e58ccecd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gloveVersion: 1
+  IMU_filterType: 1
 --- !u!4 &1300774467
 Transform:
   m_ObjectHideFlags: 0
@@ -1908,7 +1906,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d6ea8f1a6c5dd5b4cbdceded7457a180, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  glove_controller: {fileID: 1300774465}
+  gloveConnector: {fileID: 0}
   wrist: {fileID: 1834702214}
   thumb_base: {fileID: 377829204}
   thumb_pip: {fileID: 254620162}
@@ -2343,12 +2341,12 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1455260849}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d6ea8f1a6c5dd5b4cbdceded7457a180, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  glove_controller: {fileID: 1300774465}
+  gloveConnector: {fileID: 1300774466}
   wrist: {fileID: 1455260848}
   thumb_base: {fileID: 1455260844}
   thumb_pip: {fileID: 1455260843}
@@ -2388,7 +2386,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d6ea8f1a6c5dd5b4cbdceded7457a180, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  glove_controller: {fileID: 1300774465}
+  gloveConnector: {fileID: 0}
   wrist: {fileID: 1804721612}
   thumb_base: {fileID: 351830754}
   thumb_pip: {fileID: 1158986443}
@@ -2424,7 +2422,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d6ea8f1a6c5dd5b4cbdceded7457a180, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  glove_controller: {fileID: 1300774465}
+  gloveConnector: {fileID: 0}
   wrist: {fileID: 2078108471}
   thumb_base: {fileID: 1634710036}
   thumb_pip: {fileID: 1971960678}
@@ -3365,7 +3363,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d6ea8f1a6c5dd5b4cbdceded7457a180, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  glove_controller: {fileID: 1300774465}
+  gloveConnector: {fileID: 0}
   wrist: {fileID: 1916998987}
   thumb_base: {fileID: 1916998983}
   thumb_pip: {fileID: 1916998982}

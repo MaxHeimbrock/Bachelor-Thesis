@@ -6,13 +6,10 @@ using UnityEngine;
 
 public class Manager : MonoBehaviour
 {
-    public UInt16 NB_SENSORS = 40;
-    public UInt32 cnt;
-    public float[] values;
-    public UInt16 version;
+    /*
+    public GloveConnector gloveConnector;
 
-    private UInt32[] offsets;
-    private UInt32[] raw_values;
+    public IMU_Processor IMU_procesor;
 
     // for imu testing
     private Vector3 acceleration = Vector3.zero;
@@ -480,4 +477,5 @@ public class Manager : MonoBehaviour
             return (TrackingData)this.MemberwiseClone();
         }
     }
+    */
 }

@@ -8,15 +8,14 @@ using UnityEngine;
 
 public class EthernetGloveController : MonoBehaviour, GloveConnectionInterface
 {
-    //public Glove glove;
-    public const UInt16 NB_VALUES_GLOVE = 40;
+    AngleProcessor angleProcessor;
+    IMU_Processor IMU_processor;
 
     // "connection" things for Ping
     IPEndPoint remoteEndPointPing;
     UdpClient pingClient;
     public static string gloveIP = "192.168.131.59";
     public static int pingPort = 11159;
-    Boolean autoconnect = true;
 
     // "connection" things for receiving
     IPEndPoint valuesRemoteEndPoint;
@@ -25,7 +24,7 @@ public class EthernetGloveController : MonoBehaviour, GloveConnectionInterface
     UdpClient IMUClient;
     Boolean connected = false;
     public static string myIP = "192.168.131.1";
-    public static int valuesPort = 64059; //65259 for IMU
+    public static int valuesPort = 64059; 
     public static int IMUPort = 64159;
     
     StringBuilder sb = new StringBuilder();
@@ -37,77 +36,21 @@ public class EthernetGloveController : MonoBehaviour, GloveConnectionInterface
 
     private readonly object imuLock = new object();
     private readonly object gloveLock = new object();
-    private EthernetIMUPacket imu_packet;
-    private EthernetGlovePacket glove_packet;
+    private IMUPacket imu_packet;
+    private ValuePacket glove_packet;
 
-    public class EthernetGlovePacket
+    public EthernetGloveController(IMU_Processor IMU_processor)
     {
-        // Data Format: uint16_t cnt || uint16_t version/svn_revision || uint32_t values[NB_VALUES_GLOVE]
-        UInt16 cnt;
-        UInt16 version;
-        UInt32[] values;
+        Debug.Log("Ethernet Glove Controller started");
 
-        public EthernetGlovePacket(UInt16 cnt, UInt16 version, UInt32[] values)
-        {
-            this.cnt = cnt;
-            this.version = version;
-            this.values = values;
-        }
-    }
+        imu_packet = new IMUPacket();
+        glove_packet = new ValuePacket();
 
-    public class EthernetIMUPacket
-    {
-        // Data Format: uint16_t cnt || uint16_t version/svn_revision || int16_t acceleration[3] || int16_t gyro[3] || uint32_t timestamp || uint32_t temperature;
-        UInt16 cnt;
-        UInt16 version;
-        Int16[] acceleration;
-        Int16[] gyroscope;
-        UInt32 timestamp;
+        angleProcessor = new EthernetAngleProcessor();
+        this.IMU_processor = IMU_processor;
 
-        public EthernetIMUPacket(UInt16 cnt, UInt16 version, Int16[] acceleration, Int16[] gyroscope, UInt32 timestamp)
-        {
-            this.cnt = cnt;
-            this.version = version;
-            this.acceleration = acceleration;
-            this.gyroscope = gyroscope;
-            this.timestamp = timestamp;
-        }
-    }    
-
-    // Use this for initialization
-    void Start()
-    {
-        // Testing
         initUDPReceiverValues();
-
         initUDPReceiverIMU();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if (autoconnect && connected == false)
-            ping();        
-
-        // IMU logging - start with 'k' - finish with 'l'
-        if (Input.GetKey("k") && logStatus == logging.noLogging)
-            logStatus = logging.logStarted;
-
-        else if (Input.GetKey("l") && logStatus == logging.logStarted)
-        {
-            logStatus = logging.logfinished;
-            WriteIMUToFile();
-        }
-
-        UpdateTimerUI();
-    }
-
-    public void ping()
-    {
-        remoteEndPointPing = new IPEndPoint(IPAddress.Parse(gloveIP), pingPort);
-        pingClient = new UdpClient();
-        //Debug.Log("Ping Glove on " + gloveIP + " : " + pingPort);
-        sendPing();
     }
 
     public void initUDPReceiverValues()
@@ -129,9 +72,17 @@ public class EthernetGloveController : MonoBehaviour, GloveConnectionInterface
     //CallBack for joint values
     private void recvValues(IAsyncResult res)
     {
+        //--------------------------------------------------------------------------------------------------------------------
+        //----------- RECEIVING DATA -----------------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------------------------------------------------
+
         byte[] data = valuesClient.EndReceive(res, ref valuesRemoteEndPoint);
         valuesClient.BeginReceive(new AsyncCallback(recvValues), null);
         //Debug.Log("Received Value package from glove");
+
+        //--------------------------------------------------------------------------------------------------------------------
+        //----------- COPYING DATA -------------------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------------------------------------------------
 
         UInt16 cnt;
         UInt16 version;
@@ -144,11 +95,20 @@ public class EthernetGloveController : MonoBehaviour, GloveConnectionInterface
 
         //Debug.Log(version);
 
-        lock (gloveLock)
-            glove_packet = new EthernetGlovePacket(cnt, version, jointValues);
+        //--------------------------------------------------------------------------------------------------------------------
+        //----------- COMPUTING DATA -----------------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------------------------------------------------
 
-        // Apply joint values to glove object
-        //glove.apply_ethernetJointPacket(jointValues);
+        lock (gloveLock)
+        {
+            angleProcessor.ProcessAngles(jointValues);
+
+            glove_packet = new ValuePacket(cnt, version, jointValues, angleProcessor.GetAngles());
+        }
+
+        //--------------------------------------------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------------------------------------------------
 
         // If first packet
         if (connected == false)
@@ -161,10 +121,24 @@ public class EthernetGloveController : MonoBehaviour, GloveConnectionInterface
     //CallBack for IMU
     private void recvIMU(IAsyncResult res)
     {
+        //--------------------------------------------------------------------------------------------------------------------
+        //----------- RECEIVING DATA -----------------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------------------------------------------------
+
         byte[] data = IMUClient.EndReceive(res, ref IMURemoteEndPoint);
         IMUClient.BeginReceive(new AsyncCallback(recvIMU), null);
         //Debug.Log("Received IMU package from glove");
-        connected = true;
+        
+        // If first packet
+        if (connected == false)
+        {
+            Debug.Log("Glove is active");
+            connected = true;
+        }
+
+        //--------------------------------------------------------------------------------------------------------------------
+        //----------- COPYING DATA -------------------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------------------------------------------------
 
         UInt16 cnt;
 
@@ -184,10 +158,22 @@ public class EthernetGloveController : MonoBehaviour, GloveConnectionInterface
         System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16), acc, 0, 3 * sizeof(Int16));
         System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16) + 3 * sizeof(Int16), gyro, 0, 3 * sizeof(Int16));
         timestamp_in_ticks = BitConverter.ToUInt32(data, sizeof(UInt16) + sizeof(UInt16) + 3 * sizeof(Int16) + 3 * sizeof(Int16));
-        
+        float delta_t_s = GetTime((int)timestamp_in_ticks);
+
         accVec = new Vector3(acc[0], acc[1], acc[2]);
         gyroVec = new Vector3(gyro[0], gyro[1], gyro[2]);
+        
+        //--------------------------------------------------------------------------------------------------------------------
+        //----------- COMPUTING DATA -----------------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------------------------------------------------
 
+        lock (imuLock)
+        {
+            Quaternion orientation = IMU_processor.GetOrientation(delta_t_s, accVec, gyroVec);
+
+            imu_packet = new IMUPacket(cnt, version, acc, gyro, timestamp_in_ticks, orientation);
+        }
+        
         if (logStatus == logging.logStarted)
         {
             elapsed_seconds_glove = GetTime((int)timestamp_in_ticks);
@@ -202,10 +188,7 @@ public class EthernetGloveController : MonoBehaviour, GloveConnectionInterface
             }
         }
 
-        lock (imuLock)
-        {
-            imu_packet = new EthernetIMUPacket(cnt, version, acc, gyro, timestamp_in_ticks);
-        }
+
 
         //glove.applyEthernetPacketIMU(accVec, gyroVec, timestamp_in_ticks);
 
@@ -299,21 +282,35 @@ public class EthernetGloveController : MonoBehaviour, GloveConnectionInterface
 
         elapsed_seconds_glove += delta_time_seconds;
 
-        // this is it - just get delta time
-        //Debug.Log(elapsed_seconds_glove);
-
         last_timestamp_microseconds = this_timestamp_microseconds;
 
         return delta_time_seconds;
     }
 
-    public GloveConnector.ValuePacket GetValuePacket()
+    public ValuePacket GetValuePacket()
     {
-        throw new NotImplementedException();
+        lock (gloveLock)
+            return glove_packet;
     }
 
-    public GloveConnector.IMUPacket GetIMUPacket()
+    public IMUPacket GetIMUPacket()
     {
-        throw new NotImplementedException();
+        lock (imuLock)
+            return imu_packet;
+    }
+
+    public void SetZero()
+    {
+        angleProcessor.SetZero();
+    }
+
+    public void CheckGloveConnection(out bool connected)
+    {
+        remoteEndPointPing = new IPEndPoint(IPAddress.Parse(gloveIP), pingPort);
+        pingClient = new UdpClient();
+        Debug.Log("Ping Glove on " + gloveIP + " : " + pingPort);
+        sendPing();
+
+        connected = this.connected;
     }
 }
