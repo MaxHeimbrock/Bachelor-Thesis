@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="adfaee9f-0896-479d-bbaf-865d2099d0df" name="Default Changelist" comment="" />
+    <list default="true" id="adfaee9f-0896-479d-bbaf-865d2099d0df" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/undistort_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/undistort_test.py" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -22,8 +25,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/undistort_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="297">
-              <caret line="48" selection-start-line="48" selection-end-line="48" />
+            <state relative-caret-position="136">
+              <caret line="11" column="16" selection-start-line="11" selection-start-column="16" selection-end-line="11" selection-end-column="16" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -71,7 +74,7 @@
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="945" />
-    <option name="width" value="985" />
+    <option name="width" value="986" />
     <option name="height" value="525" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -80,6 +83,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -91,11 +95,10 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../tdcv-ws18-19-exercise-3" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
@@ -115,7 +118,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.Hand_Tracking_Contour">
+  <component name="RunManager" selected="Python.undistort_test">
     <configuration name="Hand_Tracking_Contour" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="CV_Python" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -223,8 +226,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.Hand_Tracking_Contour" />
         <item itemvalue="Python.undistort_test" />
+        <item itemvalue="Python.Hand_Tracking_Contour" />
         <item itemvalue="Python.SinghalHarsh_HandDetection (1)" />
         <item itemvalue="Python.SinghalHarsh_HandDetection" />
         <item itemvalue="Python.find_hand_test" />
@@ -245,9 +248,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-7" y="-7" width="2062" height="1126" extended-state="6" />
+    <frame x="-7" y="-7" width="1295" height="695" extended-state="6" />
+    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24790123" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.2472178" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -281,8 +285,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/undistort_test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="297">
-          <caret line="48" selection-start-line="48" selection-end-line="48" />
+        <state relative-caret-position="136">
+          <caret line="11" column="16" selection-start-line="11" selection-start-column="16" selection-end-line="11" selection-end-column="16" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
           </folding>

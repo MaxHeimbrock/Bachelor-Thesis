@@ -66,7 +66,10 @@ public class GloveConnector : MonoBehaviour {
 
     public float[] GetAngles()
     {
-        return gloveConnectionInterface.GetValuePacket().GetAngles();
+        if (connected)
+            return gloveConnectionInterface.GetValuePacket().GetAngles();
+        else
+            return new float[40];
     }
 
     public Vector3 GetGyro()
@@ -81,7 +84,10 @@ public class GloveConnector : MonoBehaviour {
 
     public Quaternion GetOrientation()
     {
-        return gloveConnectionInterface.GetIMUPacket().GetOrientation();
+        if (connected)
+            return gloveConnectionInterface.GetIMUPacket().GetOrientation();
+        else
+            return Quaternion.identity;
     }
 }
 
