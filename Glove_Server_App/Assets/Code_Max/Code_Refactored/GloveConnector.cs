@@ -10,7 +10,7 @@ public class GloveConnector : MonoBehaviour {
     private GloveConnectionInterface gloveConnectionInterface;
     bool connected = false;
 
-    public enum IMU_FilterType { Madgwick, Mahony, Gyro, Accelerometer }
+    public enum IMU_FilterType {Madgwick, Mahony, Gyroscope, Accelerometer}
     public IMU_FilterType IMU_filterType = IMU_FilterType.Mahony;
     private IMU_Processor IMU_processor;
 
@@ -21,13 +21,29 @@ public class GloveConnector : MonoBehaviour {
         {
             // Mahony-Filter with default Preprocessor 
             case IMU_FilterType.Mahony:
-                IMU_processor = new MahonyProcessor(new IMU_Preprocessor());
+                IMU_processor = new MahonyProcessorNoMagnet(new IMU_Preprocessor());
+                break;
+
+            // Madgwick-Filter with default Preprocessor 
+            case IMU_FilterType.Madgwick:
+                IMU_processor = new MadgwickProcessorNoMagnet(new IMU_Preprocessor());
+                break;
+
+            // GyroscopeProcessor with default Preprocessor 
+            case IMU_FilterType.Gyroscope:
+                IMU_processor = new GyroscopeProcessor(new IMU_Preprocessor());
+                break;
+
+            // AccelerometerProcessor with default Preprocessor 
+            case IMU_FilterType.Accelerometer:
+                IMU_processor = new AccelerometerProcessor(new IMU_Preprocessor());
                 break;
         }
 
 		switch (gloveVersion)
         {
             case GloveVersion.Wifi_Glove:
+                gloveConnectionInterface = new WifiGloveConnection(IMU_processor);
                 break;
 
             case GloveVersion.Ethernet_Glove:

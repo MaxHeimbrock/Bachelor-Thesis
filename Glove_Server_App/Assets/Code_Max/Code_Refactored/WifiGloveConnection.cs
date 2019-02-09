@@ -6,16 +6,10 @@ using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
 
-public class EthernetGloveController : GloveConnectionInterface
+public class WifiGloveConnection : GloveConnectionInterface
 {
     AngleProcessor angleProcessor;
-    IMU_Processor IMU_processor;
-
-    // "connection" things for Ping
-    IPEndPoint remoteEndPointPing;
-    UdpClient pingClient;
-    public static string gloveIP = "192.168.131.59";
-    public static int pingPort = 11159;
+    IMU_Processor IMU_processor;    
 
     // "connection" things for receiving
     IPEndPoint valuesRemoteEndPoint;
@@ -23,14 +17,15 @@ public class EthernetGloveController : GloveConnectionInterface
     UdpClient valuesClient;
     UdpClient IMUClient;
     Boolean connected = false;
-    public static string myIP = "192.168.131.1";
-    public static int valuesPort = 64059; 
-    public static int IMUPort = 64159;
-    
+    public static string myIP = "192.168.137.1";
+    public static int valuesPort = 64000; 
+    public static int IMUPort = 64200;
+    public static int IMUPort2 = 64400;
+
     StringBuilder sb = new StringBuilder();
     logging logStatus = logging.noLogging;
 
-    enum logging {noLogging, logStarted, logfinished}
+    enum logging { noLogging, logStarted, logfinished }
     long last_timestamp_microseconds;
     float elapsed_seconds_glove = 0;
 
@@ -39,9 +34,9 @@ public class EthernetGloveController : GloveConnectionInterface
     private IMUPacket imu_packet;
     private ValuePacket glove_packet;
 
-    public EthernetGloveController(IMU_Processor IMU_processor)
+    public WifiGloveConnection(IMU_Processor IMU_processor)
     {
-        Debug.Log("Ethernet Glove Controller started");
+        Debug.Log("Wifi Glove Controller started");
 
         imu_packet = new IMUPacket();
         glove_packet = new ValuePacket();
@@ -78,7 +73,7 @@ public class EthernetGloveController : GloveConnectionInterface
 
         byte[] data = valuesClient.EndReceive(res, ref valuesRemoteEndPoint);
         valuesClient.BeginReceive(new AsyncCallback(recvValues), null);
-        //Debug.Log("Received Value package from glove");
+        Debug.Log("Received Value package from glove");
 
         //--------------------------------------------------------------------------------------------------------------------
         //----------- COPYING DATA -------------------------------------------------------------------------------------------
@@ -127,8 +122,8 @@ public class EthernetGloveController : GloveConnectionInterface
 
         byte[] data = IMUClient.EndReceive(res, ref IMURemoteEndPoint);
         IMUClient.BeginReceive(new AsyncCallback(recvIMU), null);
-        //Debug.Log("Received IMU package from glove");
-        
+        Debug.Log("Received IMU package from glove");
+
         // If first packet
         if (connected == false)
         {
@@ -162,7 +157,7 @@ public class EthernetGloveController : GloveConnectionInterface
 
         accVec = new Vector3(acc[0], acc[1], acc[2]);
         gyroVec = new Vector3(gyro[0], gyro[1], gyro[2]);
-        
+
         //--------------------------------------------------------------------------------------------------------------------
         //----------- COMPUTING DATA -----------------------------------------------------------------------------------------
         //--------------------------------------------------------------------------------------------------------------------
@@ -174,11 +169,11 @@ public class EthernetGloveController : GloveConnectionInterface
 
             imu_packet = new IMUPacket(cnt, version, acc, gyro, timestamp_in_ticks, orientation);
         }
-        
+
         if (logStatus == logging.logStarted)
         {
             elapsed_seconds_glove = GetTime((int)timestamp_in_ticks);
-        }       
+        }
 
         // make stringbuilder threadsafe, since method is async
         if (logStatus == logging.logStarted)
@@ -195,16 +190,6 @@ public class EthernetGloveController : GloveConnectionInterface
 
         // 2000 degrees/sec default settings
         // max acceleration 2g 
-    }
-
-    // sendPing
-    private void sendPing()
-    {
-        // Daten mit der UTF8-Kodierung in das Binärformat kodieren.
-        byte[] message = Encoding.UTF8.GetBytes("Ping");
-
-        // den Ping zum Remote-Client senden.
-        pingClient.Send(message, message.Length, remoteEndPointPing);
     }
 
     // OnGUI
@@ -228,7 +213,7 @@ public class EthernetGloveController : GloveConnectionInterface
         }
     }
 
-    public void LogIMU (int timestamp, Vector3 accVec, Vector3 gyroVec)
+    public void LogIMU(int timestamp, Vector3 accVec, Vector3 gyroVec)
     {
         float G_Gain = 0.07f;
         float Accel_Factor = 16384.0f;
@@ -248,7 +233,7 @@ public class EthernetGloveController : GloveConnectionInterface
 
         System.IO.File.WriteAllText("C:\\Users\\Max\\Documents\\GitHub\\Bachelor-Thesis\\Glove_Server_App\\IMU_Calibration\\IMU_log.txt", sb.ToString());
     }
-    
+
     // initialized to discard first two seconds
     private float secondsCount = 40;
     private int secondsCountRounded;
@@ -307,12 +292,6 @@ public class EthernetGloveController : GloveConnectionInterface
 
     public void CheckGloveConnection(out bool connected)
     {
-        remoteEndPointPing = new IPEndPoint(IPAddress.Parse(gloveIP), pingPort);
-        pingClient = new UdpClient();
-        Debug.Log("Ping Glove on " + gloveIP + " : " + pingPort);
-        sendPing();
-
         connected = this.connected;
     }
 }
-

@@ -11,9 +11,7 @@ public abstract class IMU_Processor {
     public IMU_Processor(IMU_Preprocessor IMU_preprocessor)
     {
         this.preprocessor = IMU_preprocessor;
-    }
-
-    public abstract Quaternion GetOrientation(float delta_t_s, Vector3 accel, Vector3 gyro);
+    }    
 
     public abstract Quaternion GetOrientation(float delta_t_s, Vector3 accel, Vector3 gyro, Vector3 magnet);
 
@@ -45,22 +43,53 @@ public abstract class IMU_Processor {
     }
 }
 
-public class MahonyProcessor : IMU_Processor
+public class GyroscopeProcessor : IMU_Processor
+{
+    Vector3 currentRotation = Vector3.zero;
+    int count = 2;
+    Quaternion firstPose;
+
+    public GyroscopeProcessor(IMU_Preprocessor IMU_preprocessor) : base(IMU_preprocessor)
+    {
+    }
+    
+    public override Quaternion GetOrientation(float delta_t_s, Vector3 accel, Vector3 gyro, Vector3 magnet)
+    {
+        gyro = preprocessor.CorrectGyro(gyro);
+        accel = preprocessor.CorrectAccel(accel);
+        accel = preprocessor.LowPassFilter(accel);
+
+        currentRotation += gyro * delta_t_s;
+
+        // since the Mahony-Filter integrates, we need to find the starting orientation. Disregard the first pose because it is always wrong
+        if (count > 0)
+        {
+            firstPose = CalcAngleFromAcc(accel);
+            count--;
+        }
+
+        Quaternion currentRotationQuaternion = Quaternion.Euler(new Vector3(currentRotation.y, -currentRotation.z, currentRotation.x));
+
+        return Quaternion.Inverse(currentRotationQuaternion * firstPose);
+    }
+}
+
+public class MahonyProcessorNoMagnet : IMU_Processor
 {
     private MahonyAHRS mahonyARHS = new MahonyAHRS(0.00005f);
     int count = 2;
     Quaternion firstPose;
 
-    public MahonyProcessor(IMU_Preprocessor IMU_preprocessor) : base(IMU_preprocessor)
+    public MahonyProcessorNoMagnet(IMU_Preprocessor IMU_preprocessor) : base(IMU_preprocessor)
     {
-        Debug.Log("MahonyProcessor instantiated");
     }
 
-    public override Quaternion GetOrientation(float delta_t_s, Vector3 accel, Vector3 gyro)
+    public override Quaternion GetOrientation(float delta_t_s, Vector3 accel, Vector3 gyro, Vector3 magnet)
     {
         Quaternion orientation;
 
         gyro = preprocessor.CorrectGyro(gyro);
+        accel = preprocessor.CorrectAccel(accel);
         accel = preprocessor.LowPassFilter(accel);
 
         // since the Mahony-Filter integrates, we need to find the starting orientation. Disregard the first pose because it is always wrong
@@ -81,27 +110,96 @@ public class MahonyProcessor : IMU_Processor
         // Hier das inverse
         return Quaternion.Inverse(orientation);
     }
+}
+
+public class MadgwickProcessorNoMagnet : IMU_Processor
+{
+    private MadgwickAHRS madgwickARHS = new MadgwickAHRS(0.00005f);
+    int count = 2;
+    Quaternion firstPose;
+
+    public MadgwickProcessorNoMagnet(IMU_Preprocessor IMU_preprocessor) : base(IMU_preprocessor)
+    {
+    }
 
     public override Quaternion GetOrientation(float delta_t_s, Vector3 accel, Vector3 gyro, Vector3 magnet)
     {
         Quaternion orientation;
 
         gyro = preprocessor.CorrectGyro(gyro);
+        accel = preprocessor.CorrectAccel(accel);
         accel = preprocessor.LowPassFilter(accel);
 
-        if (firstPose == null)
-            firstPose = base.CalcAngleFromAcc(accel);
+        // since the Mahony-Filter integrates, we need to find the starting orientation. Disregard the first pose because it is always wrong
+        if (count > 0)
+        {
+            firstPose = CalcAngleFromAcc(accel);
+            count--;
+        }
 
-        mahonyARHS.Update(gyro.x, gyro.y, gyro.z, accel.x, accel.y, accel.z, magnet.x, magnet.y, magnet.z);
-        orientation = new Quaternion(mahonyARHS.Quaternion[0], mahonyARHS.Quaternion[1], mahonyARHS.Quaternion[3], -mahonyARHS.Quaternion[2]);
+        madgwickARHS.Update(gyro.x, gyro.y, gyro.z, accel.x, accel.y, accel.z);
+        orientation = new Quaternion(madgwickARHS.Quaternion[0], madgwickARHS.Quaternion[1], madgwickARHS.Quaternion[3], -madgwickARHS.Quaternion[2]);
         // zusätzlich noch um 180° zur x-Achse rotiert
         orientation *= Quaternion.AngleAxis(180, Vector3.right);
         // zusätzliche Rotationen für die Hololens
-        //q_mahony *= Quaternion.AngleAxis(180, Vector3.up);
+        //orientation *= Quaternion.AngleAxis(180, Vector3.forward);
         orientation *= firstPose;
 
         // Hier das inverse
         return Quaternion.Inverse(orientation);
+    }
+}
+
+/*
+public class GyroAccelFilteredProcessor : IMU_Processor
+{
+    private float filter = 0.98f;
+
+    private Vector3 filtered_rotation = Vector3.zero;
+
+    public GyroAccelFilteredProcessor(IMU_Preprocessor IMU_preprocessor) : base(IMU_preprocessor)
+    {
+    }
+
+    public override Quaternion GetOrientation(float delta_t_s, Vector3 accel, Vector3 gyro, Vector3 magnet)
+    {
+        gyro = preprocessor.CorrectGyro(gyro);
+        accel = preprocessor.CorrectAccel(accel);
+        accel = preprocessor.LowPassFilter(accel);
+
+        Vector3 integrated_gyro = gyro * delta_t_s;
+
+        Vector3 acc_angles = CalcAngleFromAcc(accel).eulerAngles;
+
+        // Acc is only trustable till around 45° right now - still a flip happens
+        if (acc_angles.x < 20)
+            filtered_rotation.x = filter * (filtered_rotation.x + integrated_gyro.x) + (1 - filter) * acc_angles.z;
+        else
+            filtered_rotation.x = filtered_rotation.x + integrated_gyro.x;
+        if (acc_angles.y < 20)
+            filtered_rotation.y = filter * (filtered_rotation.y + integrated_gyro.y) + (1 - filter) * acc_angles.x;
+        else
+            filtered_rotation.y = filtered_rotation.y + integrated_gyro.y;
+
+        filtered_rotation.z = filtered_rotation.z + integrated_gyro.z;
+
+        return Quaternion.Inverse(Quaternion.Euler(filtered_rotation));
+    }
+}
+*/
+
+public class AccelerometerProcessor : IMU_Processor
+{
+    public AccelerometerProcessor(IMU_Preprocessor IMU_preprocessor) : base(IMU_preprocessor)
+    {
+    }
+
+    public override Quaternion GetOrientation(float delta_t_s, Vector3 accel, Vector3 gyro, Vector3 magnet)
+    {
+        accel = preprocessor.CorrectAccel(accel);
+        accel = preprocessor.LowPassFilter(accel);
+
+        return Quaternion.Inverse(CalcAngleFromAcc(accel));
     }
 }
 
