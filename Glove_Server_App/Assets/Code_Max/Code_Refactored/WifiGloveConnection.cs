@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -139,33 +140,23 @@ public class WifiGloveConnection : GloveConnectionInterface
         //----------- COPYING DATA -------------------------------------------------------------------------------------------
         //--------------------------------------------------------------------------------------------------------------------
 
-        UInt16 cnt;
+        Stream dataStream = new MemoryStream(data);
+        BinaryReader binaryReader = new BinaryReader(dataStream);
 
-        UInt16 version;
+        // Data Format: uint16_t cnt || uint16_t version/svn_revision || int16_t acceleration[3] || int16_t gyro[3] || uint32_t timestamp || uint32_t temperature;
 
-        Int16[] acc = new Int16[3];
-        Vector3 accVec;
-
-        Int16[] gyro = new Int16[3];
-        Vector3 gyroVec;
-
-        Int16[] mag = new Int16[3];
-        Vector3 magVec;
-
-        UInt32 timestamp_in_ticks;
-
-        // Data Format: uint16_t cnt || uint16_t version/svn_revision || int16_t acceleration[3] || int16_t gyro[3] || int16 mag[3] || int16 hall || uint32_t timestamp || uint32_t temperature;
-        cnt = BitConverter.ToUInt16(data, 0);
-        version = BitConverter.ToUInt16(data, sizeof(UInt16));
-        System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16), acc, 0, 3 * sizeof(Int16));
-        System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16) + 3 * sizeof(Int16), gyro, 0, 3 * sizeof(Int16));
-        System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16) + 3 * sizeof(Int16) + 3 * sizeof(Int16), mag, 0, 3 * sizeof(Int16));
-        timestamp_in_ticks = BitConverter.ToUInt32(data, sizeof(UInt16) + sizeof(UInt16) + 3 * sizeof(Int16) + 3 * sizeof(Int16) + 3 * sizeof(Int16) + sizeof(Int16));
+        UInt16 cnt = binaryReader.ReadUInt16();
+        UInt16 version = binaryReader.ReadUInt16();
+        Vector3 accVec = new Vector3();
+        accVec.x = binaryReader.ReadInt16();
+        accVec.y = binaryReader.ReadInt16();
+        accVec.z = binaryReader.ReadInt16();
+        Vector3 gyroVec = new Vector3();
+        gyroVec.x = binaryReader.ReadInt16();
+        gyroVec.y = binaryReader.ReadInt16();
+        gyroVec.z = binaryReader.ReadInt16();
+        UInt32 timestamp_in_ticks = binaryReader.ReadUInt32();
         float delta_t_s = GetTime((int)timestamp_in_ticks);
-
-        accVec = new Vector3(acc[0], acc[1], acc[2]);
-        gyroVec = new Vector3(gyro[0], gyro[1], gyro[2]);
-        magVec = new Vector3(mag[0], mag[1], mag[2]);
 
         //--------------------------------------------------------------------------------------------------------------------
         //----------- COMPUTING DATA -----------------------------------------------------------------------------------------
@@ -177,7 +168,7 @@ public class WifiGloveConnection : GloveConnectionInterface
             //Quaternion orientation = IMU_processor.GetOrientation(delta_t_s, accVec, gyroVec, magVec);
             Quaternion orientation = IMU_processor.GetOrientation(delta_t_s, accVec, gyroVec, Vector3.zero);
 
-            imu_packet = new IMUPacket(cnt, version, acc, gyro, timestamp_in_ticks, orientation);
+            //imu_packet = new IMUPacket(cnt, version, acc, gyro, timestamp_in_ticks, orientation);
         }
 
         if (logStatus == logging.logStarted)

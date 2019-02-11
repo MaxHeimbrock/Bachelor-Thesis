@@ -42,12 +42,12 @@ public class IMUPacket
     // Data Format: uint16_t cnt || uint16_t version/svn_revision || int16_t acceleration[3] || int16_t gyro[3] || uint32_t timestamp || uint32_t temperature;
     UInt16 cnt;
     UInt16 version;
-    Int16[] acceleration;
-    Int16[] gyroscope;
+    Vector3 acceleration;
+    Vector3 gyroscope;
     UInt32 timestamp;
     Quaternion orientation;
 
-    public IMUPacket(UInt16 cnt, UInt16 version, Int16[] acceleration, Int16[] gyroscope, UInt32 timestamp, Quaternion orientation)
+    public IMUPacket(UInt16 cnt, UInt16 version, Vector3 acceleration, Vector3 gyroscope, UInt32 timestamp, Quaternion orientation)
     {
         this.cnt = cnt;
         this.version = version;
@@ -63,12 +63,12 @@ public class IMUPacket
 
     public Vector3 GetGyro()
     {
-        return new Vector3(gyroscope[0], gyroscope[1], gyroscope[2]);
+        return gyroscope;
     }
 
     public Vector3 GetAcceleration()
     {
-        return new Vector3(acceleration[0], acceleration[1], acceleration[2]);
+        return acceleration;
     }
 
     public Quaternion GetOrientation()
