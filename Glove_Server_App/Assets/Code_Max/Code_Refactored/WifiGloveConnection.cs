@@ -9,7 +9,7 @@ using UnityEngine;
 public class WifiGloveConnection : GloveConnectionInterface
 {
     AngleProcessor angleProcessor;
-    IMU_Processor IMU_processor;    
+    IMU_Processor IMU_processor;
 
     // "connection" things for receiving
     IPEndPoint valuesRemoteEndPoint;
@@ -17,10 +17,14 @@ public class WifiGloveConnection : GloveConnectionInterface
     UdpClient valuesClient;
     UdpClient IMUClient;
     Boolean connected = false;
+    public static string defaultIP = "0.0.0.0";
     public static string myIP = "192.168.137.1";
     public static int valuesPort = 64000; 
     public static int IMUPort = 64200;
     public static int IMUPort2 = 64400;
+
+    public static string myIP_PhoneAccessPoint = "192.168.43.154";
+    public static string gloveIP_PhoneAccessPoint = "192.168.43.188";
 
     StringBuilder sb = new StringBuilder();
     logging logStatus = logging.noLogging;
@@ -50,7 +54,7 @@ public class WifiGloveConnection : GloveConnectionInterface
 
     public void initUDPReceiverValues()
     {
-        valuesRemoteEndPoint = new IPEndPoint(IPAddress.Parse(myIP), valuesPort);
+        valuesRemoteEndPoint = new IPEndPoint(IPAddress.Parse(defaultIP), valuesPort);
         valuesClient = new UdpClient(valuesRemoteEndPoint);
 
         valuesClient.BeginReceive(new AsyncCallback(recvValues), null);
@@ -58,7 +62,7 @@ public class WifiGloveConnection : GloveConnectionInterface
 
     public void initUDPReceiverIMU()
     {
-        IMURemoteEndPoint = new IPEndPoint(IPAddress.Parse(myIP), IMUPort);
+        IMURemoteEndPoint = new IPEndPoint(IPAddress.Parse(defaultIP), IMUPort2);
         IMUClient = new UdpClient(IMURemoteEndPoint);
 
         IMUClient.BeginReceive(new AsyncCallback(recvIMU), null);
@@ -145,18 +149,23 @@ public class WifiGloveConnection : GloveConnectionInterface
         Int16[] gyro = new Int16[3];
         Vector3 gyroVec;
 
+        Int16[] mag = new Int16[3];
+        Vector3 magVec;
+
         UInt32 timestamp_in_ticks;
 
-        // Data Format: uint16_t cnt || uint16_t version/svn_revision || int16_t acceleration[3] || int16_t gyro[3] || uint32_t timestamp || uint32_t temperature;
+        // Data Format: uint16_t cnt || uint16_t version/svn_revision || int16_t acceleration[3] || int16_t gyro[3] || int16 mag[3] || int16 hall || uint32_t timestamp || uint32_t temperature;
         cnt = BitConverter.ToUInt16(data, 0);
         version = BitConverter.ToUInt16(data, sizeof(UInt16));
         System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16), acc, 0, 3 * sizeof(Int16));
         System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16) + 3 * sizeof(Int16), gyro, 0, 3 * sizeof(Int16));
-        timestamp_in_ticks = BitConverter.ToUInt32(data, sizeof(UInt16) + sizeof(UInt16) + 3 * sizeof(Int16) + 3 * sizeof(Int16));
+        System.Buffer.BlockCopy(data, sizeof(UInt16) + sizeof(UInt16) + 3 * sizeof(Int16) + 3 * sizeof(Int16), mag, 0, 3 * sizeof(Int16));
+        timestamp_in_ticks = BitConverter.ToUInt32(data, sizeof(UInt16) + sizeof(UInt16) + 3 * sizeof(Int16) + 3 * sizeof(Int16) + 3 * sizeof(Int16) + sizeof(Int16));
         float delta_t_s = GetTime((int)timestamp_in_ticks);
 
         accVec = new Vector3(acc[0], acc[1], acc[2]);
         gyroVec = new Vector3(gyro[0], gyro[1], gyro[2]);
+        magVec = new Vector3(mag[0], mag[1], mag[2]);
 
         //--------------------------------------------------------------------------------------------------------------------
         //----------- COMPUTING DATA -----------------------------------------------------------------------------------------
@@ -165,6 +174,7 @@ public class WifiGloveConnection : GloveConnectionInterface
         lock (imuLock)
         {
             // Ethernet Glove doesnt have magnetometer - pass zeros - will not be used
+            //Quaternion orientation = IMU_processor.GetOrientation(delta_t_s, accVec, gyroVec, magVec);
             Quaternion orientation = IMU_processor.GetOrientation(delta_t_s, accVec, gyroVec, Vector3.zero);
 
             imu_packet = new IMUPacket(cnt, version, acc, gyro, timestamp_in_ticks, orientation);

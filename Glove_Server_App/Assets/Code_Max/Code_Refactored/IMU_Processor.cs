@@ -98,14 +98,27 @@ public class MahonyProcessorNoMagnet : IMU_Processor
             firstPose = CalcAngleFromAcc(accel);
             count--;
         }
-        
-        mahonyARHS.Update(gyro.x, gyro.y, gyro.z, accel.x, accel.y, accel.z);
-        orientation = new Quaternion(mahonyARHS.Quaternion[0], mahonyARHS.Quaternion[1], mahonyARHS.Quaternion[3], -mahonyARHS.Quaternion[2]);
-        // zusätzlich noch um 180° zur x-Achse rotiert
-        orientation *= Quaternion.AngleAxis(180, Vector3.right);
-        // zusätzliche Rotationen für die Hololens
-        //orientation *= Quaternion.AngleAxis(180, Vector3.forward);
-        orientation *= firstPose;
+
+        if (magnet == Vector3.zero)
+        {
+            mahonyARHS.Update(gyro.x, gyro.y, gyro.z, accel.x, accel.y, accel.z);
+            orientation = new Quaternion(mahonyARHS.Quaternion[0], mahonyARHS.Quaternion[1], mahonyARHS.Quaternion[3], -mahonyARHS.Quaternion[2]);
+            // zusätzlich noch um 180° zur x-Achse rotiert
+            orientation *= Quaternion.AngleAxis(180, Vector3.right);
+            // zusätzliche Rotationen für die Hololens
+            //orientation *= Quaternion.AngleAxis(180, Vector3.forward);
+            orientation *= firstPose;
+        }
+        else
+        {
+            mahonyARHS.Update(gyro.x, gyro.y, gyro.z, accel.x, accel.y, accel.z, magnet.x, magnet.y, magnet.z);
+            orientation = new Quaternion(mahonyARHS.Quaternion[0], mahonyARHS.Quaternion[1], mahonyARHS.Quaternion[3], -mahonyARHS.Quaternion[2]);
+            // zusätzlich noch um 180° zur x-Achse rotiert
+            orientation *= Quaternion.AngleAxis(180, Vector3.right);
+            // zusätzliche Rotationen für die Hololens
+            //orientation *= Quaternion.AngleAxis(180, Vector3.forward);
+            orientation *= firstPose;
+        }
 
         // Hier das inverse
         return Quaternion.Inverse(orientation);
@@ -137,13 +150,27 @@ public class MadgwickProcessorNoMagnet : IMU_Processor
             count--;
         }
 
-        madgwickARHS.Update(gyro.x, gyro.y, gyro.z, accel.x, accel.y, accel.z);
-        orientation = new Quaternion(madgwickARHS.Quaternion[0], madgwickARHS.Quaternion[1], madgwickARHS.Quaternion[3], -madgwickARHS.Quaternion[2]);
-        // zusätzlich noch um 180° zur x-Achse rotiert
-        orientation *= Quaternion.AngleAxis(180, Vector3.right);
-        // zusätzliche Rotationen für die Hololens
-        //orientation *= Quaternion.AngleAxis(180, Vector3.forward);
-        orientation *= firstPose;
+        if (magnet == Vector3.zero)
+        {
+            madgwickARHS.Update(gyro.x, gyro.y, gyro.z, accel.x, accel.y, accel.z);
+            orientation = new Quaternion(madgwickARHS.Quaternion[0], madgwickARHS.Quaternion[1], madgwickARHS.Quaternion[3], -madgwickARHS.Quaternion[2]);
+            // zusätzlich noch um 180° zur x-Achse rotiert
+            orientation *= Quaternion.AngleAxis(180, Vector3.right);
+            // zusätzliche Rotationen für die Hololens
+            //orientation *= Quaternion.AngleAxis(180, Vector3.forward);
+            orientation *= firstPose;
+        }
+        else
+        {
+            madgwickARHS.Update(gyro.x, gyro.y, gyro.z, accel.x, accel.y, accel.z, magnet.x, magnet.y, magnet.z);
+            orientation = new Quaternion(madgwickARHS.Quaternion[0], madgwickARHS.Quaternion[1], madgwickARHS.Quaternion[3], -madgwickARHS.Quaternion[2]);
+            // zusätzlich noch um 180° zur x-Achse rotiert
+            orientation *= Quaternion.AngleAxis(180, Vector3.right);
+            // zusätzliche Rotationen für die Hololens
+            //orientation *= Quaternion.AngleAxis(180, Vector3.forward);
+            orientation *= firstPose;
+        }
+
 
         // Hier das inverse
         return Quaternion.Inverse(orientation);
