@@ -201,28 +201,7 @@ public class EthernetGloveController : GloveConnectionInterface
 
         // den Ping zum Remote-Client senden.
         pingClient.Send(message, message.Length, remoteEndPointPing);
-    }
-
-    // OnGUI
-    void OnGUI()
-    {
-        GUIStyle labelStyle = new GUIStyle(GUI.skin.GetStyle("label"));
-        labelStyle.fontSize = 40;
-
-        if (!connected)
-            GUI.Box(new Rect(100, 200, 800, 500), "Glove offline", labelStyle);
-        else
-            GUI.Box(new Rect(100, 200, 500, 500), "Glove active - getting data", labelStyle);
-
-        if (logStatus == logging.logStarted)
-        {
-            GUI.Box(new Rect(100, 300, 500, 500), "seconds: " + secondsCountRounded, labelStyle);
-            GUI.Box(new Rect(100, 350, 500, 500), "rep: " + repCount, labelStyle);
-
-            if ((int)secondsCount >= 40)
-                GUI.Box(new Rect(100, 400, 500, 500), "TURN", labelStyle);
-        }
-    }
+    }   
 
     public void LogIMU (int timestamp, Vector3 accVec, Vector3 gyroVec)
     {
@@ -299,6 +278,7 @@ public class EthernetGloveController : GloveConnectionInterface
     public void SetZero()
     {
         angleProcessor.SetZero();
+        IMU_processor.SetZero();
     }
 
     public void CheckGloveConnection(out bool connected)
@@ -309,6 +289,9 @@ public class EthernetGloveController : GloveConnectionInterface
         sendPing();
 
         connected = this.connected;
+
+        if (connected)
+            SetZero();
     }
 }
 

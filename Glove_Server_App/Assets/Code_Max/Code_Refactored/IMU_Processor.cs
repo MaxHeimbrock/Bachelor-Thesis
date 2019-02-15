@@ -11,7 +11,9 @@ public abstract class IMU_Processor {
     public IMU_Processor(IMU_Preprocessor IMU_preprocessor)
     {
         this.preprocessor = IMU_preprocessor;
-    }    
+    }
+
+    public abstract void SetZero();
 
     public abstract Quaternion GetOrientation(float delta_t_s, Vector3 accel, Vector3 gyro, Vector3 magnet);
 
@@ -72,16 +74,24 @@ public class GyroscopeProcessor : IMU_Processor
 
         return Quaternion.Inverse(currentRotationQuaternion * firstPose);
     }
+
+    public override void SetZero()
+    {
+        currentRotation = Vector3.zero;
+    }
 }
 
 public class MahonyProcessorNoMagnet : IMU_Processor
 {
     private MahonyAHRS mahonyARHS = new MahonyAHRS(0.00005f);
-    int count = 2;
+    int countTillFirstPose = 2;
+    int countTillZero = 250;
+    int counterTillZero;
     Quaternion firstPose;
 
     public MahonyProcessorNoMagnet(IMU_Preprocessor IMU_preprocessor) : base(IMU_preprocessor)
     {
+        counterTillZero = countTillZero;
     }
 
     public override Quaternion GetOrientation(float delta_t_s, Vector3 accel, Vector3 gyro, Vector3 magnet)
@@ -92,11 +102,28 @@ public class MahonyProcessorNoMagnet : IMU_Processor
         accel = preprocessor.CorrectAccel(accel);
         accel = preprocessor.LowPassFilter(accel);
 
-        // since the Mahony-Filter integrates, we need to find the starting orientation. Disregard the first pose because it is always wrong
-        if (count > 0)
+        Quaternion angleFromAcc = CalcAngleFromAcc(accel);
+
+        if (Math.Abs(angleFromAcc.eulerAngles.x) < 10 && Math.Abs(angleFromAcc.eulerAngles.z) < 10)
         {
-            firstPose = CalcAngleFromAcc(accel);
-            count--;
+            //Debug.Log(counterTillZero);
+            counterTillZero--;
+        }
+        else
+            counterTillZero = countTillZero;
+
+        if (counterTillZero <= 0)
+        {
+            SetZero();
+            Debug.Log("IMU auto Set zero ");
+            counterTillZero = countTillZero;
+        }
+
+            // since the Mahony-Filter integrates, we need to find the starting orientation. Disregard the first pose because it is always wrong
+            if (countTillFirstPose > 0)
+        {
+            firstPose = angleFromAcc;
+            countTillFirstPose--;
         }
 
         if (magnet == Vector3.zero)
@@ -122,6 +149,12 @@ public class MahonyProcessorNoMagnet : IMU_Processor
 
         // Hier das inverse
         return Quaternion.Inverse(orientation);
+    }
+
+    public override void SetZero()
+    {
+        countTillFirstPose = 2;
+        mahonyARHS = new MahonyAHRS(0.00005f);
     }
 }
 
@@ -175,6 +208,12 @@ public class MadgwickProcessorNoMagnet : IMU_Processor
         // Hier das inverse
         return Quaternion.Inverse(orientation);
     }
+
+    public override void SetZero()
+    {
+        count = 2;
+        madgwickARHS = new MadgwickAHRS(0.00005f);
+    }
 }
 
 /*
@@ -227,6 +266,11 @@ public class AccelerometerProcessor : IMU_Processor
         accel = preprocessor.LowPassFilter(accel);
 
         return Quaternion.Inverse(CalcAngleFromAcc(accel));
+    }
+
+    public override void SetZero()
+    {
+        // not needed
     }
 }
 
@@ -313,6 +357,7 @@ public class IMU_Preprocessor
 
         filter_array[LPF_filter_size - 1] = accel;
 
+        // return LPF_filter * sum + (1-LPF_filter) * accel;
         return sum;
     }
 }

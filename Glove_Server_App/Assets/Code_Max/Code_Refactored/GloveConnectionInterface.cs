@@ -74,5 +74,36 @@ public class IMUPacket
     public Quaternion GetOrientation()
     {
         return orientation;
+    }    
+
+    public UInt32 GetTimestamp()
+    {
+        return timestamp;
+    }
+}
+public class TrackingData
+{
+    public float[] JointValues;
+    public long timestamp;
+    public Quaternion orientation;
+
+    // Mock
+    public TrackingData()
+    {
+        JointValues = new float[40];
+
+        for (int i = 0; i < JointValues.Length; i++)
+            JointValues[i] = i;
+
+        orientation = Quaternion.identity;
+
+        timestamp = 1;
+    }
+
+    public TrackingData(float[] JointValues, Quaternion orientation, long timestamp)
+    {
+        this.JointValues = JointValues;
+        this.orientation = orientation;
+        this.timestamp = timestamp;
     }
 }

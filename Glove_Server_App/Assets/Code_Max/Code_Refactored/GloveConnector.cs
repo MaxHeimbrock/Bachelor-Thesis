@@ -89,6 +89,25 @@ public class GloveConnector : MonoBehaviour {
         else
             return Quaternion.identity;
     }
+
+    public TrackingData getTrackingData()
+    {
+        if (connected)
+            return new TrackingData(GetAngles(), GetOrientation(), gloveConnectionInterface.GetIMUPacket().GetTimestamp());
+        throw new NotImplementedException();
+    }
+
+    // OnGUI
+    void OnGUI()
+    {
+        GUIStyle labelStyle = new GUIStyle(GUI.skin.GetStyle("label"));
+        labelStyle.fontSize = 40;
+
+        if (!connected)
+            GUI.Box(new Rect(100, 200, 800, 500), "Glove offline", labelStyle);
+        else
+            GUI.Box(new Rect(100, 200, 500, 500), "Glove active - getting data", labelStyle);
+    }
 }
 
 

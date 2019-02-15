@@ -14,5 +14,7 @@ public class IMU_Orientation : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         this.transform.rotation = gloveConnector.GetOrientation();
+
+        //Debug.Log(transform.rotation.eulerAngles);
     }
 }

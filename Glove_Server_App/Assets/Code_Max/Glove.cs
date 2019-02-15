@@ -330,12 +330,6 @@ public class Glove : MonoBehaviour
     }
 
     #endregion
-
-    public TrackingData GetTrackingData()
-    {
-        //return new TrackingData(values, q_mahony, 1, 1);
-        return new TrackingData(null, q_mahony, 1, 1);
-    } 
     
     private long GetTime()
     {
@@ -386,53 +380,4 @@ static class Constants
     public const bool IS_BLUETOOTH = false;
     internal static int NB_VALUES_GLOVE;
 }
-
-public class TrackingData
-{
-    public float[] JointValues;
-    public long timestamp;
-    public Quaternion orientation;
-
-    // 0 for nothing, 1 for clap detected
-    public int gesture;
-
-    // Dummy for testing
-    public TrackingData()
-    {
-        JointValues = new float[40];
-
-        for (int i = 0; i < JointValues.Length; i++)
-            JointValues[i] = i;
-
-        orientation = Quaternion.identity;
-
-        timestamp = 1;
-
-        gesture = 0;
-    }
-
-    // Dummy for testing
-    public TrackingData(float[] values)
-    {
-        JointValues = values;
-
-        orientation = Quaternion.identity;
-
-        timestamp = 1;
-
-        gesture = 0;
-    }
-
-    public TrackingData(float[] JointValues, Quaternion orientation, long timestamp, int gesture)
-    {
-        this.JointValues = JointValues;
-        this.orientation = orientation;
-        this.timestamp = timestamp;
-        this.gesture = gesture;
-    }
-
-    public TrackingData Copy()
-    {
-        return (TrackingData)this.MemberwiseClone();
-    }    
-}
+ 

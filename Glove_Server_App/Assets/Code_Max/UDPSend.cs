@@ -11,6 +11,7 @@ public class UDPSend : MonoBehaviour
 {
     public Boolean SerialPortUsed = false;
     public GameObject glove_controller;
+    private GloveConnector gloveConnector;
     
     public int port = 11110;  // define in init
 
@@ -20,7 +21,7 @@ public class UDPSend : MonoBehaviour
     //public string myIP = "192.168.178.33";
 
     // default klappt
-    public string myIP = "0.0.0.0";
+    string myIP = "0.0.0.0";
 
     // "connection" things
     IPEndPoint remoteEndPoint;
@@ -35,48 +36,22 @@ public class UDPSend : MonoBehaviour
 
     // For synchronizing clocks
     static long currentTicks = 0;
-
-    // for testing
-    private Glove glove;
-    private TrackingData trackingData;
         
     // start from unity3d
     public void Start()
     {
+        gloveConnector = glove_controller.GetComponent<GloveConnector>();
         init();
-
-        try
-        {
-            //glove = glove_controller.GetComponent<EthernetGloveController>().glove;
-
-            glove.UDP_Send = this;
-        }
-        catch (Exception notReady)
-        {
-            Debug.Log("Not ready");
-        }
+        Debug.Log("ready");
     }
 
     public void Update()
     {
         currentTicks = DateTime.Now.Ticks;
+        //Hier Packet senden
 
-        if (glove != null)
-        {
-            if (SerialPortUsed)
-                trackingData = glove.GetTrackingData();
-            else
-                trackingData = glove.GetTrackingData();
-
-            if (connected && autosend)
-                sendSinglePoseUpdate(trackingData);
-        }
-        else
-        {
-            //glove = glove_controller.GetComponent<EthernetGloveController>().glove;
-
-            glove.UDP_Send = this;
-        }
+        if (connected)
+            sendSinglePoseUpdate(gloveConnector.getTrackingData());
     }       
 
     // init
@@ -97,9 +72,6 @@ public class UDPSend : MonoBehaviour
         orientation[1] = trD.orientation.x;
         orientation[2] = trD.orientation.y;
         orientation[3] = trD.orientation.z;
-
-        Quaternion rotation = new Quaternion();
-        rotation.w = 1;
 
         // data format = length (int) | Type (byte) | SEQ (uint) |  jointValues (float[40]) | orientation (float[4]) | gesture (int) | time (long)
 
@@ -129,8 +101,10 @@ public class UDPSend : MonoBehaviour
         }
 
         // gesture
-        Buffer.BlockCopy(BitConverter.GetBytes(trD.gesture), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float), sizeof(int));
-        
+        //Buffer.BlockCopy(BitConverter.GetBytes(trD.gesture), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float), sizeof(int));
+        // gesture not needed here
+        Buffer.BlockCopy(BitConverter.GetBytes(0), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float), sizeof(int));
+
         // time
         Buffer.BlockCopy(BitConverter.GetBytes(currentTicks), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float) + sizeof(int), sizeof(long));
                 
@@ -198,14 +172,7 @@ public class UDPSend : MonoBehaviour
         if (!connected)
             GUI.Box(new Rect(100, 100, 800, 500), "Hololens not connected", labelStyle);
         else
-            GUI.Box(new Rect(100, 100, 800, 800), "Hololens connected - sending data", labelStyle);
-
-        // ------------------------
-        // send it
-        // ------------------------
-        if (connected && !autosend)
-            if (GUI.Button(new Rect(100, 200, 300, 100), "send pose", buttonStyle))
-                sendSinglePoseUpdate(trackingData);        
+            GUI.Box(new Rect(100, 100, 800, 800), "Hololens connected - sending data", labelStyle);       
     }
 }
 
