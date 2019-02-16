@@ -62,6 +62,8 @@ public class GloveConnector : MonoBehaviour {
 
         if (Input.GetKey("space"))
             gloveConnectionInterface.SetZero();
+
+        Debug.Log(gloveConnectionInterface.GetIMUPacket().GetGesture());
     }
 
     public float[] GetAngles()
@@ -93,7 +95,7 @@ public class GloveConnector : MonoBehaviour {
     public TrackingData getTrackingData()
     {
         if (connected)
-            return new TrackingData(GetAngles(), GetOrientation(), gloveConnectionInterface.GetIMUPacket().GetTimestamp());
+            return new TrackingData(GetAngles(), GetOrientation(), gloveConnectionInterface.GetIMUPacket().GetTimestamp(), gloveConnectionInterface.GetIMUPacket().GetGesture());
         throw new NotImplementedException();
     }
 

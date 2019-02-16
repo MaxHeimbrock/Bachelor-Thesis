@@ -102,8 +102,7 @@ public class UDPSend : MonoBehaviour
 
         // gesture
         //Buffer.BlockCopy(BitConverter.GetBytes(trD.gesture), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float), sizeof(int));
-        // gesture not needed here
-        Buffer.BlockCopy(BitConverter.GetBytes(0), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float), sizeof(int));
+        Buffer.BlockCopy(BitConverter.GetBytes((int)trD.gesture), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float), sizeof(int));
 
         // time
         Buffer.BlockCopy(BitConverter.GetBytes(currentTicks), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float) + sizeof(int), sizeof(long));

@@ -162,13 +162,15 @@ public class WifiGloveConnection : GloveConnectionInterface
         //----------- COMPUTING DATA -----------------------------------------------------------------------------------------
         //--------------------------------------------------------------------------------------------------------------------
 
+        IMUPacket.Gesture gesture = new IMUPacket.Gesture();
+        Quaternion orientation;
+
         lock (imuLock)
         {
             // Ethernet Glove doesnt have magnetometer - pass zeros - will not be used
-            //Quaternion orientation = IMU_processor.GetOrientation(delta_t_s, accVec, gyroVec, magVec);
-            Quaternion orientation = IMU_processor.GetOrientation(delta_t_s, accVec, gyroVec, Vector3.zero);
+            IMU_processor.ProcessIMU(delta_t_s, accVec, gyroVec, Vector3.zero, out orientation, out gesture);
 
-            //imu_packet = new IMUPacket(cnt, version, acc, gyro, timestamp_in_ticks, orientation);
+            imu_packet = new IMUPacket(cnt, version, accVec, gyroVec, timestamp_in_ticks, orientation, gesture);
         }
 
         if (logStatus == logging.logStarted)

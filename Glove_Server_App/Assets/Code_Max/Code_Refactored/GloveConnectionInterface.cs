@@ -39,6 +39,8 @@ public class ValuePacket
 }
 public class IMUPacket
 {
+    public enum Gesture {None, Clap};
+
     // Data Format: uint16_t cnt || uint16_t version/svn_revision || int16_t acceleration[3] || int16_t gyro[3] || uint32_t timestamp || uint32_t temperature;
     UInt16 cnt;
     UInt16 version;
@@ -46,8 +48,9 @@ public class IMUPacket
     Vector3 gyroscope;
     UInt32 timestamp;
     Quaternion orientation;
+    Gesture gesture;
 
-    public IMUPacket(UInt16 cnt, UInt16 version, Vector3 acceleration, Vector3 gyroscope, UInt32 timestamp, Quaternion orientation)
+    public IMUPacket(UInt16 cnt, UInt16 version, Vector3 acceleration, Vector3 gyroscope, UInt32 timestamp, Quaternion orientation, Gesture gesture)
     {
         this.cnt = cnt;
         this.version = version;
@@ -55,6 +58,7 @@ public class IMUPacket
         this.gyroscope = gyroscope;
         this.timestamp = timestamp;
         this.orientation = orientation;
+        this.gesture = gesture;
     }
 
     public IMUPacket()
@@ -80,12 +84,18 @@ public class IMUPacket
     {
         return timestamp;
     }
+
+    public Gesture GetGesture()
+    {
+        return Gesture.None;
+    }
 }
 public class TrackingData
 {
     public float[] JointValues;
     public long timestamp;
     public Quaternion orientation;
+    public IMUPacket.Gesture gesture; 
 
     // Mock
     public TrackingData()
@@ -100,10 +110,11 @@ public class TrackingData
         timestamp = 1;
     }
 
-    public TrackingData(float[] JointValues, Quaternion orientation, long timestamp)
+    public TrackingData(float[] JointValues, Quaternion orientation, long timestamp, IMUPacket.Gesture gesture)
     {
         this.JointValues = JointValues;
         this.orientation = orientation;
         this.timestamp = timestamp;
+        this.gesture = gesture;
     }
 }

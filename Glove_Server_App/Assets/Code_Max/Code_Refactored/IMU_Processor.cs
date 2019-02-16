@@ -15,7 +15,7 @@ public abstract class IMU_Processor {
 
     public abstract void SetZero();
 
-    public abstract Quaternion GetOrientation(float delta_t_s, Vector3 accel, Vector3 gyro, Vector3 magnet);
+    public abstract void ProcessIMU(float delta_t_s, Vector3 accel, Vector3 gyro, Vector3 magnet, out Quaternion orientation, out IMUPacket.Gesture gesture);
 
     // Local space IMU -> left handed, z up
     protected Quaternion CalcAngleFromAcc(Vector3 accel)
@@ -53,12 +53,16 @@ public class GyroscopeProcessor : IMU_Processor
 
     public GyroscopeProcessor(IMU_Preprocessor IMU_preprocessor) : base(IMU_preprocessor)
     {
-    }
-    
-    public override Quaternion GetOrientation(float delta_t_s, Vector3 accel, Vector3 gyro, Vector3 magnet)
+    }    
+
+    public override void ProcessIMU(float delta_t_s, Vector3 accel, Vector3 gyro, Vector3 magnet, out Quaternion orientation, out IMUPacket.Gesture gesture)
     {
         gyro = preprocessor.CorrectGyro(gyro);
         accel = preprocessor.CorrectAccel(accel);
+
+        if (preprocessor.detect_clap(accel))
+            gesture = IMUPacket.Gesture.Clap;
+
         accel = preprocessor.LowPassFilter(accel);
 
         currentRotation += gyro * delta_t_s;
@@ -72,7 +76,10 @@ public class GyroscopeProcessor : IMU_Processor
 
         Quaternion currentRotationQuaternion = Quaternion.Euler(new Vector3(currentRotation.y, -currentRotation.z, currentRotation.x));
 
-        return Quaternion.Inverse(currentRotationQuaternion * firstPose);
+        orientation = Quaternion.Inverse(currentRotationQuaternion * firstPose);
+
+        //DUMMY
+        gesture = IMUPacket.Gesture.None;
     }
 
     public override void SetZero()
@@ -94,12 +101,14 @@ public class MahonyProcessorNoMagnet : IMU_Processor
         counterTillZero = countTillZero;
     }
 
-    public override Quaternion GetOrientation(float delta_t_s, Vector3 accel, Vector3 gyro, Vector3 magnet)
+    public override void ProcessIMU(float delta_t_s, Vector3 accel, Vector3 gyro, Vector3 magnet, out Quaternion orientation, out IMUPacket.Gesture gesture)
     {
-        Quaternion orientation;
-
         gyro = preprocessor.CorrectGyro(gyro);
         accel = preprocessor.CorrectAccel(accel);
+
+        if (preprocessor.detect_clap(accel))
+            gesture = IMUPacket.Gesture.Clap;
+
         accel = preprocessor.LowPassFilter(accel);
 
         Quaternion angleFromAcc = CalcAngleFromAcc(accel);
@@ -119,8 +128,8 @@ public class MahonyProcessorNoMagnet : IMU_Processor
             counterTillZero = countTillZero;
         }
 
-            // since the Mahony-Filter integrates, we need to find the starting orientation. Disregard the first pose because it is always wrong
-            if (countTillFirstPose > 0)
+        // since the Mahony-Filter integrates, we need to find the starting orientation. Disregard the first pose because it is always wrong
+        if (countTillFirstPose > 0)
         {
             firstPose = angleFromAcc;
             countTillFirstPose--;
@@ -147,8 +156,10 @@ public class MahonyProcessorNoMagnet : IMU_Processor
             orientation *= firstPose;
         }
 
-        // Hier das inverse
-        return Quaternion.Inverse(orientation);
+        orientation = Quaternion.Inverse(orientation);
+
+        //DUMMY
+        gesture = IMUPacket.Gesture.None;
     }
 
     public override void SetZero()
@@ -167,13 +178,15 @@ public class MadgwickProcessorNoMagnet : IMU_Processor
     public MadgwickProcessorNoMagnet(IMU_Preprocessor IMU_preprocessor) : base(IMU_preprocessor)
     {
     }
-
-    public override Quaternion GetOrientation(float delta_t_s, Vector3 accel, Vector3 gyro, Vector3 magnet)
+    
+    public override void ProcessIMU(float delta_t_s, Vector3 accel, Vector3 gyro, Vector3 magnet, out Quaternion orientation, out IMUPacket.Gesture gesture)
     {
-        Quaternion orientation;
-
         gyro = preprocessor.CorrectGyro(gyro);
         accel = preprocessor.CorrectAccel(accel);
+
+        if (preprocessor.detect_clap(accel))
+            gesture = IMUPacket.Gesture.Clap;
+
         accel = preprocessor.LowPassFilter(accel);
 
         // since the Mahony-Filter integrates, we need to find the starting orientation. Disregard the first pose because it is always wrong
@@ -204,9 +217,10 @@ public class MadgwickProcessorNoMagnet : IMU_Processor
             orientation *= firstPose;
         }
 
+        orientation = Quaternion.Inverse(orientation);
 
-        // Hier das inverse
-        return Quaternion.Inverse(orientation);
+        //DUMMY
+        gesture = IMUPacket.Gesture.None;
     }
 
     public override void SetZero()
@@ -259,13 +273,20 @@ public class AccelerometerProcessor : IMU_Processor
     public AccelerometerProcessor(IMU_Preprocessor IMU_preprocessor) : base(IMU_preprocessor)
     {
     }
-
-    public override Quaternion GetOrientation(float delta_t_s, Vector3 accel, Vector3 gyro, Vector3 magnet)
+    
+    public override void ProcessIMU(float delta_t_s, Vector3 accel, Vector3 gyro, Vector3 magnet, out Quaternion orientation, out IMUPacket.Gesture gesture)
     {
         accel = preprocessor.CorrectAccel(accel);
+
+        if (preprocessor.detect_clap(accel))
+            gesture = IMUPacket.Gesture.Clap;
+
         accel = preprocessor.LowPassFilter(accel);
 
-        return Quaternion.Inverse(CalcAngleFromAcc(accel));
+        orientation =  Quaternion.Inverse(CalcAngleFromAcc(accel));
+
+        //DUMMY
+        gesture = IMUPacket.Gesture.None;
     }
 
     public override void SetZero()
@@ -284,7 +305,11 @@ public class IMU_Preprocessor
     private float accel_threshold;
     private float LPF_filter;
     public int LPF_filter_size;
-    private Vector3[] filter_array;
+    public Vector3[] filter_array;
+
+    // Interactions
+    public float clap_threshold = 1.90f;
+    public float clap_before_threshold = 0.40f;
 
     public IMU_Preprocessor()
     {
@@ -359,5 +384,28 @@ public class IMU_Preprocessor
 
         // return LPF_filter * sum + (1-LPF_filter) * accel;
         return sum;
+    }
+
+    public bool detect_clap(Vector3 acc)
+    {
+        if (filter_array != null)
+        {
+            float filter_array_sum_z = 0;
+
+            for (int i = 0; i < LPF_filter_size; i++)
+            {
+                filter_array_sum_z += Math.Abs(filter_array[i].z);
+            }
+
+            filter_array_sum_z /= LPF_filter_size;
+
+            if (acc.z > clap_threshold && filter_array_sum_z < clap_before_threshold)
+            {
+                Debug.Log("Clap");
+
+                return true;
+            }
+        }
+        return false;
     }
 }

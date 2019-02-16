@@ -158,17 +158,20 @@ public class EthernetGloveController : GloveConnectionInterface
         gyroVec.z = binaryReader.ReadInt16();
         UInt32 timestamp_in_ticks = binaryReader.ReadUInt32();
         float delta_t_s = GetTime((int)timestamp_in_ticks);
-        
+
         //--------------------------------------------------------------------------------------------------------------------
         //----------- COMPUTING DATA -----------------------------------------------------------------------------------------
         //--------------------------------------------------------------------------------------------------------------------
 
+        IMUPacket.Gesture gesture = new IMUPacket.Gesture();
+        Quaternion orientation;
+
         lock (imuLock)
         {
             // Ethernet Glove doesnt have magnetometer - pass zeros - will not be used
-            Quaternion orientation = IMU_processor.GetOrientation(delta_t_s, accVec, gyroVec, Vector3.zero);
+            IMU_processor.ProcessIMU(delta_t_s, accVec, gyroVec, Vector3.zero, out orientation, out gesture);
 
-            imu_packet = new IMUPacket(cnt, version, accVec, gyroVec, timestamp_in_ticks, orientation);
+            imu_packet = new IMUPacket(cnt, version, accVec, gyroVec, timestamp_in_ticks, orientation, gesture);
         }
         
         if (logStatus == logging.logStarted)
