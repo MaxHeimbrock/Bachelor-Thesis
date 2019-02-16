@@ -163,7 +163,7 @@ public class EthernetGloveController : GloveConnectionInterface
         //----------- COMPUTING DATA -----------------------------------------------------------------------------------------
         //--------------------------------------------------------------------------------------------------------------------
 
-        IMUPacket.Gesture gesture = new IMUPacket.Gesture();
+        IMUPacket.Gesture gesture = IMUPacket.Gesture.None;
         Quaternion orientation;
 
         lock (imuLock)

@@ -62,6 +62,8 @@ public class GyroscopeProcessor : IMU_Processor
 
         if (preprocessor.detect_clap(accel))
             gesture = IMUPacket.Gesture.Clap;
+        else
+            gesture = IMUPacket.Gesture.None;
 
         accel = preprocessor.LowPassFilter(accel);
 
@@ -77,9 +79,6 @@ public class GyroscopeProcessor : IMU_Processor
         Quaternion currentRotationQuaternion = Quaternion.Euler(new Vector3(currentRotation.y, -currentRotation.z, currentRotation.x));
 
         orientation = Quaternion.Inverse(currentRotationQuaternion * firstPose);
-
-        //DUMMY
-        gesture = IMUPacket.Gesture.None;
     }
 
     public override void SetZero()
@@ -108,6 +107,8 @@ public class MahonyProcessorNoMagnet : IMU_Processor
 
         if (preprocessor.detect_clap(accel))
             gesture = IMUPacket.Gesture.Clap;
+        else
+            gesture = IMUPacket.Gesture.None;
 
         accel = preprocessor.LowPassFilter(accel);
 
@@ -157,9 +158,6 @@ public class MahonyProcessorNoMagnet : IMU_Processor
         }
 
         orientation = Quaternion.Inverse(orientation);
-
-        //DUMMY
-        gesture = IMUPacket.Gesture.None;
     }
 
     public override void SetZero()
@@ -186,6 +184,8 @@ public class MadgwickProcessorNoMagnet : IMU_Processor
 
         if (preprocessor.detect_clap(accel))
             gesture = IMUPacket.Gesture.Clap;
+        else
+            gesture = IMUPacket.Gesture.None;
 
         accel = preprocessor.LowPassFilter(accel);
 
@@ -218,9 +218,6 @@ public class MadgwickProcessorNoMagnet : IMU_Processor
         }
 
         orientation = Quaternion.Inverse(orientation);
-
-        //DUMMY
-        gesture = IMUPacket.Gesture.None;
     }
 
     public override void SetZero()
@@ -308,8 +305,8 @@ public class IMU_Preprocessor
     public Vector3[] filter_array;
 
     // Interactions
-    public float clap_threshold = 1.90f;
-    public float clap_before_threshold = 0.40f;
+    public float clap_threshold = 2.3f;
+    public float clap_before_threshold = 1f;
 
     public IMU_Preprocessor()
     {
@@ -390,16 +387,17 @@ public class IMU_Preprocessor
     {
         if (filter_array != null)
         {
-            float filter_array_sum_z = 0;
+            float filter_array_sum = 0;
 
             for (int i = 0; i < LPF_filter_size; i++)
             {
-                filter_array_sum_z += Math.Abs(filter_array[i].z);
+                filter_array_sum += Math.Abs(filter_array[i].magnitude);
             }
 
-            filter_array_sum_z /= LPF_filter_size;
-
-            if (acc.z > clap_threshold && filter_array_sum_z < clap_before_threshold)
+            filter_array_sum /= LPF_filter_size;
+            
+            // the magnitude of the current acceleration must be high, but the mean of the last 50 must be low
+            if (acc.magnitude > clap_threshold && filter_array_sum < clap_before_threshold)
             {
                 Debug.Log("Clap");
 

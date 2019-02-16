@@ -63,7 +63,7 @@ public class GloveConnector : MonoBehaviour {
         if (Input.GetKey("space"))
             gloveConnectionInterface.SetZero();
 
-        Debug.Log(gloveConnectionInterface.GetIMUPacket().GetGesture());
+        //Debug.Log(gloveConnectionInterface.GetIMUPacket().GetGesture());
     }
 
     public float[] GetAngles()

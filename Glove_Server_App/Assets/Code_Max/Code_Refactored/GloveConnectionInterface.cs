@@ -87,7 +87,7 @@ public class IMUPacket
 
     public Gesture GetGesture()
     {
-        return Gesture.None;
+        return gesture;
     }
 }
 public class TrackingData
