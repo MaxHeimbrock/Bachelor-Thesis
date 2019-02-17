@@ -5,6 +5,7 @@ using UnityEngine;
 public class hand_controller : MonoBehaviour {
 
     public UDPReceive UDP_Receive;
+    public UI_Manager UImanager;
 
 	public GameObject armature;
     public GameObject mesh;
@@ -37,9 +38,10 @@ public class hand_controller : MonoBehaviour {
     private Quaternion wrist_rot0;
 
     float[] angleValues;
-    
-	// Use this for initialization
-	void Start () {
+    public float fist_threshold = 20f;
+
+    // Use this for initialization
+    void Start () {
 		// pick up the data providers
 
         wrist_transform = armature.transform.Find("rh.wrist");
@@ -108,6 +110,11 @@ public class hand_controller : MonoBehaviour {
 	void Update () {
 
         angleValues = UDP_Receive.GetJointAngles();
+
+        if (FindFist(angleValues))
+        {
+            UImanager.Fist();
+        }
 
         /*
 		float t = Time.fixedTime;
@@ -224,5 +231,18 @@ public class hand_controller : MonoBehaviour {
 		rot = Quaternion.AngleAxis(q[19], Vector3.forward);
 		little_dip_transform.localRotation = rot0[19]*rot;
 
+    }
+
+    private bool FindFist(float[] angles)
+    {
+        float sum = 0;
+
+        for (int i = 0; i < angles.Length; i++)
+            sum += angles[i];
+
+        if (sum >= fist_threshold)
+            return true;
+        else
+            return false;
     }
 }

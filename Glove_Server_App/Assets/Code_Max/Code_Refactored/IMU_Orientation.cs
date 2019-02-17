@@ -15,6 +15,8 @@ public class IMU_Orientation : MonoBehaviour {
 	void Update () {
         this.transform.rotation = gloveConnector.GetOrientation();
 
+        //this.transform.position = Vector3.Lerp(this.transform.position, new Vector3(3, 3, 3), 0.01f);
+
         //Debug.Log(transform.rotation.eulerAngles);
     }
 }

@@ -33,7 +33,9 @@ public class UDPReceive : MonoBehaviour {
     uint prevSEQ = 0;
 
     private readonly object dataLock = new object();
-    GloveData gloveData = new GloveData(Quaternion.identity, new float[40]);
+    GloveData gloveData = new GloveData(Quaternion.identity, new float[40], 0);
+
+    public UI_Manager UImanager;
 
 #if WINDOWS_UWP
 
@@ -154,7 +156,10 @@ public class UDPReceive : MonoBehaviour {
                 prevSEQ = seq;
 
                 lock(dataLock)
-                    gloveData = new GloveData(orientationQuaternion, jointValues);
+                    gloveData = new GloveData(orientationQuaternion, jointValues, gesture);
+
+                if (gesture == 1)
+                    UImanager.Clap();
             }
         }
 
@@ -196,13 +201,17 @@ public class UDPReceive : MonoBehaviour {
 
 public class GloveData
 {
+    public enum Gesture {None, Clap};
+
     private Quaternion orientation;
     private float[] jointAngles;
+    Gesture gesture;
 
-    public GloveData(Quaternion orientation, float[] jointAngles)
+    public GloveData(Quaternion orientation, float[] jointAngles, int gesture)
     {
         this.orientation = orientation;
         this.jointAngles = jointAngles;
+        this.gesture = (Gesture)gesture;
     }
 
     public Quaternion GetOrientation()
@@ -213,5 +222,10 @@ public class GloveData
     public float[] GetJointAngles()
     {
         return jointAngles;
+    }
+
+    public Gesture GetGesture()
+    {
+        return gesture;
     }
 }

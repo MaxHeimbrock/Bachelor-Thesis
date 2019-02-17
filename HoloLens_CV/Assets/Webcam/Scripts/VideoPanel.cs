@@ -191,4 +191,9 @@ public class VideoPanel : MonoBehaviour{
 
         //Debug.Log("x: " + tracker_pos.x + " y:" + tracker_pos.y + " z:" + tracker_pos.z);
     }
+
+    public Vector3 GetLocalTrackingLocation()
+    {
+        return this.transform.localPosition;
+    }
 }
