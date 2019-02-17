@@ -91,7 +91,7 @@ public class MahonyProcessorNoMagnet : IMU_Processor
 {
     private MahonyAHRS mahonyARHS = new MahonyAHRS(0.00005f);
     int countTillFirstPose = 2;
-    int countTillZero = 250;
+    int countTillZero = 450;
     int counterTillZero;
     Quaternion firstPose;
 
@@ -114,11 +114,8 @@ public class MahonyProcessorNoMagnet : IMU_Processor
 
         Quaternion angleFromAcc = CalcAngleFromAcc(accel);
 
-        if (Math.Abs(angleFromAcc.eulerAngles.x) < 10 && Math.Abs(angleFromAcc.eulerAngles.z) < 10)
-        {
-            //Debug.Log(counterTillZero);
+        if ((angleFromAcc.eulerAngles.x < 20 || angleFromAcc.eulerAngles.x > 340) && (angleFromAcc.eulerAngles.z < 20 || angleFromAcc.eulerAngles.z > 340))
             counterTillZero--;
-        }
         else
             counterTillZero = countTillZero;
 
