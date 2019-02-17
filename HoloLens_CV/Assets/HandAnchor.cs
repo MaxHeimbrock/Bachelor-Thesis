@@ -29,10 +29,7 @@ public class HandAnchor : MonoBehaviour {
         videoProcessing.GetTrackingLocation(ref position);
 
         //Debug.Log(orientation.eulerAngles);
-
-        //Quaternion temp = new Quaternion(orientation.w, orientation.x, orientation.y, orientation.z);        
-
-        // war hier auskommentiert vorhin???
+      
         this.transform.localPosition = LowPassFilter(position);
 
         // This one is correct
