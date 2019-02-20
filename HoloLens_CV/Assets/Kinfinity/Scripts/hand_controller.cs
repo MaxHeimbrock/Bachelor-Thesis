@@ -39,6 +39,7 @@ public class hand_controller : MonoBehaviour {
 
     float[] angleValues;
     public float fist_threshold = 20f;
+    float pinch_threshold = 20f;
 
     // Use this for initialization
     void Start () {
@@ -241,6 +242,19 @@ public class hand_controller : MonoBehaviour {
             sum += angles[i];
 
         if (sum >= fist_threshold)
+            return true;
+        else
+            return false;
+    }
+
+    private bool FindPinch(float[] angles)
+    {
+        float sum = 0;
+
+        for (int i = 5; i < 8; i++)
+            sum += angles[i];
+
+        if (sum >= pinch_threshold)
             return true;
         else
             return false;

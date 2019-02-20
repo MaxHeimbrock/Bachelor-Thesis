@@ -144,6 +144,9 @@ public class EthernetGloveController : GloveConnectionInterface
         Stream dataStream = new MemoryStream(data);
         BinaryReader binaryReader = new BinaryReader(dataStream);
 
+        // in Ethernet: accel x = -z in real | accel y = -x in real | accel z = y in real - real for me left handed like unity
+        // same for gyro
+
         // Data Format: uint16_t cnt || uint16_t version/svn_revision || int16_t acceleration[3] || int16_t gyro[3] || uint32_t timestamp || uint32_t temperature;
 
         UInt16 cnt = binaryReader.ReadUInt16();
@@ -158,7 +161,18 @@ public class EthernetGloveController : GloveConnectionInterface
         gyroVec.z = binaryReader.ReadInt16();
         UInt32 timestamp_in_ticks = binaryReader.ReadUInt32();
         float delta_t_s = GetTime((int)timestamp_in_ticks);
-
+        
+        /*
+        accVec.z = -binaryReader.ReadInt16();
+        accVec.x = -binaryReader.ReadInt16();
+        accVec.y = binaryReader.ReadInt16();
+        Vector3 gyroVec = new Vector3();
+        gyroVec.z = -binaryReader.ReadInt16();
+        gyroVec.x = -binaryReader.ReadInt16();
+        gyroVec.y = binaryReader.ReadInt16();
+        UInt32 timestamp_in_ticks = binaryReader.ReadUInt32();
+        float delta_t_s = GetTime((int)timestamp_in_ticks);
+        */
         //--------------------------------------------------------------------------------------------------------------------
         //----------- COMPUTING DATA -----------------------------------------------------------------------------------------
         //--------------------------------------------------------------------------------------------------------------------

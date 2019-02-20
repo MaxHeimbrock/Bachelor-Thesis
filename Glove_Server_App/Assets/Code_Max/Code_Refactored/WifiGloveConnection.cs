@@ -49,6 +49,8 @@ public class WifiGloveConnection : GloveConnectionInterface
         angleProcessor = new EthernetAngleProcessor();
         this.IMU_processor = IMU_processor;
 
+        IMU_processor.SetGGain(0.14f);
+
         initUDPReceiverValues();
         initUDPReceiverIMU();
     }
@@ -143,6 +145,16 @@ public class WifiGloveConnection : GloveConnectionInterface
         Stream dataStream = new MemoryStream(data);
         BinaryReader binaryReader = new BinaryReader(dataStream);
 
+        /*
+        uint16_t cnt;
+        uint16_t protocol_version;
+        int16_t acc[3];
+        int16_t rot[3];
+        int16_t mag[3];
+        int16_t hall;
+        uint32_t timestamp;
+        uint16_t temperature;
+        */
         // Data Format: uint16_t cnt || uint16_t version/svn_revision || int16_t acceleration[3] || int16_t gyro[3] || uint32_t timestamp || uint32_t temperature;
 
         UInt16 cnt = binaryReader.ReadUInt16();
@@ -155,6 +167,11 @@ public class WifiGloveConnection : GloveConnectionInterface
         gyroVec.x = binaryReader.ReadInt16();
         gyroVec.y = binaryReader.ReadInt16();
         gyroVec.z = binaryReader.ReadInt16();
+        Vector3 magnetVec = new Vector3();
+        magnetVec.x = binaryReader.ReadInt16();
+        magnetVec.y = binaryReader.ReadInt16();
+        magnetVec.z = binaryReader.ReadInt16();
+        short hall = binaryReader.ReadInt16();
         UInt32 timestamp_in_ticks = binaryReader.ReadUInt32();
         float delta_t_s = GetTime((int)timestamp_in_ticks);
 
@@ -168,7 +185,8 @@ public class WifiGloveConnection : GloveConnectionInterface
         lock (imuLock)
         {
             // Ethernet Glove doesnt have magnetometer - pass zeros - will not be used
-            IMU_processor.ProcessIMU(delta_t_s, accVec, gyroVec, Vector3.zero, out orientation, out gesture);
+            //IMU_processor.ProcessIMU(delta_t_s, accVec, gyroVec, Vector3.zero, out orientation, out gesture);
+            IMU_processor.ProcessIMU(delta_t_s, accVec, gyroVec, magnetVec, out orientation, out gesture);
 
             imu_packet = new IMUPacket(cnt, version, accVec, gyroVec, timestamp_in_ticks, orientation, gesture);
         }

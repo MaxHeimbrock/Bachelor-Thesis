@@ -3485,7 +3485,7 @@ Prefab:
     m_Modifications:
     - target: {fileID: 4820729896064434, guid: 1a2d8aa840d7fbd4c9ae0c4550c337b1, type: 2}
       propertyPath: m_LocalPosition.x
-      value: 11.261147
+      value: 8.44
       objectReference: {fileID: 0}
     - target: {fileID: 4820729896064434, guid: 1a2d8aa840d7fbd4c9ae0c4550c337b1, type: 2}
       propertyPath: m_LocalPosition.y
@@ -3525,6 +3525,28 @@ Prefab:
       propertyPath: gloveConnector
       value: 
       objectReference: {fileID: 1300774466}
+    - target: {fileID: 4596142850613188, guid: 1a2d8aa840d7fbd4c9ae0c4550c337b1, type: 2}
+      propertyPath: m_LocalRotation.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4596142850613188, guid: 1a2d8aa840d7fbd4c9ae0c4550c337b1, type: 2}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4596142850613188, guid: 1a2d8aa840d7fbd4c9ae0c4550c337b1, type: 2}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 180
+      objectReference: {fileID: 0}
+    - target: {fileID: 95973923776776432, guid: 1a2d8aa840d7fbd4c9ae0c4550c337b1,
+        type: 2}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114695461607814460, guid: 1a2d8aa840d7fbd4c9ae0c4550c337b1,
+        type: 2}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 1a2d8aa840d7fbd4c9ae0c4550c337b1, type: 2}
   m_IsPrefabParent: 0

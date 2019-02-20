@@ -33,7 +33,7 @@ public class UDPReceive : MonoBehaviour {
     uint prevSEQ = 0;
 
     private readonly object dataLock = new object();
-    GloveData gloveData = new GloveData(Quaternion.identity, new float[40], 0);
+    GloveData gloveData = new GloveData(Quaternion.identity, new float[40], 0, new float[3], new float[3]);
 
     public UI_Manager UImanager;
 
@@ -140,6 +140,8 @@ public class UDPReceive : MonoBehaviour {
             if(seq > prevSEQ || ( seq < 10000 && prevSEQ > UInt32.MaxValue * 0.75 )) { //tracking data is newer than what we already have
                 float[] jointValues = new float[numberOfSensors];
                 float[] orientationArray = new float[4];
+                float[] accel = new float[3];
+                float[] gyro = new float[3];
 
                 // jointValues
                 System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint), jointValues, 0, numberOfSensors * sizeof(float));
@@ -152,14 +154,24 @@ public class UDPReceive : MonoBehaviour {
                 int gesture = BitConverter.ToInt32(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + numberOfSensors * sizeof(float) + 4 * sizeof(float));
               
                 long currentTick = BitConverter.ToInt64(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + numberOfSensors * sizeof(float) + 4 * sizeof(float) + sizeof(int));                       
+
+                // accel
+                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + numberOfSensors * sizeof(float) + 4 * sizeof(float) + sizeof(int) + sizeof(long), accel, 0, 3 * sizeof(float));
+
+                // gyro
+                System.Buffer.BlockCopy(trackingMessage, sizeof(int) + sizeof(byte) + sizeof(uint) + numberOfSensors * sizeof(float) + 4 * sizeof(float) + sizeof(int) + sizeof(long) + 3 * sizeof(float), gyro, 0, 3 * sizeof(float));
                 
                 prevSEQ = seq;
 
                 lock(dataLock)
-                    gloveData = new GloveData(orientationQuaternion, jointValues, gesture);
+                    gloveData = new GloveData(orientationQuaternion, jointValues, gesture, accel, gyro);
 
                 if (gesture == 1)
                     UImanager.Clap();
+
+                // in Ethernet: accel x = -z in real | accel y = -x in real | accel z = y in real - real for me left handed like unity
+
+                //Debug.Log(gyro[2]);
             }
         }
 
@@ -197,6 +209,16 @@ public class UDPReceive : MonoBehaviour {
         else
             return new float[numberOfSensors];
     }
+
+    public float[] GetAccel()
+    {
+        if (connected)
+            lock (dataLock)
+                return gloveData.GetAccel();
+
+        else
+            return new float[3];
+    }
 }
 
 public class GloveData
@@ -206,12 +228,16 @@ public class GloveData
     private Quaternion orientation;
     private float[] jointAngles;
     Gesture gesture;
+    float[] accel;
+    float[] gyro;
 
-    public GloveData(Quaternion orientation, float[] jointAngles, int gesture)
+    public GloveData(Quaternion orientation, float[] jointAngles, int gesture, float[] accel, float[] gyro)
     {
         this.orientation = orientation;
         this.jointAngles = jointAngles;
         this.gesture = (Gesture)gesture;
+        this.accel = accel;
+        this.gyro = gyro;
     }
 
     public Quaternion GetOrientation()
@@ -227,5 +253,10 @@ public class GloveData
     public Gesture GetGesture()
     {
         return gesture;
+    }
+
+    public float[] GetAccel()
+    {
+        return accel;
     }
 }

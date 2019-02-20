@@ -95,7 +95,7 @@ public class GloveConnector : MonoBehaviour {
     public TrackingData getTrackingData()
     {
         if (connected)
-            return new TrackingData(GetAngles(), GetOrientation(), gloveConnectionInterface.GetIMUPacket().GetTimestamp(), gloveConnectionInterface.GetIMUPacket().GetGesture());
+            return new TrackingData(GetAngles(), GetOrientation(), gloveConnectionInterface.GetIMUPacket().GetTimestamp(), gloveConnectionInterface.GetIMUPacket().GetGesture(), gloveConnectionInterface.GetIMUPacket().GetAcceleration(), gloveConnectionInterface.GetIMUPacket().GetGyro());
         throw new NotImplementedException();
     }
 

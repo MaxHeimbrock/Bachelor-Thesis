@@ -13,6 +13,11 @@ public abstract class IMU_Processor {
         this.preprocessor = IMU_preprocessor;
     }
 
+    public void SetGGain(float G_Gain)
+    {
+        preprocessor.SetGGain(G_Gain);
+    }
+
     public abstract void SetZero();
 
     public abstract void ProcessIMU(float delta_t_s, Vector3 accel, Vector3 gyro, Vector3 magnet, out Quaternion orientation, out IMUPacket.Gesture gesture);
@@ -402,5 +407,10 @@ public class IMU_Preprocessor
             }
         }
         return false;
+    }
+
+    public void SetGGain(float G_Gain)
+    {
+        this.G_Gain = G_Gain;
     }
 }

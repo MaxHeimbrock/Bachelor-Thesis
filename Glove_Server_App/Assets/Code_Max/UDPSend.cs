@@ -52,8 +52,10 @@ public class UDPSend : MonoBehaviour
 
         if (connected)
             sendSinglePoseUpdate(gloveConnector.getTrackingData());
+        else
+            fakeSendSinglePoseUpdate(gloveConnector.getTrackingData());
     }       
-
+    
     // init
     public void init()    {
         
@@ -73,10 +75,20 @@ public class UDPSend : MonoBehaviour
         orientation[2] = trD.orientation.y;
         orientation[3] = trD.orientation.z;
 
-        // data format = length (int) | Type (byte) | SEQ (uint) |  jointValues (float[40]) | orientation (float[4]) | gesture (int) | time (long)
+        float[] accelSend = new float[3];
+        accelSend[0] = trD.accel.x;
+        accelSend[1] = trD.accel.y;
+        accelSend[2] = trD.accel.z;
 
-        byte[] data = new byte[sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float) + sizeof(int) + sizeof(long)];
-        
+        float[] gyroSend = new float[3];
+        gyroSend[0] = trD.gyro.x;
+        gyroSend[1] = trD.gyro.y;
+        gyroSend[2] = trD.gyro.z;
+
+        // data format = length (int) | Type (byte) | SEQ (uint) |  jointValues (float[40]) | orientation (float[4]) | gesture (int) | time (long) | float[3] accel | float[3] gyro
+
+        byte[] data = new byte[sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float) + sizeof(int) + sizeof(long) + 6 * sizeof(float)];
+
         // lenght
         Buffer.BlockCopy(BitConverter.GetBytes(data.Length), 0, data, 0, BitConverter.GetBytes(data.Length).Length);
 
@@ -106,13 +118,87 @@ public class UDPSend : MonoBehaviour
 
         // time
         Buffer.BlockCopy(BitConverter.GetBytes(currentTicks), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float) + sizeof(int), sizeof(long));
-                
-        client.Send(data, data.Length, remoteEndPoint);
 
-        //Debug.Log("pose " + seq + " send!");        
+            // accel
+        for (int i = 0; i < 3; i++)
+            Buffer.BlockCopy(BitConverter.GetBytes(accelSend[i]), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float) + sizeof(int) + sizeof(long) + i * sizeof(float), sizeof(float));
+
+            // gyro
+        for (int i = 0; i < 3; i++)
+            Buffer.BlockCopy(BitConverter.GetBytes(gyroSend[i]), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float) + sizeof(int) + sizeof(long) + 3 * sizeof(float) + i * sizeof(float), sizeof(float));
+
+        client.Send(data, data.Length, remoteEndPoint);
 
         seq++;        
     }
+
+    private void fakeSendSinglePoseUpdate(TrackingData trD)
+    {
+        float[] orientation = new float[4];
+        orientation[0] = trD.orientation.w;
+        orientation[1] = trD.orientation.x;
+        orientation[2] = trD.orientation.y;
+        orientation[3] = trD.orientation.z;
+
+        float[] accelSend = new float[3];
+        accelSend[0] = trD.accel.x;
+        accelSend[1] = trD.accel.y;
+        accelSend[2] = trD.accel.z;
+
+        float[] gyroSend = new float[3];
+        gyroSend[0] = trD.gyro.x;
+        gyroSend[1] = trD.gyro.y;
+        gyroSend[2] = trD.gyro.z;
+
+        // data format = length (int) | Type (byte) | SEQ (uint) |  jointValues (float[40]) | orientation (float[4]) | gesture (int) | time (long) | float[3] accel | float[3] gyro
+
+        byte[] data = new byte[sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float) + sizeof(int) + sizeof(long) + 6 * sizeof(float)];
+
+        // lenght
+        Buffer.BlockCopy(BitConverter.GetBytes(data.Length), 0, data, 0, BitConverter.GetBytes(data.Length).Length);
+
+        // type
+        data[sizeof(int)] = (byte)1;//Type: 1 = default format
+
+        // SEQ
+        Buffer.BlockCopy(BitConverter.GetBytes(seq), 0, data, sizeof(int) + sizeof(byte), BitConverter.GetBytes(seq).Length);
+
+        // Maybe inefficient
+
+        // jointValues
+        for (int i = 0; i < 40; i++)
+        {
+            Buffer.BlockCopy(BitConverter.GetBytes(trD.JointValues[i]), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + i * sizeof(float), sizeof(float));
+        }
+
+        // orientation
+        for (int i = 0; i < 4; i++)
+        {
+            Buffer.BlockCopy(BitConverter.GetBytes(orientation[i]), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + i * sizeof(float), sizeof(float));
+        }
+
+        // gesture
+        //Buffer.BlockCopy(BitConverter.GetBytes(trD.gesture), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float), sizeof(int));
+        Buffer.BlockCopy(BitConverter.GetBytes((int)trD.gesture), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float), sizeof(int));
+
+        // time
+        Buffer.BlockCopy(BitConverter.GetBytes(currentTicks), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float) + sizeof(int), sizeof(long));
+
+        // accel
+        for (int i = 0; i < 3; i++)
+            Buffer.BlockCopy(BitConverter.GetBytes(accelSend[i]), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float) + sizeof(int) + sizeof(long) + i * sizeof(float), sizeof(float));
+
+        // gyro
+        for (int i = 0; i < 3; i++)
+            Buffer.BlockCopy(BitConverter.GetBytes(gyroSend[i]), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float) + sizeof(int) + sizeof(long) + 3 * sizeof(float) + i * sizeof(float), sizeof(float));
+
+        //client.Send(data, data.Length, remoteEndPoint);
+
+        //Debug.Log("fake send");
+
+        seq++;
+    }
+
 
     public void sendGesture(Glove.Gesture gesture)
     {

@@ -44,6 +44,8 @@ public class EthernetAngleProcessor : AngleProcessor
 
     public override void ProcessAngles(uint[] jointValues)
     {
+        float sum = 0;
+
         raw_values = jointValues;
 
         for (int i = 0; i < Constants.NB_SENSORS; i++)
@@ -54,8 +56,23 @@ public class EthernetAngleProcessor : AngleProcessor
             double filtered_value = (1.0f - filter) * tmpd + filter * angles[i];
 
             angles[i] = (float)filtered_value; // finally cut it to float, the precision should be fine at that point
-
+            sum += angles[i];
             //Debug.Log(angles[1]);
         }
+        if (sum > 20f)
+            Debug.Log("fist");
+        else if (sum < 4f && angles[9] + angles[10] + angles[11] > 1.16f && angles[10] < 3f)
+            Debug.Log("pinch");
+
+        // ca. 0.2
+        //Debug.Log(angles[9]);
+
+        // ca 0.9 when pinch
+        //Debug.Log(angles[10]);
+        //
+
+        // ca 0.3
+        //Debug.Log(angles[11]);
+
     }
 }

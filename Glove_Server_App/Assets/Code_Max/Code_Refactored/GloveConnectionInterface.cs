@@ -95,7 +95,9 @@ public class TrackingData
     public float[] JointValues;
     public long timestamp;
     public Quaternion orientation;
-    public IMUPacket.Gesture gesture; 
+    public IMUPacket.Gesture gesture;
+    public Vector3 accel;
+    public Vector3 gyro;
 
     // Mock
     public TrackingData()
@@ -110,11 +112,13 @@ public class TrackingData
         timestamp = 1;
     }
 
-    public TrackingData(float[] JointValues, Quaternion orientation, long timestamp, IMUPacket.Gesture gesture)
+    public TrackingData(float[] JointValues, Quaternion orientation, long timestamp, IMUPacket.Gesture gesture, Vector3 accel, Vector3 gyro)
     {
         this.JointValues = JointValues;
         this.orientation = orientation;
         this.timestamp = timestamp;
         this.gesture = gesture;
+        this.accel = accel;
+        this.gyro = gyro;
     }
 }

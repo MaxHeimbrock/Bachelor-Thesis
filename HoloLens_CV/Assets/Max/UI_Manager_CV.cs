@@ -14,6 +14,7 @@ public class UI_Manager_CV : UI_Manager {
     ColorEnum lastColorSelected = ColorEnum.None;
     ColorEnum colorClicked = ColorEnum.None;
 
+    public UDPReceive UDP_Receive;
     public GameObject billboard;
     public HandAnchor handAnchor;
     public VideoPanel videoPanel;
@@ -59,6 +60,10 @@ public class UI_Manager_CV : UI_Manager {
     Vector3 thisHandPos;
     bool handVisible;
 
+    float scaling = 100000;
+
+    bool handMovementWithAccel = false;
+
     // Use this for initialization
     void Start () {
         handRenderer = null;
@@ -84,6 +89,7 @@ public class UI_Manager_CV : UI_Manager {
 
         //Debug.Log(thisHandPos); 
 
+        // calibrated myself if hand is properly measurable with cv
         if (Math.Abs(thisHandPos.x) < 0.33 && Math.Abs(thisHandPos.y) < 0.23)
             handVisible = true;
         else
@@ -98,7 +104,10 @@ public class UI_Manager_CV : UI_Manager {
         if (gesture == LastGesture.Fist)
         {
             if (gestureTimer >= 1)
-                FistMovement();
+                if (handMovementWithAccel == true)
+                    FistMovementAccel();
+                else
+                    FistMovementCV();
             else
                 FistReleased();
         }
@@ -140,19 +149,7 @@ public class UI_Manager_CV : UI_Manager {
         if (colorClicked != ColorEnum.None)
             Clicked();
     }
-
-    bool IsHandVisible()
-    {
-        videoPanel.GetTrackingLocation(ref thisHandPos);
-
-        if (thisHandPos == lastHandPos)
-            return false;
-
-        lastHandPos = thisHandPos;
-
-        return true;
-    }
-
+    
     public override void Clap()
     {
         if (gestureTimer > 0)
@@ -176,13 +173,57 @@ public class UI_Manager_CV : UI_Manager {
             billboard.transform.position = cam.transform.position + cam.transform.rotation * Vector3.forward * 0.7f;
             gesture = LastGesture.Fist;
             billboardOn = true;
-            Debug.Log("Fist started");
+            Debug.Log("Fist with CV started");
+        }
+        else if(gesture == LastGesture.None && handVisible == false)
+        {
+            billboard.transform.position = cam.transform.position + cam.transform.rotation * Vector3.forward * 0.7f;
+            gesture = LastGesture.Fist;
+            handMovementWithAccel = true;
+            billboardOn = true;
+            Debug.Log("Fist with Accel started");
         }
 
             gestureTimer = 10;
 
     }
-    public void FistMovement()
+
+    public void FistMovementAccel()
+    {
+        float[] movement = UDP_Receive.GetAccel();
+
+        //cursor.transform.localPosition = Vector3.Lerp(cursor.transform.localPosition, cursor.transform.localPosition + new Vector3(-movement[1] / 1000, movement[2] / 1000, 0), lerpSpeed);
+        cursor.transform.localPosition = Vector3.Lerp(cursor.transform.localPosition, cursor.transform.localPosition + new Vector3(-movement[1] / scaling, -movement[0] / scaling, 0), lerpSpeed);
+
+        Debug.Log(movement[1]);
+
+        // save magnitude for later
+        float magnitude = cursor.transform.localPosition.magnitude;
+        Vector3 pos = cursor.transform.localPosition;
+
+        if (pos.y - Math.Abs(pos.x) > 0)
+            colorSelected = ColorEnum.Blue;
+
+        if (pos.y + Math.Abs(pos.x) < 0)
+            colorSelected = ColorEnum.Red;
+
+        if (pos.x - Math.Abs(pos.y) > 0)
+            colorSelected = ColorEnum.Green;
+
+        if (pos.x + Math.Abs(pos.y) < 0)
+            colorSelected = ColorEnum.Yellow;
+
+        if (magnitude >= 0.045f)
+        {
+            cursor.transform.localPosition = cursor.transform.localPosition.normalized * 0.045f;
+            colorClicked = colorSelected;
+        }
+
+        if (colorClicked == ColorEnum.None)
+            ChangeColors(magnitude);
+    }
+
+    public void FistMovementCV()
     {
         videoPanel.GetTrackingLocation(ref currentFistPos);
 
@@ -232,6 +273,7 @@ public class UI_Manager_CV : UI_Manager {
         colorSelected = ColorEnum.None;
         lastColorSelected = ColorEnum.None;
         colorBlend = 0;
+        handMovementWithAccel = false;
     }
 
     public void ChangeColors(float magnitude)
