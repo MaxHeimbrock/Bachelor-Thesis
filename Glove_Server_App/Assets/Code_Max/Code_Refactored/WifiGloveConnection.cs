@@ -305,6 +305,7 @@ public class WifiGloveConnection : GloveConnectionInterface
     public void SetZero()
     {
         angleProcessor.SetZero();
+        IMU_processor.SetZero();
     }
 
     public void CheckGloveConnection(out bool connected)
