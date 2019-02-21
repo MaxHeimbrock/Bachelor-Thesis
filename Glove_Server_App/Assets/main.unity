@@ -1214,7 +1214,7 @@ GameObject:
   - component: {fileID: 639621806}
   - component: {fileID: 639621805}
   m_Layer: 0
-  m_Name: UDP_Sender
+  m_Name: HololensConnector
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1231,10 +1231,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: faf898e0acc5a2d4cadec4f25340366d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SerialPortUsed: 0
+  location: 0
+  CustomHololensIP: 192.168.178.50
   glove_controller: {fileID: 1300774465}
-  port: 11110
-  autosend: 1
 --- !u!4 &639621806
 Transform:
   m_ObjectHideFlags: 0
@@ -1854,7 +1853,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 33772326515e7e14db6acf25e58ccecd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gloveVersion: 1
+  gloveVersion: 2
   IMU_filterType: 1
 --- !u!4 &1300774467
 Transform:

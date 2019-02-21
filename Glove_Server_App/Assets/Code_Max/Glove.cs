@@ -208,7 +208,7 @@ public class Glove : MonoBehaviour
 
                 imuTest.clapDetected();
 
-                UDP_Send.sendGesture(Gesture.Clap);
+                //UDP_Send.sendGesture(Gesture.Clap);
             }                
         }
     }

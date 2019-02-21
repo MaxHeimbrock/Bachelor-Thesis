@@ -19,13 +19,9 @@ public class WifiGloveConnection : GloveConnectionInterface
     UdpClient IMUClient;
     Boolean connected = false;
     public static string defaultIP = "0.0.0.0";
-    public static string myIP = "192.168.137.1";
     public static int valuesPort = 64000; 
     public static int IMUPort = 64200;
     public static int IMUPort2 = 64400;
-
-    public static string myIP_PhoneAccessPoint = "192.168.43.154";
-    public static string gloveIP_PhoneAccessPoint = "192.168.43.188";
 
     StringBuilder sb = new StringBuilder();
     logging logStatus = logging.noLogging;

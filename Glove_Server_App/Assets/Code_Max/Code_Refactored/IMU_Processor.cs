@@ -150,12 +150,13 @@ public class MahonyProcessorNoMagnet : IMU_Processor
         }
         else
         {
+            //Debug.Log("hier");
             mahonyARHS.Update(gyro.x, gyro.y, gyro.z, accel.x, accel.y, accel.z, magnet.x, magnet.y, magnet.z);
-            orientation = new Quaternion(mahonyARHS.Quaternion[0], mahonyARHS.Quaternion[1], mahonyARHS.Quaternion[3], -mahonyARHS.Quaternion[2]);
+            orientation = new Quaternion(-mahonyARHS.Quaternion[0], -mahonyARHS.Quaternion[1], mahonyARHS.Quaternion[3], -mahonyARHS.Quaternion[2]);
             // zusätzlich noch um 180° zur x-Achse rotiert
             orientation *= Quaternion.AngleAxis(180, Vector3.right);
             // zusätzliche Rotationen für die Hololens
-            //orientation *= Quaternion.AngleAxis(180, Vector3.forward);
+            orientation *= Quaternion.AngleAxis(180, Vector3.up);
             orientation *= firstPose;
         }
 

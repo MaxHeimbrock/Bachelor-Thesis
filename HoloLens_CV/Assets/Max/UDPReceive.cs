@@ -23,8 +23,6 @@ public class UDPReceive : MonoBehaviour {
     // Narvis
     //public static string IPAddress = "192.168.1.210";
 
-    // zu hause
-    public static string IPAddress = "192.168.178.33";
     public static int port = 11110;
 
     private bool initialized = false;
@@ -33,7 +31,7 @@ public class UDPReceive : MonoBehaviour {
     uint prevSEQ = 0;
 
     private readonly object dataLock = new object();
-    GloveData gloveData = new GloveData(Quaternion.identity, new float[40], 0, new float[3], new float[3]);
+    GloveData gloveData;
 
     public UI_Manager UImanager;
 
@@ -43,25 +41,45 @@ public class UDPReceive : MonoBehaviour {
 
     private int UDPPingReplyLength = Encoding.UTF8.GetBytes("UDPPingReply").Length + 4;
 
+
+    public static string GetLocalIp(HostNameType hostNameType = HostNameType.Ipv4)
+    {
+        var icp = NetworkInformation.GetInternetConnectionProfile();
+
+        if (icp?.NetworkAdapter == null) return null;
+        var hostname =
+            NetworkInformation.GetHostNames()
+                .FirstOrDefault(
+                    hn =>
+                        hn.Type == hostNameType &&
+                        hn.IPInformation?.NetworkAdapter != null &&
+                        hn.IPInformation.NetworkAdapter.NetworkAdapterId == icp.NetworkAdapter.NetworkAdapterId);
+
+        // the ip address
+        return hostname?.CanonicalName;
+    }
+
     void initUDPReceiver() {
         Debug.Log("Waiting for a connection...");
 
         socket = new DatagramSocket();
         socket.MessageReceived += Socket_MessageReceived;
-
+        HostNameType hostNameType = HostNameType.Ipv4;
         HostName IP = null;
         try {
             var icp = NetworkInformation.GetInternetConnectionProfile();
 
             IP = Windows.Networking.Connectivity.NetworkInformation.GetHostNames()
-            .SingleOrDefault(
-                hn =>
-                    hn.IPInformation?.NetworkAdapter != null && hn.IPInformation.NetworkAdapter.NetworkAdapterId
-                    == icp.NetworkAdapter.NetworkAdapterId);
+             .FirstOrDefault(
+                    hn =>
+                        hn.Type == hostNameType &&
+                        hn.IPInformation?.NetworkAdapter != null &&
+                        hn.IPInformation.NetworkAdapter.NetworkAdapterId == icp.NetworkAdapter.NetworkAdapterId);
 
             _ = socket.BindEndpointAsync(IP, port.ToString());
 
             initialized = true;
+            Debug.Log("Hololens IP is " + IP.CanonicalName);
         }
         catch(Exception e) {
             Debug.Log("Hier gecrasht");
@@ -73,6 +91,7 @@ public class UDPReceive : MonoBehaviour {
         Debug.Log("exit start");
     }
 
+    /*
     public async void sendUDPMessage(byte[] message) {
         try {
             Windows.Networking.HostName hnip = new Windows.Networking.HostName(IPAddress);
@@ -88,9 +107,12 @@ public class UDPReceive : MonoBehaviour {
             Debug.Log("cant send from Hololens");
         }
     }
+    */
 
     private async void Socket_MessageReceived(Windows.Networking.Sockets.DatagramSocket sender,
     Windows.Networking.Sockets.DatagramSocketMessageReceivedEventArgs args) {
+        connected = true;
+        //Debug.Log("message received");
         Stream streamIn = args.GetDataStream().AsStreamForRead();
         byte[] byteLength = new byte[4];
         await streamIn.ReadAsync(byteLength, 0, 4);
@@ -103,10 +125,8 @@ public class UDPReceive : MonoBehaviour {
         if(length == UDPPingReplyLength) {
             if(Encoding.UTF8.GetString(messageBytes, sizeof(int), length - 4).Equals("UDPPingReply")) {
                 Debug.Log("UDPPingReply received.");
-                connected = true;
             }
-        }
-        
+        }        
         else
             updateTrackingData(messageBytes);
     }    
@@ -135,7 +155,7 @@ public class UDPReceive : MonoBehaviour {
                 Debug.Log("Strange message length");
                 return;
             }
-
+            
             uint seq = BitConverter.ToUInt32(trackingMessage, sizeof(int) + sizeof(byte));
             if(seq > prevSEQ || ( seq < 10000 && prevSEQ > UInt32.MaxValue * 0.75 )) { //tracking data is newer than what we already have
                 float[] jointValues = new float[numberOfSensors];
@@ -177,47 +197,47 @@ public class UDPReceive : MonoBehaviour {
 
     }   
 
-    public void Start() {        
+    public void Start() {
+
+        float[] dummyJoints = new float[40];
+        float[] dummyAccel = new float[3];
+        float[] dummyGyro = new float[3];
+
+        for (int i = 0; i < 40; i++)
+            dummyJoints[i] = 0;
+        for (int i = 0; i < 3; i++)
+            dummyAccel[i] = 0;
+        for (int i = 0; i < 3; i++)
+            dummyGyro[i] = 0;
+        gloveData = new GloveData(Quaternion.identity, dummyJoints, 0, new float[3], new float[3]);
+
         initUDPReceiver();
     }
     
     void Update() {
-
-        if (!connected)
-        {
-            sendUDPMessage(Encoding.UTF8.GetBytes("UDPPing"));
-        }
+        //if (connected == false)
+        //    initUDPReceiver();
     }
+
+
 #endif
 
     public Quaternion GetOrientation()
     {
-        if (connected)
-            lock (dataLock)
-                return gloveData.GetOrientation();
-
-        else
-            return Quaternion.identity;
+        lock (dataLock)
+            return gloveData.GetOrientation();
     }
 
     public float[] GetJointAngles()
     {
-        if (connected)
-            lock (dataLock)
-                return gloveData.GetJointAngles();
-
-        else
-            return new float[numberOfSensors];
+        lock (dataLock)
+            return gloveData.GetJointAngles();
     }
 
     public float[] GetAccel()
     {
-        if (connected)
-            lock (dataLock)
-                return gloveData.GetAccel();
-
-        else
-            return new float[3];
+        lock (dataLock)
+            return gloveData.GetAccel();
     }
 }
 

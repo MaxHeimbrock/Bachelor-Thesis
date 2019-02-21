@@ -9,27 +9,23 @@ using System.Threading;
 
 public class UDPSend : MonoBehaviour
 {
-    public Boolean SerialPortUsed = false;
+    public enum locationIP {MobileHotspot, Bluetenstrasse, NarvisLab, Custom};
+
+    public locationIP location = locationIP.MobileHotspot;
+    public string CustomHololensIP = "192.168.178.50";
+
     public GameObject glove_controller;
     private GloveConnector gloveConnector;
     
-    public int port = 11110;  // define in init
+    private int port = 11110;  // define in init
 
-    //public string myIP = "192.168.1.210";
 
-    // zu hause
-    //public string myIP = "192.168.178.33";
-
-    // default klappt
-    string myIP = "0.0.0.0";
+    private string HololensIP;
 
     // "connection" things
-    IPEndPoint remoteEndPoint;
+    IPEndPoint HololensEndpoint;
     UdpClient client;
     Boolean connected = false;
-
-    // Send constant data stream
-    public Boolean autosend = true;    
 
     // Sequenznumber of the packet send
     static uint seq = 1;
@@ -40,6 +36,25 @@ public class UDPSend : MonoBehaviour
     // start from unity3d
     public void Start()
     {
+        switch (location)
+        {
+            case locationIP.MobileHotspot:
+                HololensIP = "192.168.43.244";
+                break;
+
+            case locationIP.Bluetenstrasse:
+                HololensIP = "192.168.178.50";
+                break;
+
+            case locationIP.NarvisLab:
+                HololensIP = "192.168.1.120";
+                break;
+
+            case locationIP.Custom:
+                HololensIP = CustomHololensIP;
+                break;
+        }
+
         gloveConnector = glove_controller.GetComponent<GloveConnector>();
         init();
         Debug.Log("ready");
@@ -58,11 +73,18 @@ public class UDPSend : MonoBehaviour
     
     // init
     public void init()    {
-        
+
+        HololensEndpoint = new IPEndPoint(IPAddress.Parse(HololensIP), port);
+        client = new UdpClient();
+
+        // setz ich hier einfach schon
+        connected = true;
+        /*
         IPEndPoint listeningEndPoint = new IPEndPoint(IPAddress.Parse("0.0.0.0"), port);
         client = new UdpClient(listeningEndPoint);
 
         client.BeginReceive(new AsyncCallback(recv), null);
+        */
     }    
 
     //______________________________________ Code von Alex
@@ -127,7 +149,7 @@ public class UDPSend : MonoBehaviour
         for (int i = 0; i < 3; i++)
             Buffer.BlockCopy(BitConverter.GetBytes(gyroSend[i]), 0, data, sizeof(int) + sizeof(byte) + sizeof(uint) + 40 * sizeof(float) + 4 * sizeof(float) + sizeof(int) + sizeof(long) + 3 * sizeof(float) + i * sizeof(float), sizeof(float));
 
-        client.Send(data, data.Length, remoteEndPoint);
+        client.Send(data, data.Length, HololensEndpoint);
 
         seq++;        
     }
@@ -199,26 +221,7 @@ public class UDPSend : MonoBehaviour
         seq++;
     }
 
-
-    public void sendGesture(Glove.Gesture gesture)
-    {
-        // data format = length (int) | Type (byte) | gesture (int)
-
-        byte[] data = new byte[sizeof(int) + sizeof(byte) + sizeof(int)];
-
-        // length
-        Buffer.BlockCopy(BitConverter.GetBytes(data.Length), 0, data, 0, BitConverter.GetBytes(data.Length).Length);
-
-        // type 2 for gesture
-        data[sizeof(int)] = (byte)2;
-
-        Buffer.BlockCopy(BitConverter.GetBytes((int)gesture), 0, data, sizeof(int) + sizeof(byte), sizeof(int));
-        if (connected)
-            client.Send(data, data.Length, remoteEndPoint);
-
-        Debug.Log("Send " + gesture);
-    }
-
+    /*
     //CallBack
     private void recv(IAsyncResult res)
     {
@@ -244,6 +247,7 @@ public class UDPSend : MonoBehaviour
             }
         }
     }
+    */
 
     // OnGUI
     void OnGUI()
