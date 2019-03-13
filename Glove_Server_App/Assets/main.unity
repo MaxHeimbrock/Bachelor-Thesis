@@ -1231,7 +1231,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: faf898e0acc5a2d4cadec4f25340366d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  location: 0
+  location: 1
   CustomHololensIP: 192.168.178.50
   glove_controller: {fileID: 1300774465}
 --- !u!4 &639621806
@@ -1853,7 +1853,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 33772326515e7e14db6acf25e58ccecd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gloveVersion: 2
+  gloveVersion: 1
   IMU_filterType: 1
 --- !u!4 &1300774467
 Transform:

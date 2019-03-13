@@ -75,7 +75,8 @@ public class VideoPanel : MonoBehaviour{
         scaling.z = 0.004f;
 
         offset.x = -0.01f;
-        offset.y = -0.15f;
+        //offset.y = -0.15f;
+        offset.y = -0.2f;
         //offset.z = 1.0f;
         //offset.z = 0.12f;
         offset.z = 0.0f;
