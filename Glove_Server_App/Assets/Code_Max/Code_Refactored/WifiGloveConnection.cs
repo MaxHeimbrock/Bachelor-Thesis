@@ -76,7 +76,7 @@ public class WifiGloveConnection : GloveConnectionInterface
 
         byte[] data = valuesClient.EndReceive(res, ref valuesRemoteEndPoint);
         valuesClient.BeginReceive(new AsyncCallback(recvValues), null);
-        Debug.Log("Received Value package from glove");
+        //Debug.Log("Received Value package from glove");
 
         //--------------------------------------------------------------------------------------------------------------------
         //----------- COPYING DATA -------------------------------------------------------------------------------------------
@@ -125,7 +125,7 @@ public class WifiGloveConnection : GloveConnectionInterface
 
         byte[] data = IMUClient.EndReceive(res, ref IMURemoteEndPoint);
         IMUClient.BeginReceive(new AsyncCallback(recvIMU), null);
-        Debug.Log("Received IMU package from glove");
+        //Debug.Log("Received IMU package from glove");
 
         // If first packet
         if (connected == false)
