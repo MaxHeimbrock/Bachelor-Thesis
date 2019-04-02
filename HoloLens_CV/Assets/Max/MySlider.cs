@@ -25,11 +25,11 @@ public class MySlider : MonoBehaviour {
         else
             renderer.material.color = Color.white;
 
-        if (transform.position.x < leftEnd)
-            transform.position = new Vector3(leftEnd, 0, 0);
+        if (transform.localPosition.x < leftEnd)
+            transform.localPosition = new Vector3(leftEnd, 0, 0);
 
-        if (transform.position.x > rightEnd)
-            transform.position = new Vector3(rightEnd, 0, 0);
+        if (transform.localPosition.x > rightEnd)
+            transform.localPosition = new Vector3(rightEnd, 0, 0);
     }
 
     public void Fist()

@@ -41,7 +41,7 @@ internal static class OpenCVInterop
 //
 //=========================================================================
 public class VideoPanel : MonoBehaviour{
-    //public RawImage rawImage;
+    public RawImage rawImage;
     public GameObject camera_owner;
     //public GameObject debug_sphere;
     private VideoSource video_source;
@@ -51,8 +51,8 @@ public class VideoPanel : MonoBehaviour{
     public string stream_type;
     public int operation = 5;
 
-    //private Texture2D textureU8;
-    //private Texture2D textureRGBA;
+    private Texture2D textureU8;
+    private Texture2D textureRGBA;
 
     private Vector3 scaling;
     private Vector3 offset;
@@ -86,13 +86,13 @@ public class VideoPanel : MonoBehaviour{
     //=========================================================================
     unsafe public void SetResolution(int width, int height){
 
-        //textureU8   = new Texture2D(width, height, TextureFormat.R8, false);
-        //textureRGBA = new Texture2D(width, height, TextureFormat.RGBA32, false);
-        //if(operation<100){
-        //    rawImage.texture = textureU8;   
-        //}else{
-        //    rawImage.texture = textureRGBA;
-        //}
+        textureU8   = new Texture2D(width, height, TextureFormat.R8, false);
+        textureRGBA = new Texture2D(width, height, TextureFormat.RGBA32, false);
+        if(operation<100){
+            rawImage.texture = textureU8;   
+        }else{
+            rawImage.texture = textureRGBA;
+        }
         
         // take the biggest format so we dont have to care later
         int channels    = 4;
@@ -163,19 +163,19 @@ public class VideoPanel : MonoBehaviour{
         }
 
 
-        //rawImage.enabled = show_panel;
-        //if (rawImage.enabled ){
-        //
-        //    if(operation<100){
-        //        rawImage.texture = textureU8;   
-        //    }else{
-        //        rawImage.texture = textureRGBA;
-        //    }
-        //
-        //    Texture2D texture = rawImage.texture as Texture2D;
-        //    texture.LoadRawTextureData( image_processed );
-        //    texture.Apply();
-        //}
+        rawImage.enabled = show_panel;
+        if (rawImage.enabled ){
+        
+            if(operation<100){
+                rawImage.texture = textureU8;   
+            }else{
+                rawImage.texture = textureRGBA;
+            }
+        
+            Texture2D texture = rawImage.texture as Texture2D;
+            texture.LoadRawTextureData( image_processed );
+            texture.Apply();
+        }
 
 
         tracker_pos.x = (float) (scaling.x*position[0] + offset.x);

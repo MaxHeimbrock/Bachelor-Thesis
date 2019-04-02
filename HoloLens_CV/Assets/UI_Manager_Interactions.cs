@@ -72,6 +72,6 @@ public class UI_Manager_Interactions : UI_Manager {
                     break;
             }
         }
-    Fist();
+    //Fist();
     }
 }

@@ -32,7 +32,7 @@ namespace HoloToolkit.Unity
 
             if (Canvas.isRootCanvas && Canvas.renderMode == RenderMode.WorldSpace)
             {
-                Canvas.worldCamera = FocusManager.Instance.UIRaycastCamera;
+                //Canvas.worldCamera = FocusManager.Instance.UIRaycastCamera;
             }
         }
     }

@@ -29,8 +29,8 @@ public abstract class IMU_Processor {
         float rot_y = 0;
 
         // X-axis - http://ozzmaker.com/berryimu/ // https://stackoverflow.com/questions/3755059/3d-accelerometer-calculate-the-orientation
-        rot_x = (float)((Math.Atan2(accel.y, accel.z) + Math.PI) * (180 / Math.PI));
-        //rot_x = -(float)(Math.Atan2(acc.y, Math.Sqrt(acc.x * acc.x + acc.z * acc.z)) * (180 / Math.PI));
+        //rot_x = (float)((Math.Atan2(accel.y, accel.z) + Math.PI) * (180 / Math.PI));
+        rot_x = -(float)(Math.Atan2(accel.y, Math.Sqrt(accel.x * accel.x + accel.z * accel.z)) * (180 / Math.PI));
 
         // diese Rechnung korrigiert Orientierung zu -180 bis 180 grad
         if (rot_x > 180)

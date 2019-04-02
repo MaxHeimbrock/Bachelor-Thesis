@@ -1,7 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="adfaee9f-0896-479d-bbaf-865d2099d0df" name="Default Changelist" comment="" />
+    <list default="true" id="adfaee9f-0896-479d-bbaf-865d2099d0df" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/CV_Python.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/CV_Python.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Hand_Tracking_Contour.py" beforeDir="false" afterPath="$PROJECT_DIR$/Hand_Tracking_Contour.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Glove_Server_App/Assets/Code_Max/Code_Refactored/IMU_Processor.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../Glove_Server_App/Assets/Code_Max/Code_Refactored/IMU_Processor.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Glove_Server_App/Assets/main.unity" beforeDir="false" afterPath="$PROJECT_DIR$/../Glove_Server_App/Assets/main.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../HoloLens_CV/Assets/HoloToolkit/Utilities/Scripts/CanvasHelper.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../HoloLens_CV/Assets/HoloToolkit/Utilities/Scripts/CanvasHelper.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../HoloLens_CV/Assets/Max/MoveHandTest.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../HoloLens_CV/Assets/Max/MoveHandTest.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../HoloLens_CV/Assets/Max/MyButton.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../HoloLens_CV/Assets/Max/MyButton.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../HoloLens_CV/Assets/Max/MySlider.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../HoloLens_CV/Assets/Max/MySlider.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../HoloLens_CV/Assets/MyObject.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../HoloLens_CV/Assets/MyObject.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../HoloLens_CV/Assets/Scenes/SampleScene.unity" beforeDir="false" afterPath="$PROJECT_DIR$/../HoloLens_CV/Assets/Scenes/SampleScene.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../HoloLens_CV/Assets/UI_Manager_Interactions.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../HoloLens_CV/Assets/UI_Manager_Interactions.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../HoloLens_CV/Assets/Webcam/Scripts/VideoPanel.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../HoloLens_CV/Assets/Webcam/Scripts/VideoPanel.cs" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -13,8 +28,11 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Hand_Tracking_Contour.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="142">
-              <caret line="35" column="38" lean-forward="true" selection-start-line="35" selection-start-column="38" selection-end-line="35" selection-end-column="38" />
+            <state relative-caret-position="510">
+              <caret line="66" column="41" lean-forward="true" selection-start-line="66" selection-start-column="41" selection-end-line="66" selection-end-column="41" />
+              <folding>
+                <element signature="e#0#18#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -35,6 +53,8 @@
       <find>drawContours</find>
       <find>print</find>
       <find>dist</find>
+      <find>imgray</find>
+      <find>image</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -48,14 +68,14 @@
         <option value="$PROJECT_DIR$/find_hand_test.py" />
         <option value="$PROJECT_DIR$/venv/SinghalHarsh_HandDetection.py" />
         <option value="$PROJECT_DIR$/SinghalHarsh_HandDetection.py" />
-        <option value="$PROJECT_DIR$/Hand_Tracking_Contour.py" />
         <option value="$PROJECT_DIR$/undistort_test.py" />
+        <option value="$PROJECT_DIR$/Hand_Tracking_Contour.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="945" />
-    <option name="width" value="987" />
+    <option name="width" value="988" />
     <option name="height" value="525" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -64,7 +84,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -76,6 +95,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -269,8 +289,11 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Hand_Tracking_Contour.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="142">
-          <caret line="35" column="38" lean-forward="true" selection-start-line="35" selection-start-column="38" selection-end-line="35" selection-end-column="38" />
+        <state relative-caret-position="510">
+          <caret line="66" column="41" lean-forward="true" selection-start-line="66" selection-start-column="41" selection-end-line="66" selection-end-column="41" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

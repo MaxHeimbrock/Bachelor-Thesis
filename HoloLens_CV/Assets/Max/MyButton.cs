@@ -10,6 +10,8 @@ public class MyButton : MonoBehaviour {
     Collider collider;
     AudioSource sound;
 
+    int timer = 20;
+
     enum State {start, pressed};
 
     State state = new State();
@@ -28,9 +30,17 @@ public class MyButton : MonoBehaviour {
         {
             state = State.pressed;
             renderer.material.color = Color.red;
-            collider.enabled = !collider.enabled;
+            collider.enabled = false;
             sound.Play();
+        }   // Button not completely pressed
+        else if (state == State.start && this.transform.localPosition.z > -0.65f)
+        {
+            timer--;
+            if (timer < 0)
+                CorrectPosition();
         }
+        else if (state == State.start)
+            timer = 20;
 
         if (state == State.pressed)
         {
@@ -39,16 +49,17 @@ public class MyButton : MonoBehaviour {
             {
                 state = State.start;
                 renderer.material.color = Color.black;
-                collider.enabled = !collider.enabled;
+                collider.enabled = true;
             }
         }
 
-        if (this.transform.localPosition.z < -0.72f)
-            CorrectPosition();
+        if (this.transform.localPosition.z < -0.7f)
+            this.transform.localPosition = new Vector3(0, 0, -0.7f);
 	}
 
     void CorrectPosition()
     {
         this.transform.localPosition = Vector3.Lerp(this.transform.localPosition, origin, 0.1f);
     }
+
 }
