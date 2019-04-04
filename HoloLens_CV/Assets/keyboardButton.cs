@@ -21,7 +21,7 @@ public class keyboardButton : MonoBehaviour {
         renderer = this.GetComponent<Renderer>();
         collider = this.GetComponent<Collider>();
         sound = this.GetComponent<AudioSource>();
-        renderer.material.color = Color.black;
+        renderer.material.color = Color.blue;
 
         origin = this.transform.localPosition;
     }
@@ -29,11 +29,14 @@ public class keyboardButton : MonoBehaviour {
     // Update is called once per frame
     void Update()
     {
-
+        CorrectPosition();
     }
 
     void CorrectPosition()
     {
+        if (this.transform.localPosition.y <= 0.24f)
+            this.transform.localPosition = new Vector3(this.transform.localPosition.x, 0.24f, this.transform.localPosition.z);
+
         this.transform.localPosition = Vector3.Lerp(this.transform.localPosition, origin, 0.1f);
     }
 

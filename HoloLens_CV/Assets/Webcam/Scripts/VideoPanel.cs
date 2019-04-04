@@ -60,6 +60,13 @@ public class VideoPanel : MonoBehaviour{
     public bool show_panel = false;
     private int lib_version = 0;
 
+    Vector4 K_column1 = new Vector4(196.92f, 0, 0, 0);
+    Vector4 K_column2 = new Vector4(0, 200.66f, 0, 0);
+    Vector4 K_column3 = new Vector4(222.29f, 230.41f, 1, 0);
+    Vector4 K_column4 = new Vector4(0, 0, 0, 1);
+
+    Matrix4x4 K;
+
     //public GameObject debug_sphere2;
     //private GameObject camGameObject;
     //private Transform camTransform;
@@ -74,12 +81,15 @@ public class VideoPanel : MonoBehaviour{
         //scaling.z = 0.000f;
         scaling.z = 0.004f;
 
-        offset.x = -0.01f;
+        //offset.x = -0.01f;
+        offset.x = 0.02f;
         //offset.y = -0.15f;
-        offset.y = -0.2f;
+        offset.y = -0.22f;
         //offset.z = 1.0f;
         //offset.z = 0.12f;
         offset.z = 0.0f;
+
+        K = new Matrix4x4(K_column1, K_column2, K_column3, K_column4);
 
     }
 
@@ -181,6 +191,21 @@ public class VideoPanel : MonoBehaviour{
         tracker_pos.x = (float) (scaling.x*position[0] + offset.x);
         tracker_pos.y = (float) (scaling.y*position[1] + offset.y);
         tracker_pos.z = (float) (scaling.z*position[2] + offset.z);
+
+        /*
+        Matrix4x4 R = Matrix4x4.Rotate(this.transform.rotation);
+        Vector4 C_Schlange = new Vector4(this.transform.position.x, this.transform.position.y, this.transform.position.z, 1);
+
+        Matrix4x4 Q = K * R;
+
+        //Vector4 m = new Vector4((float)position[0], (float)position[1], 1, 0);
+
+        Vector4 m = new Vector4(100, 110, 1, 0);
+
+        Vector4 M = C_Schlange + Q.inverse * m;
+
+        tracker_pos = new Vector3(M.x, M.y, tracker_pos.z);
+        */
 
         this.transform.localPosition = tracker_pos;
     }

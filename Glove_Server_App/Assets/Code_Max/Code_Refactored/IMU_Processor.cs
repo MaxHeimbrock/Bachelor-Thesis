@@ -126,7 +126,8 @@ public class MahonyProcessorNoMagnet : IMU_Processor
 
         if (counterTillZero <= 0)
         {
-            SetZero();
+            // auto reset deactivated
+            //SetZero();
             Debug.Log("IMU auto Set zero ");
             counterTillZero = countTillZero;
         }

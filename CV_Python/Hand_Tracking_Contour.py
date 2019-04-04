@@ -48,7 +48,7 @@ while (cap.isOpened()):
             roi = frame[B_y:A_y, A_x:B_x]
             imgray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
             image, contours, hierarchy = cv2.findContours(imgray, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            cv2.drawContours(roi, contours, -1, 255, 3)
+            #cv2.drawContours(roi, contours, -1, 255, 3)
             cnt = max(contours, key=cv2.contourArea)
 
             #cv2.imshow("test", roi)
@@ -58,9 +58,11 @@ while (cap.isOpened()):
             CIRCLE_THICKNESS = 2
             GREEN = np.array([0, 255, 0])
 
-            cv2.circle(roi, (int(x), int(y)), int(radius), GREEN, CIRCLE_THICKNESS)
-            cv2.circle(roi, (int(x), int(y)), int(2), GREEN, CIRCLE_THICKNESS)
-            cv2.rectangle(frame, (A_x, B_y), (B_x, A_y), (255, 0, 0), 2)
+            #cv2.circle(frame, topmost, int(5), GREEN, CIRCLE_THICKNESS)
+
+            #cv2.circle(roi, (int(x), int(y)), int(radius), GREEN, CIRCLE_THICKNESS)
+            #cv2.circle(roi, (int(x), int(y)), int(2), GREEN, CIRCLE_THICKNESS)
+            #cv2.rectangle(frame, (A_x, B_y), (B_x, A_y), (255, 0, 0), 2)
 
             M = cv2.moments(cnt)
             cx = int(M['m10'] / M['m00'])
