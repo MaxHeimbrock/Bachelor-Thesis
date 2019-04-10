@@ -5,16 +5,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Glove
+public class Glove : MonoBehaviour
 {
-    public UInt16 NB_SENSORS = 40;
-    public UInt32 cnt;
-    public float[] values;
-    public UInt16 version;
-
-    private UInt32[] offsets;
-    private UInt32[] raw_values;
-
     // for imu testing
     private Vector3 acceleration = Vector3.zero;
     private Vector3 velocity;
@@ -48,7 +40,15 @@ public class Glove
     bool first_pose = true;
 
     long time0;
+    long time1;
+    long elapsedTimeServer;
 
+    long elapsedTimeGlove_microseconds;
+    long elapsedTimeGlove_milliseconds = 0;
+
+    long last_timestamp_microseconds;
+    float elapsed_seconds_glove = 0;
+    
     public int timestamp0 = 0;
     public int timestamp1 = 0;
 
@@ -72,77 +72,26 @@ public class Glove
 
     public Glove()
     {
-        cnt = 0;
-        version = 0;
-        raw_values = new UInt32[Constants.NB_SENSORS];
-        offsets = new UInt32[Constants.NB_SENSORS];
-        values = new float[Constants.NB_SENSORS];
-
         acceleration = new Vector3(0, 0, 0);
         velocity = new Vector3(0, 0, 0);
 
         time0 = 0;
-}
+        elapsedTimeServer = 0;
+        elapsedTimeGlove_microseconds = 0;
+    }    
 
-    public void set_zero()
-    {
-        Debug.Log("set_zero");
-
-        for (int i = 0; i < Constants.NB_SENSORS; i++)
-        {
-            offsets[i] = raw_values[i];
-        }
-
-        fist_detection_activated = false;
-    }  
-
-    public void apply_ethernetJointPacket(UInt32[] newValues)
-    {
-        float sum = 0;
-
-        cnt++;
- 
-        float filter = 0.9f;
-
-        raw_values = newValues;
- 
-        for (int i = 0; i < Constants.NB_SENSORS; i++)
-        {
-            Int64 tmp = ((Int64)newValues[i]) - ((Int64)offsets[i]);
-            double tmpd = (double)tmp; // I use double here to avoid loosing to much precision
-            tmpd = 0.00001f * tmpd; // That should be the same scale as for the serial glove
-            double filtered_value = (1.0f - filter) * tmpd + filter * values[i];
-
-            values[i] = (float)filtered_value; // finally cut it to float, the precision should be fine at that point
-
-            //Debug.Log(values[1]);
-
-            sum += values[i];
-        }
-
-        if (sum < fist_threshold && fist_detection_activated == false)
-            fist_detection_activated = true;
-
-        if (sum > fist_threshold && fist_detection_activated == true)
-        {
-            imuTest.fistDetected();
-            Debug.Log("Fist");
-            UDP_Send.sendGesture(Gesture.Fist);
-        }
-
-        //Debug.Log(sum);
-    }
-
-    public void applyEthernetPacketIMU(Vector3 acceleration1, Vector3 gyroscope)
+    public void applyEthernetPacketIMU(Vector3 acceleration1, Vector3 gyroscope, int timestamp)
     {   
         long time1 = DateTime.Now.Ticks;
 
         if (bias_counter > bias_length)
-        {            
+        {
             // delta t in seconds or miliseconds
             TimeSpan elapsedSpan = new TimeSpan(time1 - time0);
             long delta_t_ms = elapsedSpan.Milliseconds;
             float delta_t_s = delta_t_ms / 1000f;
+
+            float delta_t_s_imu = GetTime(timestamp);
 
             // TODO: Bias nötig?
             gyroscope = CorrectGyro(gyroscope);
@@ -157,16 +106,13 @@ public class Glove
             q_acc = Quaternion.Euler(new Vector3(angleFromAcc.y, 0, angleFromAcc.x));
             //Debug.Log(angleFromAcc);
 
-            gyro_current_rotation += IntegrateGyro(gyroscope, delta_t_s);
+            gyro_current_rotation += IntegrateGyro(gyroscope, delta_t_s_imu);
             q_gyro = Quaternion.Euler(new Vector3(gyro_current_rotation.y, -gyro_current_rotation.z, gyro_current_rotation.x));
             //Debug.Log(gyro_current_rotation);
 
-            FilterRotation(gyroscope, delta_t_s, angleFromAcc, filter);
+            FilterRotation(gyroscope, delta_t_s_imu, angleFromAcc, filter);
             q_filtered = Quaternion.Euler(new Vector3(filtered_rotation.y, -filtered_rotation.z, filtered_rotation.x));
-
-            // dont know how to convert
-            float delta_timestamp_s = (timestamp1 - timestamp0)/10000.0f;    
-
+            
             // Give initial pose for madgwick and mahony from accelerometer angles --> best if glove is relatively flat on table
             if (first_pose)
             {
@@ -181,14 +127,14 @@ public class Glove
             q_madgwick *= q_acc_first_pose;
 
             mahonyARHS.Update(gyroscope.x, gyroscope.y, gyroscope.z, acceleration1.x, acceleration1.y, acceleration1.z);
-            q_mahony = new Quaternion(mahonyARHS.Quaternion[0], -mahonyARHS.Quaternion[1], mahonyARHS.Quaternion[3], mahonyARHS.Quaternion[2]);
+            q_mahony = new Quaternion(mahonyARHS.Quaternion[0], mahonyARHS.Quaternion[1], mahonyARHS.Quaternion[3], -mahonyARHS.Quaternion[2]);
             // zusätzlich noch um 180° zur x-Achse rotiert
             q_mahony *= Quaternion.AngleAxis(180, Vector3.right);
             // zusätzliche Rotationen für die Hololens
             //q_mahony *= Quaternion.AngleAxis(180, Vector3.up);
             q_mahony *= q_acc_first_pose;
 
-            FilterRotationQuaternion(q_madgwick, delta_t_s, angleFromAcc, filter);
+            FilterRotationQuaternion(q_madgwick, delta_t_s_imu, angleFromAcc, filter);
             q_madgwick_filtered = Quaternion.Euler(new Vector3(filtered_rotation_q.y, -filtered_rotation_q.z, filtered_rotation_q.x));
         }
         
@@ -205,8 +151,6 @@ public class Glove
             bias_counter++;
             Debug.Log("Gyroscope bias is " + gyro_bias);
             Debug.Log("Acceleration bias is " + acceleration_bias);
-
-            set_zero();
         }
         else
         {
@@ -264,7 +208,7 @@ public class Glove
 
                 imuTest.clapDetected();
 
-                UDP_Send.sendGesture(Gesture.Clap);
+                //UDP_Send.sendGesture(Gesture.Clap);
             }                
         }
     }
@@ -346,6 +290,7 @@ public class Glove
     // Local space IMU -> left handed, z up
     Vector3 IntegrateGyro(Vector3 gyro, float delta_t_s)
     {
+        //Debug.Log(delta_t_s);
         return (gyro * delta_t_s);
     }
 
@@ -385,66 +330,54 @@ public class Glove
     }
 
     #endregion
-
-    public TrackingData GetTrackingData()
+    
+    private long GetTime()
     {
-        return new TrackingData(values, q_mahony, 1, 1);
-    }    
+        time1 = DateTime.Now.Ticks;
+
+        TimeSpan elapsedSpan = new TimeSpan(time1 - time0);
+        long delta_t_ms = elapsedSpan.Milliseconds;
+        float delta_t_s = delta_t_ms / 1000f;
+
+        elapsedTimeServer += delta_t_ms;
+        
+        //Debug.Log(elapsedTimeServer);
+
+        time0 = time1;
+
+        return 0;
+    }
+
+    private float GetTime(int timestamp_in_ticks)
+    {
+
+        long this_timestamp_microseconds = timestamp_in_ticks * 39;
+
+        long delta_time_microseconds = 0;
+
+        if (last_timestamp_microseconds != 0)
+            delta_time_microseconds = this_timestamp_microseconds - last_timestamp_microseconds;
+
+        float delta_time_seconds = ((float)delta_time_microseconds / (1000 * 1000));
+
+        if (delta_time_seconds < 0)
+            delta_time_seconds = 0.0033f;
+
+        elapsed_seconds_glove += delta_time_seconds;
+
+        // this is it - just get delta time
+        //Debug.Log(elapsed_seconds_glove);
+
+        last_timestamp_microseconds = this_timestamp_microseconds;
+
+        return delta_time_seconds;
+    }
 }
 
 static class Constants
 {
     public const int NB_SENSORS = 40;
     public const bool IS_BLUETOOTH = false;
+    internal static int NB_VALUES_GLOVE;
 }
-
-public class TrackingData
-{
-    public float[] JointValues;
-    public long timestamp;
-    public Quaternion orientation;
-
-    // 0 for nothing, 1 for clap detected
-    public int gesture;
-
-    // Dummy for testing
-    public TrackingData()
-    {
-        JointValues = new float[40];
-
-        for (int i = 0; i < JointValues.Length; i++)
-            JointValues[i] = i;
-
-        orientation = Quaternion.identity;
-
-        timestamp = 1;
-
-        gesture = 0;
-    }
-
-    // Dummy for testing
-    public TrackingData(float[] values)
-    {
-        JointValues = values;
-
-        orientation = Quaternion.identity;
-
-        timestamp = 1;
-
-        gesture = 0;
-    }
-
-    public TrackingData(float[] JointValues, Quaternion orientation, long timestamp, int gesture)
-    {
-        this.JointValues = JointValues;
-        this.orientation = orientation;
-        this.timestamp = timestamp;
-        this.gesture = gesture;
-    }
-
-    public TrackingData Copy()
-    {
-        return (TrackingData)this.MemberwiseClone();
-    }
-
-}
+ 

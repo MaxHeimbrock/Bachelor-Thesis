@@ -8,8 +8,12 @@ def is_similar(image1, image2):
 # from Kevins calibration of the depth camera - intrinsics matrix
 fx = 197.707225374208
 fy = 201.581311460880
+
+# try to center 
 ppx = 226.208683510427
 ppy = 225.819548268168
+#
+
 k1 = -0.271283991007049
 k2 = 0.0806828103078386
 k3 = -0.0109236654954672
@@ -55,11 +59,11 @@ while (cap.isOpened()):
             # print (np.where((frame == [0, 0, 0]).all(axis=2)))
             cv2.imshow('frame', frame)
 
-            #newcameramtx, roi = cv2.getOptimalNewCameraMatrix(camera_matrix, dist_coeffs, (width, height), 1,(width, height))
-            #mapx, mapy = cv2.initUndistortRectifyMap(newcameramtx, dist_coeffs, None, newcameramtx, (width, height), 5)
-            #dst = cv2.remap(frame, mapx, mapy, cv2.INTER_LINEAR)
+            newcameramtx, roi = cv2.getOptimalNewCameraMatrix(camera_matrix, dist_coeffs, (width, height), 1,(width, height))
+            mapx, mapy = cv2.initUndistortRectifyMap(newcameramtx, dist_coeffs, None, newcameramtx, (width, height), 5)
+            dst = cv2.remap(frame, mapx, mapy, cv2.INTER_LINEAR)
 
-            #cv2.imshow('undist_frame', dst)
+            cv2.imshow('undist_frame', dst)
 
             #print(is_similar(frame, dst))
 

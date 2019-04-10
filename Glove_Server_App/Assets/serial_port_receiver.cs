@@ -36,14 +36,14 @@ public class serial_port_receiver : MonoBehaviour {
 	private  SerialPort _serialPort;
 	private Thread readThread;
 	private int MESSAGE_SIZE;
-	public Glove glove;
+	//public Glove glove;
 
 
 	//=======================================================
 	// Use this for initialization
 	void Start () {
 		MESSAGE_SIZE = Constants.NB_SENSORS * 2 + 12;
-		glove = new Glove ();
+		//glove = new Glove ();
 		readThread = new Thread(Read);
 		 
 		// Allow the user to set the appropriate properties.
@@ -95,15 +95,15 @@ public class serial_port_receiver : MonoBehaviour {
 	//=======================================================
 	// Update is called once per frame
 	void Update () {
-		if(glove.cnt%1000==0){
-			Debug.Log ("got 1000 packet");
-		}
+		//if(glove.cnt%1000==0){
+	    //  Debug.Log ("got 1000 packet");
+		//}
         //Debug.Log(glove.cnt + " " + glove.version + " " + glove.values[1] + "\t" + glove.values[2] + "\t" + glove.values[2] + "\t" + glove.values[3] );
 
         // von mir hier hin verschoben
         if (Input.GetKey("space"))
         {
-            glove.set_zero();
+            //glove.set_zero();
             Debug.Log("set_zero");
         }
     }
