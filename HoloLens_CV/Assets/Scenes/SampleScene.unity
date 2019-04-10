@@ -576,12 +576,6 @@ Transform:
   m_PrefabParentObject: {fileID: 4374530975894902, guid: 16ad2d038c8801b48bf26b80d6b2abb3,
     type: 2}
   m_PrefabInternal: {fileID: 53066914}
---- !u!114 &444668025 stripped
-MonoBehaviour:
-  m_PrefabParentObject: {fileID: 114124568637479292, guid: 16ad2d038c8801b48bf26b80d6b2abb3,
-    type: 2}
-  m_PrefabInternal: {fileID: 53066914}
-  m_Script: {fileID: 11500000, guid: 4f968af7087a0a442a35e4946520f342, type: 3}
 --- !u!1 &462062765
 GameObject:
   m_ObjectHideFlags: 0
@@ -1911,7 +1905,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1242164443
 Transform:
   m_ObjectHideFlags: 0
@@ -1940,10 +1934,10 @@ MonoBehaviour:
   UDP_Receive: {fileID: 1964602099}
   billboard: {fileID: 1213120835}
   handAnchor: {fileID: 2125451293}
-  videoPanel: {fileID: 444668025}
+  videoPanel: {fileID: 0}
   handMesh: {fileID: 1382425530}
   cursor: {fileID: 1319666245}
-  cam: {fileID: 2093557951}
+  cam: {fileID: 0}
   redButton: {fileID: 1328324930}
   blueButton: {fileID: 1166202512}
   yellowButton: {fileID: 576724450}
