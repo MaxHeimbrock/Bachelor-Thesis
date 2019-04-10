@@ -13,9 +13,9 @@ public abstract class IMU_Processor {
         this.preprocessor = IMU_preprocessor;
     }
 
-    public void SetGGain(float G_Gain)
+    public void SetGGain(float Gyro_Factor)
     {
-        preprocessor.SetGGain(G_Gain);
+        preprocessor.SetGGain(Gyro_Factor);
     }
 
     public abstract void SetZero();
@@ -298,7 +298,7 @@ public class AccelerometerProcessor : IMU_Processor
 
 public class IMU_Preprocessor
 {
-    private float G_Gain = 0.07f;
+    private float Gyro_Factor = 16.4f;
     private float Accel_Factor = 16384.0f;
     private Vector3 accel_bias = new Vector3(0.0397429f, -0.0665699f, -0.024349f);
     private Vector3 gyro_bias = new Vector3(-0.903895f, 0.44357f, -0.429229f);
@@ -330,7 +330,7 @@ public class IMU_Preprocessor
 
     public Vector3 CorrectGyro(Vector3 gyro)
     {
-        gyro *= G_Gain;
+        gyro /= Gyro_Factor;
         gyro -= gyro_bias;
         return gyro;
     }
@@ -411,8 +411,8 @@ public class IMU_Preprocessor
         return false;
     }
 
-    public void SetGGain(float G_Gain)
+    public void SetGGain(float Gyro_Factor)
     {
-        this.G_Gain = G_Gain;
+        this.Gyro_Factor = Gyro_Factor;
     }
 }
