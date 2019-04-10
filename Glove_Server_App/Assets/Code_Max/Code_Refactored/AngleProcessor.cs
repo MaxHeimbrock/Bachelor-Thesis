@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.IO;
 
 public abstract class AngleProcessor {
 
@@ -39,8 +40,8 @@ public abstract class AngleProcessor {
 
 public class EthernetAngleProcessor : AngleProcessor
 {
-
     private float filter = 0.9f;
+    
 
     public override void ProcessAngles(uint[] jointValues)
     {
@@ -59,20 +60,10 @@ public class EthernetAngleProcessor : AngleProcessor
             sum += angles[i];
             //Debug.Log(angles[1]);
         }
+
         if (sum > 20f)
             Debug.Log("fist");
-        else if (sum < 4f && angles[9] + angles[10] + angles[11] > 1.16f && angles[10] < 3f)
-            Debug.Log("pinch");
 
-        // ca. 0.2
-        //Debug.Log(angles[9]);
-
-        // ca 0.9 when pinch
-        //Debug.Log(angles[10]);
-        //
-
-        // ca 0.3
-        //Debug.Log(angles[11]);
-
+       
     }
 }

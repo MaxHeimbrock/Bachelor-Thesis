@@ -2,6 +2,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using UnityEngine;
 
 public abstract class IMU_Processor {
@@ -91,6 +93,10 @@ public class GyroscopeProcessor : IMU_Processor
         currentRotation = Vector3.zero;
     }
 }
+
+/// <summary>
+/// Mahony Filter //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// </summary>
 
 public class MahonyProcessorNoMagnet : IMU_Processor
 {
@@ -298,6 +304,8 @@ public class AccelerometerProcessor : IMU_Processor
 
 public class IMU_Preprocessor
 {
+    bool alreadyLogged = false;
+
     private float G_Gain = 0.07f;
     private float Accel_Factor = 16384.0f;
     private Vector3 accel_bias = new Vector3(0.0397429f, -0.0665699f, -0.024349f);
@@ -311,6 +319,7 @@ public class IMU_Preprocessor
     // Interactions
     public float clap_threshold = 2.3f;
     public float clap_before_threshold = 1f;
+    //public float clap_before_threshold = 1.2f;
 
     public IMU_Preprocessor()
     {
@@ -321,7 +330,7 @@ public class IMU_Preprocessor
     }
 
     public IMU_Preprocessor(float acc_threshold, float LPF_filter, int LPF_filter_size, Vector3[] filter_array)
-    {
+    {        
         this.accel_threshold = acc_threshold;
         this.LPF_filter = LPF_filter;
         this.LPF_filter_size = LPF_filter_size;
@@ -404,7 +413,7 @@ public class IMU_Preprocessor
             if (acc.magnitude > clap_threshold && filter_array_sum < clap_before_threshold)
             {
                 Debug.Log("Clap");
-
+                
                 return true;
             }
         }
